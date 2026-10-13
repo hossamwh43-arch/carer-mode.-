@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>مسيرة لاعب — Player Career</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="boot" class="boot"><div class="boot-ball">⚽</div><p>جارٍ تحميل اللعبة…</p></div>
+<header id="topbar" class="topbar hidden">
+  <button class="icon-btn" data-a="menu" aria-label="القائمة">☰</button>
+  <div id="topTitle" class="top-title"></div>
+  <button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل">✉<span id="inboxBadge" class="badge hidden">0</span></button>
+</header>
+<main id="app" class="app"></main>
+<nav id="bottomnav" class="bottomnav hidden">
+  <button data-a="go" data-v="home"><span>🏠</span><small>الرئيسية</small></button>
+  <button data-a="go" data-v="league"><span>🏆</span><small>الدوري</small></button>
+  <button data-a="go" data-v="ucl"><span>⭐</span><small>الأبطال</small></button>
+  <button data-a="go" data-v="train"><span>💪</span><small>التدريب</small></button>
+  <button data-a="go" data-v="market"><span>🔁</span><small>الانتقالات</small></button>
+</nav>
+<div id="sheetWrap" class="sheet-wrap hidden"><div class="sheet-back" data-a="closeSheet"></div><div id="sheet" class="sheet"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/save.js"></script>
+<script src="js/players.js"></script>
+<script src="js/league.js"></script>
+<script src="js/lineup.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/match.js"></script>
+<script src="js/live.js"></script>
+<script src="js/moments.js"></script>
+<script src="js/ucl.js"></script>
+<script src="js/training.js"></script>
+<script src="js/transfers.js"></script>
+<script src="js/season.js"></script>
+<script src="js/ui_core.js"></script>
+<script src="js/ui_start.js"></script>
+<script src="js/ui_home.js"></script>
+<script src="js/ui_league.js"></script>
+<script src="js/ui_match.js"></script>
+<script src="js/ui_train.js"></script>
+<script src="js/ui_market.js"></script>
+<script src="js/ui_career.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

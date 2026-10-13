@@ -1,0 +1,83 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      # إن رُفع المشروع كملف واحد project.zip (طريقة الهاتف) نفكّه هنا
+      - name: Unpack project.zip if present
+        run: |
+          if [ -f project.zip ]; then unzip -oq project.zip; fi
+          test -f package.json || { echo "::error::package.json غير موجود (ارفع project.zip أو ملفات المشروع)"; exit 1; }
+          test -f www/index.html || { echo "::error::www/index.html غير موجود"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: |
+          python -m pip install pillow
+          npm install
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Customize (icons, splash, colors, orientation, version)
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: python scripts/prepare_android.py
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      # مفتاح توقيع ثابت: يجعل كل نسخة جديدة تُثبَّت فوق القديمة دون فقدان الحفظ
+      - name: Use fixed signing key
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Accept Android licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk player-career.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: player-career-apk
+          path: player-career.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "نسخة ${{ github.run_number }}"
+          body: "حمّل player-career.apk وثبّته على هاتف أندرويد."
+          files: player-career.apk
