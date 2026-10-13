@@ -66,8 +66,18 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Name the APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk player-career.apk
+      # توقيع صريح بالمفتاح الثابت + تحقق: يفشل البناء إن لم يطابق التوقيع المفتاح
+      - name: Sign APK with the fixed key and verify
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "build-tools: $BT"
+          "$BT/zipalign" -f -p 4 android/app/build/outputs/apk/debug/app-debug.apk aligned.apk
+          "$BT/apksigner" sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android \
+            --ks-key-alias androiddebugkey --out player-career.apk aligned.apk
+          "$BT/apksigner" verify --verbose --print-certs player-career.apk | tee verify.txt
+          WANT=$(keytool -list -keystore debug.keystore -storepass android 2>/dev/null | sed -n 's/.*(SHA-256): //p' | tr -d ':' | tr 'A-F' 'a-f')
+          echo "expected SHA-256: $WANT"
+          grep -qi "certificate SHA-256 digest: $WANT" verify.txt || { echo "::error::APK signature does not match the fixed key"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
