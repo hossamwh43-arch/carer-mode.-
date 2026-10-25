@@ -12,14 +12,34 @@
 
   Save.exists = () => { const st = store(); return !!(st && (st.getItem(C().saveKey) || st.getItem(C().backupKey))); };
 
+  // تجميد الحفظ مؤقتًا (تستعمله المحاكاة): الاستدعاءات العادية تُؤجَّل ثم يُجرى حفظ واحد عند release.
+  // حارس أمان: التجميد الذي يطول عن دقيقة يُعدّ مهجورًا ويُلغى حتى لا يتوقف الحفظ للأبد.
+  Save._hold = 0; Save._holdAt = 0; Save._dirty = false; Save.lastJson = null;
+  Save.hold = () => { Save._hold++; Save._holdAt = Date.now(); };
+  Save.touch = () => { Save._holdAt = Date.now(); };
+  Save.release = (flush) => {
+    Save._hold = Math.max(0, Save._hold - 1);
+    if (Save._hold === 0 && Save._dirty && flush !== false) return Save.save(true);
+    return true;
+  };
+
   // الحفظ: نكتب أولًا إلى مفتاح مؤقت للتحقق ثم نُدوّر النسخة الاحتياطية
-  Save.save = () => {
+  // force: يتجاوز التجميد · wantJson: يبني النص حتى لو لم يتوفر تخزين (تستعمله المحاكاة كنقطة استرجاع)
+  Save.save = (force, wantJson) => {
+    if (!Save.valid(G.S)) return false;
+    if (Save._hold > 0 && !force) {
+      if (Date.now() - Save._holdAt > 60000) { Save._hold = 0; } // تجميد مهجور
+      else { Save._dirty = true; return true; }
+    }
     const st = store();
-    if (!st || !Save.valid(G.S)) return false;
+    if (!st && !wantJson) return false;
     try {
       G.S.rng = G.rngState;
       G.S.savedAt = Date.now();
       const json = JSON.stringify(G.S);
+      Save.lastJson = json;
+      Save._dirty = false;
+      if (!st) return false;
       JSON.parse(json); // تحقق من سلامة النص قبل الكتابة
       const old = st.getItem(C().saveKey);
       if (old) st.setItem(C().backupKey, old);
@@ -42,6 +62,7 @@
         if (!Save.valid(S)) continue;
         G.S = S;
         if (S.rng) G.rngState = S.rng >>> 0;
+        if (G.Media) G.safe(() => G.Media.get(), 'media'); // ترقية الحفظ القديم: إنشاء حالة الإعلام قبل أي لعب
         G.loadedFrom = key;
         return true;
       } catch (e) { /* ننتقل للنسخة الاحتياطية */ }
@@ -64,6 +85,7 @@
       if (!Save.valid(S)) return false;
       G.S = S;
       if (S.rng) G.rngState = S.rng >>> 0;
+      if (G.Media) G.safe(() => G.Media.get(), 'media');
       Save.save();
       return true;
     } catch (e) { return false; }

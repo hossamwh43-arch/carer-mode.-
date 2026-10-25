@@ -5,8 +5,8 @@
   const me = () => G.S.players[G.S.user];
 
   // ---------- الرسائل ----------
-  const GROUPS = { all: null, offers: ['offer', 'contract'], awards: ['award'], other: ['news', 'training', 'injury', 'coach'] };
-  const ICON = { news: '📰', offer: '📨', contract: '📝', training: '💪', injury: '🩹', coach: '🧑‍🏫', award: '🏆' };
+  const GROUPS = { all: null, offers: ['offer', 'contract'], awards: ['award'], other: ['news', 'training', 'injury', 'coach', 'media'] };
+  const ICON = { news: '📰', offer: '📨', contract: '📝', training: '💪', injury: '🩹', coach: '🧑‍🏫', award: '🏆', media: '📣' };
   UI.screens.inbox = () => {
     const S = G.S, tab = UI.curTab('ib', 'all'), kinds = GROUPS[tab];
     const list = (S.inbox || []).filter((m) => !kinds || kinds.indexOf(m.kind) >= 0);
@@ -21,7 +21,7 @@
   const trophyIcons = (t) => (t.liga ? '🥇' : '') + (t.ucl ? '🌟' : '');
   function profileCard(p) {
     const tot = G.Season.careerTotals();
-    return '<div class="card hl"><div class="row">' + UI.avatar(p.look, p.club, 78) + '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div class="mut sm">' + UI.natName(p.nat) + ' · ' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة</div><div class="mut sm">' + p.h + ' سم · ' + p.w + ' كغ · القدم ' + (p.foot === 'R' ? 'اليمنى' : 'اليسرى') + '</div><div>' + UI.clubTag(p.club, 20) + ' <span class="mut sm">#' + p.num + '</span></div></div><div class="ovr">' + p.ovr + '</div></div>' +
+    return '<div class="card hl"><div class="row">' + UI.avatar(p.look, p.club, 78) + '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div class="mut sm">' + UI.natName(p.nat) + ' · ' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة</div><div class="mut sm">' + p.h + ' سم · ' + p.w + ' كغ · القدم ' + (p.foot === 'R' ? 'اليمنى' : 'اليسرى') + '</div><div>' + UI.clubTag(p.club, 20) + ' <span class="mut sm">#' + p.num + '</span></div></div><div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div>' +
       '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + tot.apps + '</b><small>مباراة</small></div><div class="stat"><b>' + tot.g + '</b><small>هدف</small></div><div class="stat"><b>' + tot.a + '</b><small>صناعة</small></div>' +
       '<div class="stat"><b>' + (tot.avg ? tot.avg.toFixed(2) : '—') + '</b><small>متوسط التقييم</small></div><div class="stat"><b>' + tot.seasons + '</b><small>مواسم كاملة</small></div><div class="stat"><b>' + (tot.liga + tot.ucl) + '</b><small>ألقاب</small></div></div></div>';
   }
@@ -42,7 +42,7 @@
       const tot = G.Season.careerTotals();
       h += '<div class="card hl c"><div style="font-size:44px">🏁</div><h2>اعتزلتَ كرة القدم</h2><p class="mut">في الموسم ' + G.Season.label(S.retiredAt.season) + ' بعمر ' + S.retiredAt.age + ' سنة بعد ' + tot.seasons + ' مواسم، ' + tot.apps + ' مباراة و' + tot.g + ' هدفًا.</p><button class="btn pri" data-a="newCareer">✨ ابدأ مسيرة جديدة</button></div>';
     }
-    h += profileCard(p) + '<h4 style="margin:6px 2px">مسيرتي موسمًا بموسم</h4>' + seasonsTable(p);
+    h += UI.fifaCard(p) + profileCard(p) + '<div class="card"><h4>🕸️ مخطط سماتك</h4>' + UI.radar(p) + '</div>' + (UI.mediaCard ? UI.mediaCard() : '') + UI.careerCharts(p) + '<h4 style="margin:6px 2px">مسيرتي موسمًا بموسم</h4>' + seasonsTable(p);
     return h;
   };
 
@@ -105,6 +105,14 @@
     const S = G.S;
     let h = '<div class="card"><h3>💾 الحفظ</h3><p class="sm mut">اللعبة تحفظ تلقائيًا بعد كل مباراة وأسبوع وقرار، وعند إغلاق الصفحة. آخر حفظ: ' + (S.savedAt ? new Date(S.savedAt).toLocaleString('ar') : '—') + '</p>' +
       '<button class="btn pri" data-a="saveNow">💾 احفظ الآن</button><button class="btn" data-a="exportSave">📤 تصدير الحفظ (نسخ النص)</button><button class="btn" data-a="importSheet">📥 استيراد حفظ</button></div>';
+    if (UI.diffCard) h += UI.diffCard();
+    h += '<div class="card"><h3>📘 دليل اللعبة</h3><p class="sm mut">شرح مختصر لأهم أجزاء اللعبة.</p><button class="btn" data-a="tourOpen">افتح الدليل</button></div>';
+    const P = UI.prefs;
+    const tgl = (k, on, title, sub) => '<div class="setrow"><div>' + title + '<small>' + sub + '</small></div><button class="tgl ' + (on ? 'on' : '') + '" data-a="prefToggle" data-v="' + k + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" aria-label="' + title + '"></button></div>';
+    h += '<div class="card"><h3>🔊 الصوت والاهتزاز</h3>' +
+      tgl('sound', P.sound !== false, 'المؤثرات الصوتية', 'صافرات وجمهور وأهداف — تُولَّد داخل اللعبة بلا ملفات') +
+      tgl('haptics', P.haptics !== false, 'الاهتزاز', 'عند الأهداف والبطاقات ولحظات القرار (الهواتف التي تدعمه)') +
+      '<button class="btn sm" data-a="fxTest">🎧 جرّب المؤثرات</button></div>';
     h += '<div class="card"><h3>🧪 سلامة البيانات</h3><button class="btn" data-a="validateNow">فحص الجداول والنتائج</button>' + (S.check ? '<p class="sm ' + (S.check.ok ? 'pos' : 'neg') + '">آخر فحص: ' + (S.check.ok ? 'سليم ✔️' : S.check.errs.length + ' ملاحظات (أُصلحت تلقائيًا)') + '</p>' : '') + '</div>';
     h += '<div class="card"><h3>🔄 المسيرة</h3><button class="btn" data-a="newCareer">✨ بدء مسيرة جديدة (يبقى الحفظ الحالي كنسخة احتياطية)</button><button class="btn red" data-a="wipeAsk">🗑️ حذف كل البيانات</button></div>';
     h += '<div class="card"><h3>ℹ️ عن البيانات</h3><p class="sm mut">أسماء الأندية حقيقية (موسم 2025/26 كمرجع) والتقييمات والقيم تقريبية وقابلة للتعديل من <span class="ltr">js/data.js</span>. اللاعبون خياليون بالكامل لعدم وجود تراخيص. المسابقتان: الدوري الإسباني ودوري أبطال أوروبا فقط.</p></div>';
@@ -112,6 +120,14 @@
     return h;
   };
 
+  UI.on('prefToggle', (k) => {
+    if (k !== 'sound' && k !== 'haptics') return false;
+    UI.prefs[k] = UI.prefs[k] === false; // الافتراضي مفعّل: غير المعرَّف أو true يصبح false، وfalse يصبح true
+    UI.savePrefs();
+    if (k === 'sound' && UI.prefs.sound === false && G.Audio) G.Audio.crowd(false);
+    if (UI.prefs[k]) UI.fx(k === 'sound' ? 'ping' : 'done');
+  });
+  UI.on('fxTest', () => { UI.fx('goalMe'); UI.banner('me', '⚽ هدف!', 'هكذا تبدو المؤثرات'); return false; });
   UI.on('saveNow', () => { UI.toast(G.Save.save() ? 'تم الحفظ ✔️' : 'تعذّر الحفظ (قد يكون التخزين ممتلئًا أو معطّلًا)'); });
   UI.on('exportSave', () => {
     const txt = G.Save.exportText();

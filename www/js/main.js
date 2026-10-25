@@ -18,12 +18,13 @@
       } else G.S = null;
     }, 'boot');
     UI.render();
+    G.safe(() => UI.initBack(), 'initBack');
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       navigator.serviceWorker.register('sw.js').catch(() => { /* اختياري */ });
     }
   }
 
-  const save = () => { if (G.S) { if (UI.matchStop && UI.cur !== 'match') { /* لا شيء */ } G.Save.save(); } };
+  const save = () => { if (G.S) G.Save.save(true); }; // قسرًا: حتى لو كانت المحاكاة مجمِّدة للحفظ
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
   window.addEventListener('pagehide', save);
 

@@ -19,7 +19,7 @@
 
   const fresh = () => ({
     step: 1, name: '', nat: 'IQ', age: 18, pos: 'ST', h: 180, w: 74, foot: 'R',
-    look: { skin: 2, hair: 0, style: 0 }, num: 9, clubId: null, seed: (Date.now() & 0x7fffffff) || 7, world: null
+    look: { skin: 2, hair: 0, style: 0 }, num: 9, clubId: null, diff: 'normal', seed: (Date.now() & 0x7fffffff) || 7, world: null
   });
 
   // ---------- عالم المعاينة (نفس البذرة التي ستستخدمها newGame ⇒ نفس الفرق) ----------
@@ -104,6 +104,7 @@
       const cl = c[wz.clubId];
       h += '<div class="card hl"><div class="row"><div>' + UI.avatar(wz.look, null, 84) + '</div><div class="grow"><h3 style="margin:0">' + esc(wz.name.trim()) + '</h3><div class="mut">' + natName(wz.nat) + ' · ' + wz.age + ' سنة</div><div class="mut">' + G.POS_AR[wz.pos] + ' (' + wz.pos + ') · ' + wz.h + ' سم · ' + wz.w + ' كغ · ' + (wz.foot === 'R' ? 'يمنى' : 'يسرى') + '</div></div></div>' +
         '<div class="kv"><span>النادي</span><b>' + esc(cl ? cl.name : '') + '</b></div><div class="kv"><span>التقييم الابتدائي</span><span>≈ ' + expectedOvr(wz.age) + '</span></div><div class="kv"><span>رقم القميص</span><span>' + wz.num + '</span></div></div>' +
+        '<div class="card"><h4>🎚️ مستوى الصعوبة</h4>' + UI.diffPicker(wz.diff || 'normal', 'wzDiff') + '<p class="sm mut">يمكنك تغييره لاحقًا من الإعدادات.</p></div>' +
         '<div class="notice ok">سيتم حفظ مسيرتك تلقائيًا. يمكنك إغلاق المتصفح والعودة في أي وقت.</div>';
     }
     const back = wz.step > 1 ? '<button class="btn" data-a="wzStep" data-v="-1">→ السابق</button>' : '<button class="btn" data-a="wzCancel">إلغاء</button>';
@@ -124,6 +125,7 @@
   UI.on('wzFoot', (v) => { UI.wz.foot = v; });
   UI.on('wzLook', (k, i) => { UI.wz.look[k] = +i; });
   UI.on('wzClub', (v) => { UI.wz.clubId = v; });
+  UI.on('wzDiff', (v) => { if (G.DIFF[v]) UI.wz.diff = v; });
   UI.ins.wzName = (v) => { UI.wz.name = v; };
   UI.ins.wzNat = (v) => { UI.wz.nat = v; };
   UI.ins.wzNum = (v) => { UI.wz.num = U.clamp(parseInt(v, 10) || 9, 1, 99); };
@@ -145,9 +147,8 @@
     if (!wz.clubId || wz.name.trim().length < 2) { UI.toast('أكمل بيانات اللاعب'); return false; }
     const doStart = () => {
       // لا نمسح الحفظ القديم: newGame تحفظ فوقه والقديم يبقى نسخة احتياطية
-      const S = G.Season.newGame({ name: wz.name.trim(), nat: wz.nat, age: wz.age, pos: wz.pos, h: wz.h, w: wz.w, foot: wz.foot, look: wz.look, num: wz.num, clubId: wz.clubId, seed: wz.seed });
+      const S = G.Season.newGame({ name: wz.name.trim(), nat: wz.nat, age: wz.age, pos: wz.pos, h: wz.h, w: wz.w, foot: wz.foot, look: wz.look, num: wz.num, clubId: wz.clubId, seed: wz.seed, diff: wz.diff });
       UI.wz = null; UI.cur = 'home'; UI.sub = {};
-      UI.toast('بدأت مسيرتك! ابدأ بفترة الإعداد ثم انطلق في الموسم');
       return S;
     };
     const r = G.safe(doStart, 'newGame');

@@ -4,6 +4,7 @@
   const U = G.U, P = (id) => G.S.players[id], C = (id) => G.S.clubs[id];
   const Season = (G.Season = {});
   const LAST_WEEK = 39, WINTER_OPEN = 19, WINTER_CLOSE = 22;
+  const DIFFS = G.DIFF_ORDER;
 
   Season.label = (season) => { const y = G.CONFIG.startYear + season - 1; return y + '/' + String(y + 1).slice(2); };
   Season.userClub = () => C(P(G.S.user).club);
@@ -12,18 +13,20 @@
   Season.userInUcl = () => !!(G.S.ucl && G.S.ucl.teams.indexOf(P(G.S.user).club) >= 0);
 
   // ---------- لعبة جديدة ----------
-  // opts: name, nat, age, pos, h, w, foot, look, num, clubId, seed?
+  // opts: name, nat, age, pos, h, w, foot, look, num, clubId, seed?, diff? (easy|normal|hard|legend)
   Season.newGame = (opts) => {
     U.seed(opts.seed || (Date.now() & 0x7fffffff));
     G.S = {
-      v: 1, nextId: 1, season: 1, year: G.CONFIG.startYear, week: 0, phase: 'summer', user: null, clubs: {}, players: {}, free: [],
+      v: 1, diff: DIFFS.indexOf(opts.diff) >= 0 ? opts.diff : 'normal', tour: 0, nextId: 1, season: 1, year: G.CONFIG.startYear, week: 0, phase: 'summer', user: null, clubs: {}, players: {}, free: [],
       league: null, ucl: null, uclTeams: [], uclHistory: [], inbox: [], offers: [], tlog: [], training: { focus: 'balanced', intensity: 'normal' },
       window: { open: true, kind: 'summer' }, matchLog: [], hist: [], errors: [], preLeft: 3, active: null, created: Date.now()
     };
+    G.S.seed = G.rngState; // بذرة المسيرة (تُشتق منها «صدفة» الإعلام الثابتة دون استهلاك U.rnd)
     G.Players.initWorld();
     G.Players.createUser(opts);
     G.S.uclTeams = G.Ucl.qualify(null);
     G.Coach.decide();
+    if (G.Media) G.Media.get();
     G.Inbox.add('news', 'مرحبًا في مسيرتك!', 'بدأتَ مسيرتك مع ' + G.C(opts.clubId).name + '. اكسب مكانك بالأداء والتدريب ثم ابدأ الموسم.');
     G.Save.save();
     return G.S;
@@ -80,7 +83,7 @@
   };
   Season.nextFixture = () => { // أقرب مباراة غير ملعوبة للاعب (للعرض)
     const S = G.S;
-    for (let w = S.week; w <= LAST_WEEK; w++) { const f = Season.userFixtures(w).find((x) => !x.played); if (f) return f; }
+    for (let w = S.week; w <= LAST_WEEK; w++) { const f = Season.userFixtures(w).find((x) => !x.played); if (f) return Object.assign({}, f, { w }); }
     return null;
   };
 
@@ -150,13 +153,14 @@
       if (u.yel >= 5) { u.susp = Math.max(u.susp, 1); u.yel = 0; summary.ban5 = true; }
       if (ps.red) u.susp = Math.max(u.susp, ps.direct ? U.int(2, 3) : 1);
     } else if (u.susp > 0) u.susp--; // أنهى مباراة إيقاف
-    if (ps.inj) { u.inj = Math.max(u.inj, ps.inj); summary.inj = ps.inj; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + ps.inj + ' أسبوعًا تقريبًا.'); }
+    if (ps.inj) { const iw = Math.max(1, Math.round(ps.inj * G.diff().injLen)); u.inj = Math.max(u.inj, iw); summary.inj = iw; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + iw + ' أسبوعًا تقريبًا.'); }
     G.Coach.afterMatch(u, rating || 6.4, mins);
     u.trainingMinutes = 0;
     S.matchLog.unshift(summary); if (S.matchLog.length > 60) S.matchLog.length = 60;
     S.lastMatch = summary;
     S.active = null;
     G.Players.refresh(u);
+    if (G.Media) G.safe(() => G.Media.afterMatch(summary), 'media');
     Season.simAIWeek(S.week);
     G.Ucl.advanceAll();
     Season.validateAll();
@@ -216,6 +220,7 @@
     if (S.offers.length) S.offers = S.offers.filter((o) => o.expires == null || o.expires >= S.week || o.type === 'free');
     u.trust = U.clamp(u.trust + (50 - u.trust) * 0.04, 0, 100); // ميل بطيء نحو الحياد
     u.val = G.Players.value(u);
+    if (G.Media) G.safe(() => G.Media.weekly(), 'media');
     if (S.week > LAST_WEEK) { Season.endSeason(); }
     else G.Coach.decide();
     G.Save.save();
@@ -285,6 +290,7 @@
     if (trophies.ucl) u.trophies.ucl++;
     S.hist.push({ season: S.season, label: row.label, champion: aw.champion, uclWinner: ucl ? ucl.winner : null, scorer: aw.list.find((a) => a.type === 'scorer') || null, awards: aw.list });
     if (ucl) { S.uclHistory.push({ season: S.season, winner: ucl.winner, exit: ucl.exit }); }
+    if (G.Media) G.safe(() => G.Media.seasonEnd(row), 'media');
     S.summary = { row, awards: aw.list, champion: aw.champion, table: table.map((id) => ({ id, ...S.league.table[id] })), uclWinner: ucl ? ucl.winner : null };
     mine.forEach((t) => G.Inbox.add('award', 'جائزة: ' + Season.AWARD_AR[t], 'فزتَ بجائزة ' + Season.AWARD_AR[t] + ' لموسم ' + row.label + '! 🏆'));
     if (trophies.liga) G.Inbox.add('award', 'بطل الدوري!', 'توّجتَ مع ' + C(uClub).name + ' بلقب الدوري الإسباني.');

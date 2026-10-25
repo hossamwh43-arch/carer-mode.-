@@ -5,6 +5,7 @@
   - شاشة البداية الداكنة بدل شاشة Capacitor البيضاء
   - ألوان شريط الحالة وشريط التنقل
   - اتجاه عمودي فقط
+  - إذن الاهتزاز (VIBRATE) لمؤثرات اللعبة
   - رقم الإصدار (versionCode) من رقم تشغيل البناء
 
 كل تعديل معزول: إن فشل أحدها يطبع تحذيرًا ويكمل، ولا يفشل البناء بسبب أمر تجميلي.
@@ -122,6 +123,19 @@ def orient():
         if s2 == s:
             raise RuntimeError("لم أجد <activity>")
         write(p, s2)
+
+
+@step("إذن الاهتزاز")
+def vibrate():
+    # navigator.vibrate داخل WebView يحتاج إذن VIBRATE في المانيفست (يتجاهله النظام بصمت إن غاب)
+    p = os.path.join(ANDROID, "app", "src", "main", "AndroidManifest.xml")
+    s = read(p)
+    if "android.permission.VIBRATE" in s:
+        return
+    perm = '    <uses-permission android:name="android.permission.VIBRATE" />\n'
+    if "</manifest>" not in s:
+        raise RuntimeError("لم أجد </manifest>")
+    write(p, s.replace("</manifest>", perm + "</manifest>", 1))
 
 
 @step("رقم الإصدار")

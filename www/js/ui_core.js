@@ -64,8 +64,108 @@
     UI.sheet('<h3>' + UI.esc(title) + '</h3><p class="mut">' + text + '</p><button class="btn pri" data-a="yes">' + (yesLabel || 'تأكيد') + '</button><button class="btn" data-a="closeSheet">إلغاء</button>');
   };
 
+  // ---------- تفضيلات الجهاز (لا تُحفظ مع المسيرة، تبقى حتى لو بدأتَ مسيرة جديدة) ----------
+  const PREF_KEY = 'fcc_prefs_v1';
+  UI.prefs = { sound: true, haptics: true, simAutoDP: false, simRest: true, simStop: { offers: true, window: true, injury: true, key: true, dp: false, role: false, press: false } };
+  try {
+    const raw = localStorage.getItem(PREF_KEY);
+    if (raw) { const p = JSON.parse(raw); Object.keys(p).forEach((k) => { if (k === 'simStop') Object.assign(UI.prefs.simStop, p.simStop || {}); else UI.prefs[k] = p[k]; }); }
+  } catch (e) { /* التخزين غير متاح: نبقى على الافتراضي */ }
+  UI.savePrefs = () => { try { localStorage.setItem(PREF_KEY, JSON.stringify(UI.prefs)); } catch (e) { /* لا شيء */ } };
+
   // ---------- التنقل والرسم ----------
   UI.go = (tab, keepScroll) => { UI.cur = tab; UI.render(); if (!keepScroll) window.scrollTo(0, 0); };
+
+  // سجل الشاشات لزر الرجوع: مسار بلا تكرار يُحدَّث تلقائيًا من UI.render عند تغيّر UI.cur أيًّا كان مصدر التغيير.
+  // العودة إلى شاشة موجودة في المسار تقطعه عندها (الرئيسية → الدوري → التدريب → الدوري ⇒ المسار: [الرئيسية]).
+  UI.MAIN = ['home', 'league', 'ucl', 'train', 'market'];
+  UI.stack = [];
+  UI._last = null;
+  UI._back = false;
+  UI._track = () => {
+    const c = UI.cur;
+    if (UI._last && UI._last !== c && !UI._back && UI._last !== 'match' && UI.stack.indexOf(UI._last) < 0) UI.stack.push(UI._last);
+    UI._back = false;
+    UI._last = c;
+    const j = UI.stack.lastIndexOf(c);
+    if (j >= 0) UI.stack.length = j;
+    if (UI.stack.length > 10) UI.stack.shift();
+  };
+  // رجوع خطوة واحدة في المسار؛ تُرجع false إن لم يكن هناك ما يُرجَع إليه
+  UI.goBack = () => {
+    const S = G.S;
+    let prev = null;
+    while (UI.stack.length) {
+      const c = UI.stack.pop();
+      if (c === UI.cur || !UI.screens[c]) continue;
+      if (S && S.phase === 'retired' && ['career', 'stats', 'settings'].indexOf(c) < 0) continue;
+      prev = c; break;
+    }
+    if (!prev) return false;
+    UI._back = true; UI.cur = prev; UI.render(); window.scrollTo(0, 0);
+    return true;
+  };
+
+  // ---------- معالجة زر الرجوع (أندرويد/المتصفح) ----------
+  // وحدات أخرى (المحاكاة مثلًا) تسجّل هنا دوال تُستشار أولًا؛ تُرجع true إن عالجت الضغطة.
+  UI.backHooks = [];
+  UI._exitAt = 0;
+  const nativeApp = () => { try { const c = window.Capacitor; return c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins.App ? c.Plugins.App : null; } catch (e) { return null; } };
+  const rootExit = () => {
+    const now = Date.now();
+    if (now - UI._exitAt < 2200) {
+      UI._exitAt = 0;
+      const app = nativeApp();
+      if (app && app.exitApp) { try { app.exitApp(); } catch (e) { /* لا شيء */ } }
+      return 'exit';
+    }
+    UI._exitAt = now;
+    UI.toast('اضغط «رجوع» مرة أخرى للخروج (تقدّمك محفوظ)', 2000);
+    return 'hint';
+  };
+  UI.onBack = () => {
+    for (const h of UI.backHooks) { if (h()) return 'hook'; }
+    const wrap = $('#sheetWrap');
+    if (wrap && !wrap.classList.contains('hidden')) {
+      UI.closeSheet();
+      if (UI.mv && UI.mv.phase === 'live' && UI.mv.paused && UI.mv.autoPaused) { UI.mv.paused = false; UI.mv.autoPaused = false; if (UI.mvRepaint) UI.mvRepaint(); }
+      return 'sheet';
+    }
+    const S = G.S;
+    if (!S) {
+      if (UI.wz) { if (UI.wz.step > 1) UI.wz.step--; else UI.wz = null; UI.render(); window.scrollTo(0, 0); return 'wizard'; }
+      return rootExit();
+    }
+    if (UI.cur === 'match') {
+      if (UI.mv && UI.mv.phase === 'live') {
+        UI.mv.autoPaused = !UI.mv.paused; UI.mv.paused = true;
+        UI.sheet('<h3>الخروج من المباراة؟</h3><p class="mut">تُحفظ المباراة كما هي ويمكنك استئنافها من الصفحة الرئيسية في أي وقت.</p><button class="btn pri" data-a="backStay">▶ متابعة اللعب</button><button class="btn red" data-a="backLeave">🏠 خروج</button>');
+      } else { UI.mv = null; UI.cur = 'home'; UI.render(); window.scrollTo(0, 0); }
+      return 'match';
+    }
+    if (UI.goBack()) return 'back';
+    if (UI.cur !== 'home' && S.phase !== 'retired') { UI.cur = 'home'; UI.render(); window.scrollTo(0, 0); return 'home'; }
+    return rootExit();
+  };
+  UI.initBack = () => {
+    if (UI._backInit) return;
+    UI._backInit = true;
+    const app = nativeApp();
+    if (app && app.addListener) { // تطبيق أندرويد (Capacitor): نمسك زر الرجوع بدل الخروج المباشر
+      try { app.addListener('backButton', () => { G.safe(UI.onBack, 'back'); }); UI.nativeBack = true; } catch (e) { /* يبقى السلوك الافتراضي */ }
+      return;
+    }
+    try { if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return; } catch (e) { /* لا شيء */ }
+    // متصفح عادي: حارس للتاريخ حتى يعمل زر الرجوع داخل اللعبة بدل مغادرة الصفحة مباشرة
+    try {
+      if (!(history.state && history.state.g === 1)) { history.replaceState({ g: 0 }, ''); history.pushState({ g: 1 }, ''); }
+      window.addEventListener('popstate', () => {
+        const r = G.safe(UI.onBack, 'back');
+        if (r === 'exit') { try { history.go(-1); } catch (e) { /* لا شيء */ } }
+        else { try { history.pushState({ g: 1 }, ''); } catch (e) { /* لا شيء */ } }
+      });
+    } catch (e) { /* التاريخ غير متاح */ }
+  };
   UI.tabs = (key, items, def) => {
     const cur = UI.sub[key] || def || items[0][0];
     return '<div class="tabs">' + items.map((it) => '<button class="tab ' + (cur === it[0] ? 'on' : '') + '" data-a="tab" data-v="' + key + '" data-v2="' + it[0] + '">' + it[1] + '</button>').join('') + '</div>';
@@ -77,10 +177,15 @@
     const boot = $('#boot'); if (boot) boot.remove();
     if (!S) { UI.chrome(false); app.className = 'app nonav'; app.innerHTML = G.safe(() => UI.screens.start(), 'start') || ''; return; }
     if (S.phase === 'retired' && UI.cur !== 'career' && UI.cur !== 'stats' && UI.cur !== 'settings') UI.cur = 'career';
+    UI._track();
+    try { document.documentElement.style.setProperty('--cc', UI.clubAccent ? UI.clubAccent(S.players[S.user].club) : '#22c55e'); } catch (e) { /* لون النادي زينة فقط */ }
+    if (UI.cur !== 'match' && G.Audio && G.Audio.crowdSrc) G.Audio.crowd(false); // أمان: لا ضجيج ملعب خارج شاشة المباراة
     UI.chrome(true);
     app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '');
     $('#bottomnav').classList.toggle('hidden', UI.cur === 'match');
     $('#topTitle').textContent = UI.titles[UI.cur] || '';
+    const bb = $('#backBtn');
+    if (bb) bb.classList.toggle('hidden', !(UI.MAIN.indexOf(UI.cur) < 0 && UI.cur !== 'match' && (UI.stack.length > 0 || S.phase !== 'retired')));
     document.querySelectorAll('#bottomnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === UI.cur));
     const ub = G.Inbox.unread(), bd = $('#inboxBadge');
     bd.textContent = ub; bd.classList.toggle('hidden', !ub);
@@ -114,8 +219,12 @@
   UI.on('closeSheet', () => { UI.closeSheet(); return false; });
   UI.on('yes', () => { const f = UI._yes; UI._yes = null; UI.closeSheet(); if (f) f(); });
   UI.on('menu', () => {
-    UI.sheet('<h3>القائمة</h3><button class="btn" data-a="menuGo" data-v="career">📖 مسيرتي</button><button class="btn" data-a="menuGo" data-v="stats">📊 الإحصائيات والإنجازات</button><button class="btn" data-a="menuGo" data-v="settings">⚙️ الإعدادات والحفظ</button><button class="btn" data-a="closeSheet">إغلاق</button>');
+    UI.sheet('<h3>القائمة</h3><button class="btn" data-a="menuGo" data-v="career">📖 مسيرتي</button><button class="btn" data-a="menuGo" data-v="stats">📊 الإحصائيات والإنجازات</button><button class="btn" data-a="menuGo" data-v="settings">⚙️ الإعدادات والحفظ</button><button class="btn" data-a="tourOpen">📘 دليل اللعبة</button><button class="btn" data-a="closeSheet">إغلاق</button>');
     return false;
   });
   UI.on('menuGo', (v) => { UI.closeSheet(); UI.cur = v; window.scrollTo(0, 0); });
+  // أفعال الرجوع (تُسجَّل هنا لأن UI.on تُعرَّف أعلاه)
+  UI.on('backStay', () => { UI.closeSheet(); if (UI.mv) { UI.mv.paused = false; UI.mv.autoPaused = false; } if (UI.mvRepaint) UI.mvRepaint(); return false; });
+  UI.on('backLeave', () => { UI.closeSheet(); if (UI.acts.mvLeave) return UI.acts.mvLeave(); });
+  UI.on('goBack', () => { if (UI.goBack()) return false; UI.cur = 'home'; window.scrollTo(0, 0); });
 })(window.G = window.G || {});

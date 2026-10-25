@@ -48,7 +48,7 @@
     while (p.xp >= Training.need(p.lvl)) { p.xp -= Training.need(p.lvl); p.lvl++; p.dp++; ups++; }
     return ups;
   };
-  Training.matchXP = (rating, mins) => Math.max(0, (mins / 90) * (8 + (rating - 6) * 7));
+  Training.matchXP = (rating, mins) => Math.max(0, (mins / 90) * (8 + (rating - 6) * 7)) * G.diff().xp;
 
   // يضبط Overall مستهدفًا بتحريك السمات المؤثرة
   Training.setOvr = (p, target) => {
@@ -69,7 +69,7 @@
     const hurt = p.inj > 0;
     const fac = Training.facility(p.club);
     const am = ageMult(p.age);
-    let xp = 22 * I.xp * fac * (hurt ? 0.4 : 1) * (0.9 + U.rnd() * 0.2);
+    let xp = 22 * I.xp * fac * G.diff().xp * (hurt ? 0.4 : 1) * (0.9 + U.rnd() * 0.2);
     if (p.pos === 'GK' && t.focus === 'gk') xp *= 1.1;
     res.xp = Math.round(xp);
     res.ups = Training.addXP(p, xp);
@@ -96,7 +96,7 @@
     res.fitGain = rec;
     p.training = { heavy: t.intensity === 'heavy' };
     if (!hurt) {
-      const risk = I.inj * (p.fit < 55 ? 2.5 : 1);
+      const risk = I.inj * G.diff().inj * (p.fit < 55 ? 2.5 : 1);
       if (U.rnd() < risk) { p.inj = U.int(1, 4); res.injured = true; }
     }
     return res;
@@ -128,6 +128,7 @@
     else if (apps >= 20 && avg >= 6.8) d += 0.4;
     if (apps < 5 && p.age <= 22) { d -= 0.6; note = 'قلة المشاركة أبطأت تطورك'; }
     if (d > 0) d *= U.clamp((p.pot - p.ovr + 2) / 6, 0.15, 1.25);
+    d *= d > 0 ? G.diff().grow : G.diff().decl;
     d += U.gauss() * 0.5;
     const old = p.ovr;
     const target = U.clamp(Math.round(old + d), old - 4, p.age < 24 ? Math.max(old, p.pot + 1) : old + 1);

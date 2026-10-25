@@ -155,7 +155,9 @@
     if (n.mode === 'renew') { r = T().renew(s, s.wage, s.years); if (r.ok) G.S.renew = null; }
     else r = T().acceptOffer(n.id, s.wage, s.years);
     if (!r.ok) { n.msg = r.msg; n.agreed = false; reneg(); return false; }
-    G.Coach.decide(); G.Save.save(); UI.closeSheet(); UI.toast(n.mode === 'renew' ? 'تم تجديد العقد ✅' : 'تم الانتقال إلى ' + UI.cname(r.to) + ' ✅'); UI.render(); return false;
+    G.Coach.decide(); G.Save.save(); UI.closeSheet(); UI.toast(n.mode === 'renew' ? 'تم تجديد العقد ✅' : 'تم الانتقال إلى ' + UI.cname(r.to) + ' ✅'); UI.render();
+    UI.fx('coin'); UI.banner('win', n.mode === 'renew' ? '✍️ تم تجديد العقد' : '✍️ انتقال جديد', n.mode === 'renew' ? UI.cname(G.S.players[G.S.user].club) : UI.cname(r.to), { confetti: 18 });
+    return false;
   });
 
   // ---------- قبول/رفض/ضغط ----------
@@ -169,6 +171,7 @@
       const r = T().acceptOffer(id, o.wage, o.years);
       if (r.ok) { G.Coach.decide(); G.Save.save(); UI.toast('تم! أنت الآن في ' + UI.cname(r.to)); } else UI.toast(r.msg);
       UI.render();
+      if (r.ok) { UI.fx('coin'); UI.banner('win', o.type === 'loan' ? '🔁 إعارة جديدة' : '✍️ انتقال جديد', UI.cname(r.to), { confetti: 18 }); }
     }, 'تأكيد');
     return false;
   });

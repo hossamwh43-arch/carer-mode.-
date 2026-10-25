@@ -110,4 +110,32 @@
     const base = 1.26 * (home === true ? 1.10 : home === false ? 0.92 : 1);
     return U.clamp(base * Math.exp(0.042 * (rA.A - rB.D)) * Math.exp(0.012 * (rA.M - rB.M)), 0.12, 5.5);
   };
+
+  // ---------- توقّع مباراة (للعرض فقط) ----------
+  // بلا أي عشوائية: تشكيلتان بلا ضوضاء + توزيع بواسون مستقل لكل فريق (نفس معادلة المحاكاة السريعة)، ولا يستهلك U.rnd أبدًا
+  // فيبقى تسلسل العشوائية المحفوظ كما هو سواء فتح اللاعب شاشة التوقعات أم لم يفتحها.
+  Lineup.LIVE_K = { start: 1.22, bench: 1.05, out: 1.03 };
+  const pois = (l, n) => { const out = [Math.exp(-l)]; for (let k = 1; k <= n; k++) out.push(out[k - 1] * l / k); return out; };
+  Lineup.predict = (hid, aid, opts) => {
+    opts = opts || {};
+    const u = G.S.players[G.S.user];
+    const side = (cid) => (u && cid === u.club ? { role: u.role, rotStart: false, noise: 0 } : { noise: 0 });
+    const L = { h: Lineup.forClub(hid, side(hid)), a: Lineup.forClub(aid, side(aid)) };
+    const R = { h: Lineup.ratings(L.h.xi), a: Lineup.ratings(L.a.xi) };
+    const lam = { h: Lineup.lambda(R.h, R.a, opts.neutral ? null : true), a: Lineup.lambda(R.a, R.h, opts.neutral ? null : false) };
+    // اللحظات التفاعلية (تظهر فقط حين يكون اللاعب في الملعب) تُضيف فرصًا فوق معدّل التسديد الأساسي، فتزيد أهداف مباراته
+    // ≈ 22% للفريقين مقارنةً بمحاكاة الذكاء الاصطناعي؛ نعايرها هنا كي تطابق التوقعات ما يحدث فعلًا (يتحقق منها tests/predict-test.js).
+    const us = u && (hid === u.club ? 'h' : aid === u.club ? 'a' : null);
+    const k = !us ? 1 : L[us].xi.some((x) => x.id === u.id) ? Lineup.LIVE_K.start : L[us].bench.indexOf(u.id) >= 0 ? Lineup.LIVE_K.bench : Lineup.LIVE_K.out;
+    lam.h *= k; lam.a *= k;
+    const N = 9, ph = pois(lam.h, N), pa = pois(lam.a, N), sc = [];
+    let w = 0, d = 0, l = 0, tot = 0;
+    for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+      const p = ph[i] * pa[j]; tot += p;
+      if (i > j) w += p; else if (i === j) d += p; else l += p;
+      sc.push({ h: i, a: j, p });
+    }
+    sc.sort((x, y) => y.p - x.p);
+    return { L, R, lam, k, pH: w / tot, pD: d / tot, pA: l / tot, top: sc.slice(0, 3).map((x) => ({ h: x.h, a: x.a, p: x.p / tot })), cs: { h: Math.exp(-lam.a), a: Math.exp(-lam.h) } };
+  };
 })(window.G = window.G || {});

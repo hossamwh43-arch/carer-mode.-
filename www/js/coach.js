@@ -64,6 +64,7 @@
       if (mins < 25) d *= 0.5;
       if (rating < 5.5 && p.role === 'starter') d -= 1;
     } else d = p.role === 'bench' ? -0.4 : 0;
+    d *= d > 0 ? G.diff().trustUp : G.diff().trustDown;
     p.trust = U.clamp(Math.round((p.trust + d) * 10) / 10, 0, 100);
   };
 

@@ -16,6 +16,18 @@
     saveKey: 'fcc_save_v1', backupKey: 'fcc_save_v1_bak'
   };
 
+  // مستويات الصعوبة: معاملات تضرب في آليات تخص اللاعب المستخدم فقط (ولا تمسّ محرك المباراة ولا الفرق الأخرى).
+  // xp: سرعة اكتساب الخبرة · trustUp/trustDown: تغيّر ثقة المدرب بعد الأداء الجيد/السيئ · inj: احتمال إصابة التدريب · injLen: مدة إصابات المباريات
+  // offers: كثرة عروض الانتقال · grow: النمو الموسمي الإيجابي · decl: التراجع الموسمي (عمر متقدم)
+  G.DIFF = {
+    easy:   { ar: 'سهل', icon: '🌱', desc: 'تطوّر أسرع وثقة مدرب أعلى وإصابات أقصر وعروض أكثر. مناسب للتجربة والاستمتاع.', xp: 1.25, trustUp: 1.3, trustDown: 0.7, inj: 0.7, injLen: 0.8, offers: 1.25, grow: 1.15, decl: 0.85 },
+    normal: { ar: 'عادي', icon: '⚽', desc: 'التوازن الأصلي للعبة.', xp: 1, trustUp: 1, trustDown: 1, inj: 1, injLen: 1, offers: 1, grow: 1, decl: 1 },
+    hard:   { ar: 'صعب', icon: '🔥', desc: 'تطوّر أبطأ والمدرب أقل صبرًا وإصابات أكثر وعروض أقل. تحتاج إلى تخطيط.', xp: 0.85, trustUp: 0.85, trustDown: 1.25, inj: 1.3, injLen: 1.2, offers: 0.8, grow: 0.9, decl: 1.1 },
+    legend: { ar: 'أسطوري', icon: '👑', desc: 'قاسٍ جدًا: كل تراجع يكلّفك ثقة المدرب، والإصابات طويلة، والنجومية لا تأتي بسهولة.', xp: 0.7, trustUp: 0.7, trustDown: 1.5, inj: 1.6, injLen: 1.4, offers: 0.65, grow: 0.8, decl: 1.2 }
+  };
+  G.DIFF_ORDER = ['easy', 'normal', 'hard', 'legend'];
+  G.diff = () => G.DIFF[(G.S && G.S.diff) || 'normal'] || G.DIFF.normal;
+
   G.POS = ['ST', 'LW', 'RW', 'CAM', 'CM', 'CDM', 'LB', 'RB', 'CB', 'GK'];
   G.POS_AR = { ST: 'مهاجم', LW: 'جناح أيسر', RW: 'جناح أيمن', CAM: 'صانع ألعاب', CM: 'وسط', CDM: 'وسط مدافع', LB: 'ظهير أيسر', RB: 'ظهير أيمن', CB: 'قلب دفاع', GK: 'حارس مرمى' };
   G.POS_GROUP = { ST: 'att', LW: 'att', RW: 'att', CAM: 'mid', CM: 'mid', CDM: 'mid', LB: 'def', RB: 'def', CB: 'def', GK: 'gk' };

@@ -40,7 +40,8 @@
     const keys = G.Players.ATTRS.filter((k) => (k === 'gk' ? p.pos === 'GK' : p.pos === 'GK' ? !!G.Players.OVR_W.GK[k] : true));
     const rel = T().relevant(p).filter((k) => keys.indexOf(k) >= 0).sort((a, b) => G.Players.OVR_W[p.pos][b] - G.Players.OVR_W[p.pos][a]);
     const oth = keys.filter((k) => rel.indexOf(k) < 0);
-    return '<div class="card"><div class="row sb"><div><div class="sm mut">التقييم العام</div><div class="ovr">' + p.ovr + '</div></div><div class="stat" style="min-width:110px"><b class="' + (p.dp ? 'gold' : '') + '">' + p.dp + '</b><small>نقاط تطوير متاحة</small></div></div></div>' +
+    return '<div class="card"><div class="row sb"><div><div class="sm mut">التقييم العام</div><div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div><div class="stat" style="min-width:110px"><b class="' + (p.dp ? 'gold' : '') + '">' + p.dp + '</b><small>نقاط تطوير متاحة</small></div></div></div>' +
+      '<div class="card">' + UI.radar(p) + '</div>' +
       '<div class="card"><h4>السمات المؤثرة في مركزك (' + G.POS_AR[p.pos] + ')</h4>' + rel.map((k) => attrRow(p, k)).join('') + '</div>' +
       (oth.length ? '<div class="card"><h4>سمات أخرى</h4>' + oth.map((k) => attrRow(p, k)).join('') + '</div>' : '') +
       '<p class="sm mut">تكلفة النقطة: 1 للسمة تحت 65، 2 حتى 80، 3 فوق 80.</p>';
@@ -83,6 +84,7 @@
     G.Coach.decide();
     G.Save.save();
     UI.toast(G.Players.ATTR_AR[k] + ' ← ' + p.a[k] + ' · التقييم ' + p.ovr + (r.delta ? ' (+' + r.delta + ')' : ''));
+    UI.fx('coin');
   });
   UI.on('posAsk', (pos) => {
     UI.confirm('تغيير المركز إلى ' + G.POS_AR[pos] + '؟', 'سيتغير تقييمك وتُعاد قراءة موقعك في التشكيلة. تنخفض ثقة المدرب قليلًا.', () => {

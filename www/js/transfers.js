@@ -42,6 +42,7 @@
     p.num = G.Players.freeNumber(toId, p.pos, p.user ? p.num : 0);
     if (p.user) {
       p.hist.push({ season: S.season, club: toId, from: oldClub, type: opts.loan ? 'loan' : fee > 0 ? 'transfer' : 'free', fee, wage });
+      if (G.Media) G.safe(() => G.Media.onTransfer(oldClub, toId, fee, !!opts.loan), 'media');
     }
     G.Players.refresh(p);
     if (!opts.loan && (fee > 0 || p.ovr >= 78 || p.user)) logTransfer({ season: S.season, p: p.id, name: p.n, from: oldClub, to: toId, fee, user: !!p.user, ovr: p.ovr });
@@ -281,6 +282,8 @@
       if (gap < -3 || p.ovr < T.clubQ(club) - 9) return;
       let pr = U.clamp(0.10 + gap * 0.04 + (form - 6.5) * 0.08 + (p.age <= 22 ? 0.04 : 0), 0, 0.55) * (boost || 1);
       if (S.transferRequest) pr *= 1.4;
+      if (G.Media) pr *= G.Media.offerBoost();
+      pr *= G.diff().offers;
       if (U.rnd() < pr && T.makeOffer(club, p)) made++;
     });
     return made;
@@ -424,7 +427,11 @@
   T.canRenew = () => { const p = P(G.S.user); return !p.parentPays && p.ct.y <= 2; };
   T.renew = (terms, wage, years) => {
     const p = P(G.S.user), club = C(p.club);
-    if (!canAffordWage(club, wage, p.ct.w)) return { ok: false, msg: 'ميزانية رواتب النادي لا تسمح بهذا الراتب' };
+    if (!canAffordWage(club, wage, p.ct.w)) {
+      // النادي يتمسك بلاعبه: إن كان الراتب ضمن سعر السوق (≤ 115% مما يستحقه) يوسّع سقف رواتبه بدل أن يرفض بعد أن وافق في التفاوض
+      if (wage <= G.Players.wageFor(p) * 1.15) club.wcap = Math.max(club.wcap, T.wageBill(club) - p.ct.w + wage);
+      else return { ok: false, msg: 'ميزانية رواتب النادي لا تسمح بهذا الراتب' };
+    }
     p.ct = { y: years, w: wage };
     p.trust = U.clamp(p.trust + 3, 0, 100);
     G.S.userExpired = false;

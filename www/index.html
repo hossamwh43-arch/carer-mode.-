@@ -13,9 +13,9 @@
 <body>
 <div id="boot" class="boot"><div class="boot-ball">⚽</div><p>جارٍ تحميل اللعبة…</p></div>
 <header id="topbar" class="topbar hidden">
-  <button class="icon-btn" data-a="menu" aria-label="القائمة">☰</button>
+  <div class="tb-side"><button class="icon-btn" data-a="menu" aria-label="القائمة">☰</button><button id="backBtn" class="icon-btn hidden" data-a="goBack" aria-label="رجوع">→</button></div>
   <div id="topTitle" class="top-title"></div>
-  <button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل">✉<span id="inboxBadge" class="badge hidden">0</span></button>
+  <div class="tb-side tb-end"><button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل">✉<span id="inboxBadge" class="badge hidden">0</span></button></div>
 </header>
 <main id="app" class="app"></main>
 <nav id="bottomnav" class="bottomnav hidden">
@@ -41,8 +41,16 @@
 <script src="js/ucl.js"></script>
 <script src="js/training.js"></script>
 <script src="js/transfers.js"></script>
+<script src="js/media.js"></script>
 <script src="js/season.js"></script>
+<script src="js/sim.js"></script>
 <script src="js/ui_core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui_fx.js"></script>
+<script src="js/ui_charts.js"></script>
+<script src="js/ui_card.js"></script>
+<script src="js/ui_media.js"></script>
+<script src="js/ui_guide.js"></script>
 <script src="js/ui_start.js"></script>
 <script src="js/ui_home.js"></script>
 <script src="js/ui_league.js"></script>
@@ -50,6 +58,7 @@
 <script src="js/ui_train.js"></script>
 <script src="js/ui_market.js"></script>
 <script src="js/ui_career.js"></script>
+<script src="js/ui_sim.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
