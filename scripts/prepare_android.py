@@ -80,6 +80,21 @@ def icons():
         raise RuntimeError("لم أجد ملفات أيقونات في القالب")
 
 
+def feather(img, edge=0.16):
+    """يُليّن حواف الأيقونة المربعة حتى تذوب في خلفية شاشة البداية فلا يظهر إطار مربع حولها."""
+    from PIL import Image
+    w, h = img.size
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            t = min(x, w - 1 - x, y, h - 1 - y) / (min(w, h) * edge)
+            t = 1.0 if t >= 1 else max(t, 0.0)
+            t = t * t * (3 - 2 * t)  # smoothstep
+            r, g, b, a = px[x, y]
+            px[x, y] = (r, g, b, int(a * t))
+    return img
+
+
 @step("شاشة البداية")
 def splash():
     from PIL import Image
@@ -90,7 +105,7 @@ def splash():
         w, h = Image.open(p).size
         canvas = Image.new("RGBA", (w, h), bg)
         k = int(min(w, h) * 0.38)
-        canvas.alpha_composite(src.resize((k, k), Image.LANCZOS), ((w - k) // 2, (h - k) // 2))
+        canvas.alpha_composite(feather(src.resize((k, k), Image.LANCZOS)), ((w - k) // 2, (h - k) // 2))
         canvas.save(p)
         n += 1
     if n == 0:
