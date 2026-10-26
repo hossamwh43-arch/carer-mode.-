@@ -13,28 +13,28 @@
     return 'دوري الأبطال · ' + st + (f.leg ? ' · ' + (f.leg === 1 ? 'الذهاب' : 'الإياب') : '');
   };
   UI.fixLine = (f, big) => {
-    const sc = f.played ? '<b class="sco">' + f.hg + ' - ' + f.ag + '</b>' + (f.pens ? '<div class="sm mut ltr">(' + f.pens.h + '-' + f.pens.a + ' ر.ج)</div>' : '') : '<span class="mut">ضد</span>';
-    return '<div class="score"><div class="tm">' + UI.badge(f.h, big ? 44 : 32) + '<div>' + esc(UI.cname(f.h)) + '</div></div><div class="' + (big ? 'sc' : '') + '" style="min-width:70px;text-align:center">' + sc + '</div><div class="tm">' + UI.badge(f.a, big ? 44 : 32) + '<div>' + esc(UI.cname(f.a)) + '</div></div></div>';
+    const sc = f.played ? '<b class="sco">' + f.hg + ' - ' + f.ag + '</b>' + (f.pens ? '<div class="sm mut ltr">(' + f.pens.h + '-' + f.pens.a + ' ر.ج)</div>' : '') : '<span class="vstag">ضد</span>';
+    return '<div class="score"><div class="tm">' + UI.badge(f.h, big ? 54 : 34) + '<div>' + esc(UI.cname(f.h)) + '</div></div><div class="' + (big ? 'sc' : '') + '" style="min-width:70px;text-align:center">' + sc + '</div><div class="tm">' + UI.badge(f.a, big ? 54 : 34) + '<div>' + esc(UI.cname(f.a)) + '</div></div></div>';
   };
 
   function playerCard(p) {
     const S = S_(), club = S.clubs[p.club];
-    const ft = Math.round(p.fit);
-    let h = '<div class="card hl hero-club"><div class="row">' + UI.avatar(p.look, p.club, 78) +
-      '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div>' + UI.clubTag(p.club, 20) + '</div>' +
-      '<div class="sm mut">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + ' · ' + UI.natName(p.nat) + '</div>' +
+    const ft = Math.round(p.fit), tc = UI.tierCls(p);
+    let h = '<div class="card pstrip hero-club ' + tc + '"><div class="ps-top"><div class="ps-av">' + UI.avatar(p.look, p.club, 84) + '</div>' +
+      '<div class="ps-id"><div class="ps-name">' + esc(p.n) + '</div><div>' + UI.clubTag(p.club, 20) + '</div>' +
+      '<div class="ps-meta">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + ' · ' + UI.natName(p.nat) + '</div>' +
       (p.parentPays ? '<div class="sm gold">معار من ' + esc(UI.cname(p.parent)) + '</div>' : '') + '</div>' +
-      '<div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div>' +
-      '<div class="grid3" style="margin-top:10px"><div class="stat"><b>' + UI.stars(p.pot) + '</b><small>الإمكانات</small></div>' +
+      '<div class="ps-ovr"><div class="ovr ' + tc + '">' + p.ovr + '</div><div class="ps-pos">' + p.pos + '</div></div></div>' +
+      '<div class="grid3"><div class="stat"><b>' + UI.stars(p.pot) + '</b><small>الإمكانات</small></div>' +
       '<div class="stat"><b>' + UI.rolePill(p.role) + '</b><small>دورك الحالي</small></div>' +
       '<div class="stat"><b>' + Math.round(p.trust) + '</b><small>' + G.Coach.trustLabel(p.trust) + '</small></div></div>';
-    if (p.roleInfo && p.roleInfo.text) h += '<p class="sm mut" style="margin:8px 0 2px">🗒️ ' + esc(p.roleInfo.text) + '</p>';
-    h += '<div class="row sb sm" style="margin-top:8px"><span>اللياقة</span><span>' + ft + '%</span></div>' + UI.bar(ft, ft < 50 ? 'red' : ft < 75 ? 'gold' : '');
-    if (p.inj > 0) h += '<div class="notice bad" style="margin-top:8px">🩹 مصاب — يغيب ' + p.inj + ' أسبوع/أسابيع</div>';
-    if (p.susp > 0) h += '<div class="notice bad" style="margin-top:8px">🟥 موقوف عن المباراة القادمة</div>';
+    if (p.roleInfo && p.roleInfo.text) h += '<p class="sm mut" style="margin:10px 0 2px">🗒️ ' + esc(p.roleInfo.text) + '</p>';
+    h += '<div class="gauge"><div class="row sb"><span>اللياقة</span><span>' + ft + '%</span></div>' + UI.bar(ft, ft < 50 ? 'red' : ft < 75 ? 'gold' : '') + '</div>';
+    if (p.inj > 0) h += '<div class="notice bad" style="margin-top:10px">🩹 مصاب — يغيب ' + p.inj + ' أسبوع/أسابيع</div>';
+    if (p.susp > 0) h += '<div class="notice bad" style="margin-top:10px">🟥 موقوف عن المباراة القادمة</div>';
     if (UI.mediaMini) h += UI.mediaMini();
-    h += '<div style="margin-top:10px"><div class="sm mut" style="margin-bottom:4px">آخر التقييمات</div>' + UI.formDots(p.form) + '</div>' +
-      '<button class="btn sm" style="margin-top:10px" data-a="cardOpen">🃏 بطاقتي ومخطط السمات (' + UI.tier(p).ar + ')</button></div>';
+    h += '<div style="margin-top:12px"><div class="sm mut" style="margin-bottom:5px">آخر التقييمات</div>' + UI.formDots(p.form) + '</div>' +
+      '<button class="btn sm" style="margin-top:12px;width:100%" data-a="cardOpen">🃏 بطاقتي ومخطط السمات (' + UI.tier(p).ar + ')</button></div>';
     return h;
   }
 
@@ -48,7 +48,7 @@
     }
     if (pend) {
       const act = u.role === 'starter' || u.role === 'rotation' || u.role === 'bench';
-      h += '<div class="card"><div class="row sb"><h3>المباراة القادمة</h3><span class="pill b">' + UI.week() + '</span></div><div class="sm mut" style="margin-bottom:8px">' + UI.fixLabel(pend) + '</div>' + UI.fixLine(pend, true) + (UI.predCard ? UI.predCard(pend) : '');
+      h += '<div class="card nm"><div class="row sb"><h3>المباراة القادمة</h3><span class="pill b">' + UI.week() + '</span></div><div class="sm mut">' + UI.fixLabel(pend) + '</div>' + UI.fixLine(pend, true) + (UI.predCard ? UI.predCard(pend) : '');
       if (u.role === 'injured' || u.role === 'suspended') h += '<div class="notice bad" style="margin-top:8px">' + (u.role === 'injured' ? 'أنت مصاب ولن تشارك' : 'أنت موقوف ولن تشارك') + ' — يمكنك مشاهدة المباراة أو محاكاتها.</div>';
       else if (u.role === 'out') h += '<div class="notice" style="margin-top:8px">لست ضمن قائمة المباراة حسب قرار المدرب.</div>';
       h += '<button class="btn pri" data-a="playMatch" data-v="' + pend.id + '" data-v2="i">' + (act ? '🎮 العب المباراة (تفاعلي)' : '👁️ شاهد المباراة') + '</button>' +

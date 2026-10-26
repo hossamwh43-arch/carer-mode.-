@@ -92,7 +92,7 @@
   }
 
   // ---------- مكوّنات الواجهة ----------
-  const minTxt = (m) => (m.done ? 'نهاية المباراة' : m.i === 0 ? 'قبل صافرة البداية' : m.labs[m.i - 1] + "'" + (m.et ? ' · وقت إضافي' : ''));
+  const minTxt = (m) => (m.done ? 'نهاية المباراة' : m.i === 0 ? 'قبل صافرة البداية' : '<span class="ltr">' + m.labs[m.i - 1] + "'</span>" + (m.et ? ' · وقت إضافي' : ''));
 
   function liveRating(m) {
     const uid = G.S.user, ps = m.ps[uid];
@@ -109,9 +109,9 @@
     const on = G.Live.userOn(m);
     const st = on ? '🟢 في الملعب · لياقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? '🔁 تم استبدالك' : m.uState === 'bench' ? '🪑 على مقاعد البدلاء' : '🚫 خارج قائمة المباراة';
     const lr = liveRating(m);
-    return '<div class="card"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + (m.neutral ? ' · ملعب محايد' : '') + '</div>' +
-      '<div class="score" style="margin-top:6px"><div class="tm">' + UI.badge(m.h, 42) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + m.score.h + ' - ' + m.score.a + '</div><div class="tm">' + UI.badge(m.a, 42) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
-      '<div class="minute">' + minTxt(m) + '</div>' +
+    return '<div class="card nm"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + (m.neutral ? ' · ملعب محايد' : '') + '</div>' +
+      '<div class="score" style="margin-top:6px"><div class="tm">' + UI.badge(m.h, 52) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + m.score.h + ' - ' + m.score.a + '</div><div class="tm">' + UI.badge(m.a, 52) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
+      '<div class="minute">' + (!m.done && m.i > 0 ? '<span class="livebadge"><i></i>مباشر</span>' : '') + minTxt(m) + '</div>' +
       '<div class="row sb sm" style="margin-top:8px"><span>' + st + '</span><span>⚽ ' + ps.g + ' · 🅰️ ' + ps.a + (lr ? ' · ' + UI.rating(lr) : '') + '</span></div>' +
       (on ? UI.bar(m.fat[uid], m.fat[uid] < 40 ? 'red' : m.fat[uid] < 65 ? 'gold' : '') : '') + '</div>';
   }
@@ -173,8 +173,8 @@
       '<div class="c"><span class="pill ' + (gf > ga || (sm.pens && res.indexOf('فوز') === 0) ? 'g' : gf < ga || sm.pens ? 'r' : 'y') + '">' + res + '</span>' + (sm.et ? ' <span class="pill">وقت إضافي</span>' : '') + (sm.pens ? ' <span class="pill">ترجيح ' + sm.pens.h + '-' + sm.pens.a + '</span>' : '') + '</div></div>';
     if (sm.mins > 0) {
       h += '<div class="card"><div class="row sb"><h3 style="margin:0">أداؤك</h3><div>' + UI.rating(sm.rating) + (sm.motm ? ' <span class="pill y">⭐ نجم المباراة</span>' : '') + '</div></div>' +
-        '<div class="grid3" style="margin-top:10px"><div class="stat"><b>' + sm.mins + "'</b><small>الدقائق</small></div><div class=\"stat\"><b>" + sm.g + '</b><small>أهداف</small></div><div class="stat"><b>' + sm.as + '</b><small>صناعة</small></div>' +
-        '<div class="stat"><b>' + sm.sh + ' (' + sm.sot + ')</b><small>تسديدات (على المرمى)</small></div><div class="stat"><b>' + sm.pasOk + '/' + sm.pas + '</b><small>تمريرات ناجحة</small></div><div class="stat"><b>' + sm.drOk + '/' + sm.dr + '</b><small>مراوغات</small></div>' +
+        '<div class="grid3" style="margin-top:10px"><div class="stat"><b class="ltr">' + sm.mins + "'</b><small>الدقائق</small></div><div class=\"stat\"><b>" + sm.g + '</b><small>أهداف</small></div><div class="stat"><b>' + sm.as + '</b><small>صناعة</small></div>' +
+        '<div class="stat"><b class="ltr">' + sm.sh + ' (' + sm.sot + ')</b><small>تسديدات (على المرمى)</small></div><div class="stat"><b>' + sm.pasOk + '/' + sm.pas + '</b><small>تمريرات ناجحة</small></div><div class="stat"><b>' + sm.drOk + '/' + sm.dr + '</b><small>مراوغات</small></div>' +
         '<div class="stat"><b>' + sm.tkOk + '/' + sm.tk + '</b><small>تدخلات</small></div><div class="stat"><b>' + (sm.big || 0) + '</b><small>فرص محققة ضائعة</small></div><div class="stat"><b>' + (sm.yel ? '🟨' + sm.yel : '') + (sm.red ? '🟥' + sm.red : '') + (!sm.yel && !sm.red ? '—' : '') + '</b><small>بطاقات</small></div></div>' +
         (sm.inj ? '<div class="notice bad" style="margin-top:10px">🩹 أُصبتَ وستغيب ' + sm.inj + ' أسبوعًا تقريبًا.</div>' : '') +
         (sm.ban5 ? '<div class="notice bad" style="margin-top:10px">🟨 تراكمت عليك 5 إنذارات: أنت موقوف عن المباراة القادمة.</div>' : '') + '</div>';

@@ -12,7 +12,7 @@
 """
 import os, re, sys, glob
 
-BG = "#0b1220"
+BG = "#060a15"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANDROID = os.path.join(ROOT, "android")
 RES = os.path.join(ANDROID, "app", "src", "main", "res")

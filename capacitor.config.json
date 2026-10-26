@@ -2,7 +2,7 @@
   "appId": "com.hossam.playercareer",
   "appName": "مسيرة لاعب",
   "webDir": "www",
-  "backgroundColor": "#0b1220",
+  "backgroundColor": "#060a15",
   "server": {
     "androidScheme": "https"
   },

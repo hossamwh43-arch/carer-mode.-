@@ -5,7 +5,7 @@
 (function (G) {
   'use strict';
   const UI = G.UI;
-  const COLORS = ['#22c55e', '#fbbf24', '#38bdf8', '#f472b6', '#f8fafc', '#fb923c', '#a78bfa'];
+  const COLORS = ['#ffc53d', '#35e6a0', '#5b9bff', '#ff7aa8', '#f8fafc', '#ff9a4d', '#a78bfa'];
   let timer = null;
 
   const reduced = () => { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } };

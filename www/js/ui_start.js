@@ -56,7 +56,7 @@
   UI.screens.start = () => {
     if (UI.wz) return wizard();
     const sv = peek();
-    let h = '<div class="hero"><div class="big">⚽</div><h1>مسيرة لاعب</h1><p class="mut">ابدأ كلاعب ناشئ في الدوري الإسباني وادفع بنفسك نحو دوري أبطال أوروبا</p></div>';
+    let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero">' + UI.ico('ball', 'st-ball') + '<h1>مسيرة لاعب</h1><span class="st-bar"></span><p class="mut">ابدأ كلاعب ناشئ في الدوري الإسباني وادفع بنفسك نحو دوري أبطال أوروبا</p></div>';
     if (sv) {
       h += '<div class="card hl"><h3>مسيرة محفوظة</h3><div class="kv"><span>اللاعب</span><b>' + esc(sv.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(sv.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + sv.season + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + sv.ovr + ' / ' + sv.age + '</span></div><button class="btn pri" data-a="continueGame">▶ متابعة المسيرة</button></div>';
     }
@@ -68,7 +68,7 @@
 
   const steps = ['الهوية', 'الجسم والمركز', 'المظهر', 'النادي', 'تأكيد'];
   function progress(wz) {
-    return '<div class="row" style="gap:5px;margin:4px 0 14px">' + steps.map((s, i) => '<div class="grow"><div class="bar ' + (i + 1 <= wz.step ? '' : 'blue') + '" style="height:6px;opacity:' + (i + 1 <= wz.step ? 1 : .25) + '"><i style="width:100%"></i></div><div class="sm c ' + (i + 1 === wz.step ? '' : 'mut') + '" style="margin-top:3px">' + s + '</div></div>').join('') + '</div>';
+    return '<div class="stepper">' + steps.map((s, i) => '<div class="stp ' + (i + 1 < wz.step ? 'done' : i + 1 === wz.step ? 'on' : '') + '"><i></i>' + s + '</div>').join('') + '</div>';
   }
 
   function wizard() {
@@ -97,7 +97,7 @@
       h += '<div class="notice">اختر ناديك. التوقّع أدناه تقديري لدورك مع تقييم لاعب بعمر ' + wz.age + ' (≈' + expectedOvr(wz.age) + ') — الأندية الكبرى توفّر مستوى أعلى لكن فرص اللعب أقل بكثير للناشئين. 🏆 = يشارك في دوري الأبطال هذا الموسم.</div>';
       list.forEach((c) => {
         const sel = wz.clubId === c.id;
-        h += '<button class="card" data-a="wzClub" data-v="' + c.id + '" style="width:100%;text-align:start;margin-bottom:8px;' + (sel ? 'border-color:var(--acc);background:#16301f' : '') + '"><div class="row"><span>' + clubBadge(c) + '</span><div class="grow"><b>' + esc(c.name) + '</b> ' + (c.ucl ? '🏆' : '') + '<div class="sm mut">القوة ' + c.strength + (c.rival ? ' · المنافس: ' + esc(c.rival.n) + ' (' + c.rival.ovr + ')' : '') + '</div></div>' + UI.rolePill(c.role) + '</div></button>';
+        h += '<button class="copt ' + (sel ? 'sel' : '') + '" data-a="wzClub" data-v="' + c.id + '" style="--cl:' + c.c[0] + '"><span>' + clubBadge(c) + '</span><div class="ci"><b>' + esc(c.name) + '</b> ' + (c.ucl ? '🏆' : '') + '<small>القوة ' + c.strength + (c.rival ? ' · المنافس: ' + esc(c.rival.n) + ' (' + c.rival.ovr + ')' : '') + '</small></div>' + UI.rolePill(c.role) + '</button>';
       });
     } else {
       const c = G.S && G.S.clubs[wz.clubId] ? G.S.clubs : ensureWorld(wz).clubs;

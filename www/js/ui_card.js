@@ -13,9 +13,9 @@
   // لون بارز بما يكفي على الخلفية الداكنة من ألوان النادي (وإلا الأخضر الافتراضي)
   UI.clubAccent = (id) => {
     const c = G.S && G.S.clubs[id];
-    if (!c || !c.c) return '#22c55e';
-    for (const col of c.c) { const l = lum(col); if (l >= 0.28 && l <= 0.93) return col; }
-    return '#22c55e';
+    if (!c || !c.c) return '#ffc53d';
+    for (const col of c.c) { const l = lum(col); if (l >= 0.1 && l <= 0.93) return col; }
+    return '#ffc53d';
   };
 
   // ---------- بطاقة FIFA ----------

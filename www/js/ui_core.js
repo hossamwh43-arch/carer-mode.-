@@ -24,6 +24,29 @@
     const c0 = c.c[0], c1 = c.c[1], tx = lum(c0) > 0.6 ? '#111' : '#fff';
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z" fill="' + c0 + '" stroke="' + c1 + '" stroke-width="2.4"/><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 Z" fill="' + c1 + '" opacity=".55"/><text x="20" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="' + tx + '" font-family="Arial,sans-serif">' + UI.abbr(c.name).slice(0, 3) + '</text></svg>';
   };
+  // لون التمييز (النادي): يضبط --cc وما يشتق منه (rgb للظلال، نسخة أفتح للنصوص، ولون نص مقروء فوقه). الافتراضي ذهبي.
+  UI.applyAccent = (hex) => {
+    let h = String(hex || '#ffc53d').replace('#', '');
+    if (h.length !== 6) h = 'ffc53d';
+    let r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    if ([r, g, b].some((v) => isNaN(v))) { r = 255; g = 197; b = 61; }
+    const rl = (R, G2, B) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(R) + 0.7152 * f(G2) + 0.0722 * f(B); };
+    const cr = (x, y) => (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    const BGL = rl(14, 22, 40); // سطح البطاقات الداكن
+    // نرفع الألوان الداكنة تدريجيًا نحو الأبيض حتى تظهر بوضوح (≥ 3.4:1) على الخلفية الداكنة
+    for (let i = 0; i < 12 && cr(rl(r, g, b), BGL) < 3.4; i++) { r = Math.round(r + (255 - r) * 0.08); g = Math.round(g + (255 - g) * 0.08); b = Math.round(b + (255 - b) * 0.08); }
+    // منطقة وسطى لا يبلغ فيها لا النص الداكن ولا الأبيض نسبة 4.5:1 → نرفع اللون قليلًا حتى يصير النص الداكن مقروءًا
+    const INK = rl(10, 15, 28);
+    for (let i = 0; i < 8 && Math.max(cr(rl(r, g, b), INK), cr(rl(r, g, b), 1)) < 4.5; i++) { r = Math.round(r + (255 - r) * 0.06); g = Math.round(g + (255 - g) * 0.06); b = Math.round(b + (255 - b) * 0.06); }
+    const L = rl(r, g, b), mix = (v) => Math.round(v + (255 - v) * 0.4), st = document.documentElement.style;
+    const key = r + ',' + g + ',' + b;
+    if (UI._accKey === key) return;
+    UI._accKey = key;
+    st.setProperty('--cc', 'rgb(' + key + ')');
+    st.setProperty('--cc-rgb', r + ' ' + g + ' ' + b);
+    st.setProperty('--cc-hi', 'rgb(' + mix(r) + ',' + mix(g) + ',' + mix(b) + ')');
+    st.setProperty('--cc-ink', cr(L, INK) >= cr(L, 1) ? '#0a0f1c' : '#ffffff'); // النص الأوضح فوق اللون
+  };
   UI.clubTag = (id, size) => '<span class="club">' + UI.badge(id, size || 22) + '<span>' + UI.esc(UI.cname(id)) + '</span></span>';
 
   UI.avatar = (look, clubId, size) => {
@@ -178,7 +201,7 @@
     if (!S) { UI.chrome(false); app.className = 'app nonav'; app.innerHTML = G.safe(() => UI.screens.start(), 'start') || ''; return; }
     if (S.phase === 'retired' && UI.cur !== 'career' && UI.cur !== 'stats' && UI.cur !== 'settings') UI.cur = 'career';
     UI._track();
-    try { document.documentElement.style.setProperty('--cc', UI.clubAccent ? UI.clubAccent(S.players[S.user].club) : '#22c55e'); } catch (e) { /* لون النادي زينة فقط */ }
+    try { UI.applyAccent(UI.clubAccent ? UI.clubAccent(S.players[S.user].club) : null); } catch (e) { /* لون النادي زينة فقط */ }
     if (UI.cur !== 'match' && G.Audio && G.Audio.crowdSrc) G.Audio.crowd(false); // أمان: لا ضجيج ملعب خارج شاشة المباراة
     UI.chrome(true);
     app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '');

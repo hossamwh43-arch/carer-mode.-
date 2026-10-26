@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#060a15">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>مسيرة لاعب — Player Career</title>
@@ -11,19 +11,19 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="boot" class="boot"><div class="boot-ball">⚽</div><p>جارٍ تحميل اللعبة…</p></div>
+<div id="boot" class="boot"><div class="boot-ball">⚽</div><div>جارٍ تحميل اللعبة…</div></div>
 <header id="topbar" class="topbar hidden">
-  <div class="tb-side"><button class="icon-btn" data-a="menu" aria-label="القائمة">☰</button><button id="backBtn" class="icon-btn hidden" data-a="goBack" aria-label="رجوع">→</button></div>
+  <div class="tb-side"><button class="icon-btn" data-a="menu" aria-label="القائمة"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-menu"/></svg></button><button id="backBtn" class="icon-btn hidden" data-a="goBack" aria-label="رجوع"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrowr"/></svg></button></div>
   <div id="topTitle" class="top-title"></div>
-  <div class="tb-side tb-end"><button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل">✉<span id="inboxBadge" class="badge hidden">0</span></button></div>
+  <div class="tb-side tb-end"><button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg><span id="inboxBadge" class="badge hidden">0</span></button></div>
 </header>
 <main id="app" class="app"></main>
-<nav id="bottomnav" class="bottomnav hidden">
-  <button data-a="go" data-v="home"><span>🏠</span><small>الرئيسية</small></button>
-  <button data-a="go" data-v="league"><span>🏆</span><small>الدوري</small></button>
-  <button data-a="go" data-v="ucl"><span>⭐</span><small>الأبطال</small></button>
-  <button data-a="go" data-v="train"><span>💪</span><small>التدريب</small></button>
-  <button data-a="go" data-v="market"><span>🔁</span><small>الانتقالات</small></button>
+<nav id="bottomnav" class="bottomnav hidden" aria-label="التنقل الرئيسي">
+  <button data-a="go" data-v="home"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg></span><small>الرئيسية</small></button>
+  <button data-a="go" data-v="league"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-podium"/></svg></span><small>الدوري</small></button>
+  <button data-a="go" data-v="ucl"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ucl"/></svg></span><small>الأبطال</small></button>
+  <button data-a="go" data-v="train"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dumbbell"/></svg></span><small>التدريب</small></button>
+  <button data-a="go" data-v="market"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-swap"/></svg></span><small>الانتقالات</small></button>
 </nav>
 <div id="sheetWrap" class="sheet-wrap hidden"><div class="sheet-back" data-a="closeSheet"></div><div id="sheet" class="sheet"></div></div>
 <div id="toast" class="toast hidden"></div>
@@ -45,6 +45,7 @@
 <script src="js/season.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/ui_core.js"></script>
+<script src="js/ui_icons.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/ui_fx.js"></script>
 <script src="js/ui_charts.js"></script>
