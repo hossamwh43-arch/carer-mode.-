@@ -19,7 +19,7 @@
 
   const fresh = () => ({
     step: 1, name: '', nat: 'IQ', age: 18, pos: 'ST', h: 180, w: 74, foot: 'R',
-    look: { skin: 2, hair: 0, style: 0 }, num: 9, clubId: null, diff: 'normal', seed: (Date.now() & 0x7fffffff) || 7, world: null
+    look: { skin: 2, hair: 0, style: 0 }, num: 9, clubId: null, lg: 'ESP1', diff: 'normal', seed: (Date.now() & 0x7fffffff) || 7, world: null
   });
 
   // ---------- عالم المعاينة (نفس البذرة التي ستستخدمها newGame ⇒ نفس الفرق) ----------
@@ -28,7 +28,7 @@
     const keepS = G.S, keepR = G.rngState;
     try {
       U.seed(wz.seed);
-      G.S = { v: 1, nextId: 1, season: 1, year: G.CONFIG.startYear, clubs: {}, players: {}, free: [], uclHistory: [] };
+      G.S = { v: 1, nextId: 1, season: 1, year: G.CONFIG.startYear, clubs: {}, players: {}, free: [], uclHistory: [], seed: G.rngState };
       G.Players.initWorld();
       wz.world = G.S;
     } finally { G.S = keepS; G.rngState = keepR; }
@@ -40,13 +40,15 @@
     const world = ensureWorld(wz), keepS = G.S, keepR = G.rngState, out = [];
     try {
       G.S = world;
-      const ovr = expectedOvr(wz.age);
+      const ovr = expectedOvr(wz.age), lg = wz.lg || 'ESP1';
       const fake = { pos: wz.pos, age: wz.age, ovr, pot: Math.max(76, ovr + 10), trust: 45, form: [], fit: 90 };
-      const ids = Object.keys(world.clubs).filter((id) => world.clubs[id].liga);
+      const ids = G.World.members(lg);
       const byRep = ids.slice().sort((a, b) => world.clubs[b].rep - world.clubs[a].rep);
+      const slots = G.UCL_SLOTS[lg] || 0;
       ids.forEach((id) => {
+        G.World.ensureSquad(id); // أندية الدرجة الثانية خفيفة: تُولَّد تشكيلتها (بذرة ثابتة ⇒ نفس التشكيلة عند بدء اللعبة)
         const c = world.clubs[id], ev = G.Coach.evaluateAt(fake, id), rival = ev.rival ? world.players[ev.rival] : null;
-        out.push({ id, name: c.name, rep: c.rep, strength: G.Players.clubStrength(c), role: ev.role, diff: ev.diff, rival: rival ? { n: rival.n, ovr: rival.ovr } : null, ucl: byRep.indexOf(id) < G.CONFIG.uclSpainSlots, c: c.c });
+        out.push({ id, name: c.name, rep: c.rep, strength: G.Players.clubStrength(c), role: ev.role, diff: ev.diff, rival: rival ? { n: rival.n, ovr: rival.ovr } : null, ucl: byRep.indexOf(id) < slots, c: c.c });
       });
     } finally { G.S = keepS; G.rngState = keepR; }
     return out.sort((a, b) => b.rep - a.rep);
@@ -56,13 +58,13 @@
   UI.screens.start = () => {
     if (UI.wz) return wizard();
     const sv = peek();
-    let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero">' + UI.ico('ball', 'st-ball') + '<h1>مسيرة لاعب</h1><span class="st-bar"></span><p class="mut">ابدأ كلاعب ناشئ في الدوري الإسباني وادفع بنفسك نحو دوري أبطال أوروبا</p></div>';
+    let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero">' + UI.ico('ball', 'st-ball') + '<h1>مسيرة لاعب</h1><span class="st-bar"></span><p class="mut">ابدأ ناشئًا في أحد الدوريات الخمسة الكبرى أو درجاتها الثانية، وطارد دوري الأبطال وكأس العالم والكرة الذهبية</p></div>';
     if (sv) {
       h += '<div class="card hl"><h3>مسيرة محفوظة</h3><div class="kv"><span>اللاعب</span><b>' + esc(sv.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(sv.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + sv.season + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + sv.ovr + ' / ' + sv.age + '</span></div><button class="btn pri" data-a="continueGame">▶ متابعة المسيرة</button></div>';
     }
     h += '<button class="btn ' + (sv ? '' : 'pri') + '" data-a="wzNew">✨ مسيرة جديدة</button>';
     h += '<button class="btn" data-a="importSheet">📥 استيراد حفظ من نص</button>';
-    h += '<div class="notice" style="margin-top:14px">ℹ️ أسماء الأندية حقيقية (موسم 2025/26 كمرجع)، أما اللاعبون فخياليون بالكامل لعدم وجود تراخيص رسمية. كل البيانات الأولية قابلة للتعديل من ملف <span class="ltr">js/data.js</span>.</div>';
+    h += '<div class="notice" style="margin-top:14px">ℹ️ أسماء الأندية حقيقية (موسم 2025/26 كمرجع)، أما اللاعبون فخياليون بالكامل لعدم وجود تراخيص رسمية. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.</div>';
     return h;
   };
 
@@ -93,8 +95,12 @@
         '<label class="f">قصّة الشعر</label><div class="chips">' + L.styles.map((c, i) => '<button class="chip ' + (wz.look.style === i ? 'on' : '') + '" data-a="wzLook" data-v="style" data-v2="' + i + '">' + c + '</button>').join('') + '</div>' +
         '<label class="f">رقم القميص المفضل (إن كان محجوزًا يُعطى رقمًا قريبًا)</label><input type="number" min="1" max="99" value="' + wz.num + '" data-in="wzNum" inputmode="numeric"></div>';
     } else if (wz.step === 4) {
-      const list = previews(wz);
-      h += '<div class="notice">اختر ناديك. التوقّع أدناه تقديري لدورك مع تقييم لاعب بعمر ' + wz.age + ' (≈' + expectedOvr(wz.age) + ') — الأندية الكبرى توفّر مستوى أعلى لكن فرص اللعب أقل بكثير للناشئين. 🏆 = يشارك في دوري الأبطال هذا الموسم.</div>';
+      const list = previews(wz), LG = G.LEAGUES[wz.lg || 'ESP1'];
+      const chip = (id) => '<button class="chip ' + (wz.lg === id ? 'on' : '') + '" data-a="wzLg" data-v="' + id + '">' + esc(G.LEAGUES[id].short) + '</button>';
+      h += '<div class="card"><label class="f">الدرجة الأولى</label><div class="chips">' + G.LEAGUE_ORDER.filter((x) => G.LEAGUES[x].tier === 1).map(chip).join('') + '</div>' +
+        '<label class="f">الدرجة الثانية (تصعد بناديك أو تنتقل للأعلى)</label><div class="chips">' + G.LEAGUE_ORDER.filter((x) => G.LEAGUES[x].tier === 2).map(chip).join('') + '</div></div>';
+      h += '<div class="notice"><b>' + esc(LG.ar) + '</b> — ' + LG.n + ' ناديًا. ' + (LG.tier === 1 ? 'المراكز الأولى تتأهل لدوري أبطال أوروبا (' + (G.UCL_SLOTS[LG.id] || 0) + ' مقاعد) والمراكز الثلاثة الأخيرة تهبط.' : 'أول ثلاثة أندية تصعد إلى ' + esc(G.leagueName(LG.other)) + '. فرصة اللعب أكبر هنا لكن الأضواء والرواتب أقل.') +
+        '<br>التوقّع أدناه تقديري لدورك مع تقييم لاعب بعمر ' + wz.age + ' (≈' + expectedOvr(wz.age) + '). الأندية الكبرى توفّر مستوى أعلى لكن فرص اللعب أقل بكثير للناشئين. 🏆 = يشارك في دوري الأبطال هذا الموسم.</div>';
       list.forEach((c) => {
         const sel = wz.clubId === c.id;
         h += '<button class="copt ' + (sel ? 'sel' : '') + '" data-a="wzClub" data-v="' + c.id + '" style="--cl:' + c.c[0] + '"><span>' + clubBadge(c) + '</span><div class="ci"><b>' + esc(c.name) + '</b> ' + (c.ucl ? '🏆' : '') + '<small>القوة ' + c.strength + (c.rival ? ' · المنافس: ' + esc(c.rival.n) + ' (' + c.rival.ovr + ')' : '') + '</small></div>' + UI.rolePill(c.role) + '</button>';
@@ -103,7 +109,7 @@
       const c = G.S && G.S.clubs[wz.clubId] ? G.S.clubs : ensureWorld(wz).clubs;
       const cl = c[wz.clubId];
       h += '<div class="card hl"><div class="row"><div>' + UI.avatar(wz.look, null, 84) + '</div><div class="grow"><h3 style="margin:0">' + esc(wz.name.trim()) + '</h3><div class="mut">' + natName(wz.nat) + ' · ' + wz.age + ' سنة</div><div class="mut">' + G.POS_AR[wz.pos] + ' (' + wz.pos + ') · ' + wz.h + ' سم · ' + wz.w + ' كغ · ' + (wz.foot === 'R' ? 'يمنى' : 'يسرى') + '</div></div></div>' +
-        '<div class="kv"><span>النادي</span><b>' + esc(cl ? cl.name : '') + '</b></div><div class="kv"><span>التقييم الابتدائي</span><span>≈ ' + expectedOvr(wz.age) + '</span></div><div class="kv"><span>رقم القميص</span><span>' + wz.num + '</span></div></div>' +
+        '<div class="kv"><span>النادي</span><b>' + esc(cl ? cl.name : '') + '</b></div><div class="kv"><span>الدوري</span><span>' + esc(G.leagueName(wz.lg)) + '</span></div><div class="kv"><span>التقييم الابتدائي</span><span>≈ ' + expectedOvr(wz.age) + '</span></div><div class="kv"><span>رقم القميص</span><span>' + wz.num + '</span></div></div>' +
         '<div class="card"><h4>🎚️ مستوى الصعوبة</h4>' + UI.diffPicker(wz.diff || 'normal', 'wzDiff') + '<p class="sm mut">يمكنك تغييره لاحقًا من الإعدادات.</p></div>' +
         '<div class="notice ok">سيتم حفظ مسيرتك تلقائيًا. يمكنك إغلاق المتصفح والعودة في أي وقت.</div>';
     }
@@ -125,6 +131,7 @@
   UI.on('wzFoot', (v) => { UI.wz.foot = v; });
   UI.on('wzLook', (k, i) => { UI.wz.look[k] = +i; });
   UI.on('wzClub', (v) => { UI.wz.clubId = v; });
+  UI.on('wzLg', (v) => { if (G.LEAGUES[v]) { UI.wz.lg = v; UI.wz.clubId = null; } });
   UI.on('wzDiff', (v) => { if (G.DIFF[v]) UI.wz.diff = v; });
   UI.ins.wzName = (v) => { UI.wz.name = v; };
   UI.ins.wzNat = (v) => { UI.wz.nat = v; };

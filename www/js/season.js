@@ -8,8 +8,8 @@
 
   Season.label = (season) => { const y = G.CONFIG.startYear + season - 1; return y + '/' + String(y + 1).slice(2); };
   Season.userClub = () => C(P(G.S.user).club);
-  Season.ligaIds = () => G.LALIGA.map((d) => d[0]);
-  Season.userInLiga = () => !!C(P(G.S.user).club).liga;
+  Season.ligaIds = () => G.World.members(G.World.viewLg());
+  Season.userInLiga = () => !!(G.S.league && G.S.league.table[P(G.S.user).club]); // هل يلعب نادي المستخدم في دوري محاكى هذا الموسم
   Season.userInUcl = () => !!(G.S.ucl && G.S.ucl.teams.indexOf(P(G.S.user).club) >= 0);
 
   // ---------- لعبة جديدة ----------
@@ -17,7 +17,7 @@
   Season.newGame = (opts) => {
     U.seed(opts.seed || (Date.now() & 0x7fffffff));
     G.S = {
-      v: 1, diff: DIFFS.indexOf(opts.diff) >= 0 ? opts.diff : 'normal', tour: 0, nextId: 1, season: 1, year: G.CONFIG.startYear, week: 0, phase: 'summer', user: null, clubs: {}, players: {}, free: [],
+      v: 1, ver: G.CONFIG.saveVer, others: null, lgId: null, diff: DIFFS.indexOf(opts.diff) >= 0 ? opts.diff : 'normal', tour: 0, nextId: 1, season: 1, year: G.CONFIG.startYear, week: 0, phase: 'summer', user: null, clubs: {}, players: {}, free: [],
       league: null, ucl: null, uclTeams: [], uclHistory: [], inbox: [], offers: [], tlog: [], training: { focus: 'balanced', intensity: 'normal' },
       window: { open: true, kind: 'summer' }, matchLog: [], hist: [], errors: [], preLeft: 3, active: null, created: Date.now()
     };
@@ -42,8 +42,8 @@
     const S = G.S, c = Season.canStart();
     if (!c.ok) return c;
     if (S.phase !== 'summer') return { ok: false, msg: 'الموسم قيد التقدم' };
-    Object.keys(S.clubs).forEach((id) => G.Transfers.fixSquad(S.clubs[id]));
-    S.league = G.League.make(Season.ligaIds(), S.season);
+    Object.keys(S.clubs).forEach((id) => { if (!S.clubs[id].light) G.Transfers.fixSquad(S.clubs[id]); });
+    G.World.startSeason(S.season); // جداول كل الدوريات (دوري المستخدم كاملًا والبقية مضغوطة)
     S.ucl = G.Ucl.setup(S.season, S.uclTeams);
     S.week = 1; S.phase = 'season'; S.window = { open: false, kind: 'none' };
     S.offers = []; S.transferRequest = false; S.check = null; S.active = null;
@@ -69,12 +69,13 @@
   Season.findFix = (id) => {
     const S = G.S;
     for (const rd of (S.league ? S.league.rounds : [])) for (const f of rd) if (f.id === id) return f;
-    return S.ucl ? G.Ucl.allFixtures().find((f) => f.id === id) : null;
+    const uf = S.ucl ? G.Ucl.allFixtures().find((f) => f.id === id) : null;
+    return uf || (S.intl && G.Intl ? G.Intl.findFix(id) : null);
   };
   Season.userFixtures = (week) => {
     const S = G.S, club = P(S.user).club, out = [];
     if (S.ucl) G.Ucl.fixturesForWeek(week).forEach((f) => { if (f.h === club || f.a === club) out.push(f); });
-    if (S.league && week <= G.CONFIG.ligaWeeks) G.League.roundFixtures(week).forEach((f) => { if (f.h === club || f.a === club) out.push(f); });
+    if (S.league) G.League.roundFixtures(week).forEach((f) => { if (f.h === club || f.a === club) out.push(f); });
     return out;
   };
   Season.pending = () => {
@@ -94,8 +95,8 @@
   Season.startMatch = (fixId) => {
     const S = G.S, fix = Season.findFix(fixId);
     if (!fix || fix.played) return null;
-    G.Coach.decide();
-    const m = G.Live.create(fix, optsFor(fix));
+    if (fix.comp === 'NT') G.Intl.prepare(fix); else G.Coach.decide();
+    const m = G.Live.create(fix, fix.comp === 'NT' ? G.Intl.matchOpts(fix) : optsFor(fix));
     S.active = { fixId, m };
     G.Save.save();
     return m;
@@ -104,13 +105,14 @@
   // يحاكي كل مباريات الأسبوع ما عدا مباريات نادي اللاعب
   Season.simAIWeek = (week) => {
     const S = G.S, club = P(S.user).club;
-    if (S.league && week <= G.CONFIG.ligaWeeks) {
+    if (S.league) {
       G.League.roundFixtures(week).forEach((f) => {
         if (f.played || f.h === club || f.a === club) return;
-        const r = G.Match.quick(f.h, f.a, { comp: 'lg' });
-        G.League.record(f, r.hg, r.ag);
+        const sc = G.World.simMatch(f.h, f.a);
+        G.League.record(f, sc[0], sc[1]);
       });
     }
+    G.World.simWeek(week); // بقية دوريات العالم
     if (S.ucl) G.Ucl.fixturesForWeek(week).forEach((f) => {
       if (f.played || f.h === club || f.a === club) return;
       G.Ucl.simFixture(f);
@@ -124,8 +126,9 @@
     if (fix.played) { S.active = null; return null; } // منع التكرار
     if (!m.done) throw new Error('المباراة لم تنتهِ');
     const res = m.result, comp = m.comp;
+    const isNT = fix.comp === 'NT';
     if (fix.comp === 'LL') G.League.record(fix, m.score.h, m.score.a);
-    else G.Ucl.record(fix, m.score.h, m.score.a, m.pens);
+    else if (!isNT) G.Ucl.record(fix, m.score.h, m.score.a, m.pens); // مباريات المنتخب تُسجَّل في Intl.afterUserMatch
     // إحصائيات الجميع
     Object.keys(res.ratings).forEach((id) => {
       const ps = m.ps[id];
@@ -154,16 +157,16 @@
       if (ps.red) u.susp = Math.max(u.susp, ps.direct ? U.int(2, 3) : 1);
     } else if (u.susp > 0) u.susp--; // أنهى مباراة إيقاف
     if (ps.inj) { const iw = Math.max(1, Math.round(ps.inj * G.diff().injLen)); u.inj = Math.max(u.inj, iw); summary.inj = iw; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + iw + ' أسبوعًا تقريبًا.'); }
-    G.Coach.afterMatch(u, rating || 6.4, mins);
+    if (!isNT) G.Coach.afterMatch(u, rating || 6.4, mins); // ثقة مدرب النادي لا تتأثر بمباريات المنتخب
     u.trainingMinutes = 0;
     S.matchLog.unshift(summary); if (S.matchLog.length > 60) S.matchLog.length = 60;
     S.lastMatch = summary;
     S.active = null;
     G.Players.refresh(u);
     if (G.Media) G.safe(() => G.Media.afterMatch(summary), 'media');
-    Season.simAIWeek(S.week);
-    G.Ucl.advanceAll();
-    Season.validateAll();
+    if (G.Press) G.safe(() => G.Press.afterMatch(summary), 'press');
+    if (isNT) G.Intl.afterUserMatch(fix, m);
+    else { Season.simAIWeek(S.week); G.Ucl.advanceAll(); Season.validateAll(); }
     G.Save.save();
     return summary;
   };
@@ -221,6 +224,8 @@
     u.trust = U.clamp(u.trust + (50 - u.trust) * 0.04, 0, 100); // ميل بطيء نحو الحياد
     u.val = G.Players.value(u);
     if (G.Media) G.safe(() => G.Media.weekly(), 'media');
+    if (G.BD) G.safe(() => G.BD.weekly(S.week - 1), 'bd');
+    if (G.Press) G.safe(() => G.Press.weekly(S.week - 1), 'press');
     if (S.week > LAST_WEEK) { Season.endSeason(); }
     else G.Coach.decide();
     G.Save.save();
@@ -240,7 +245,9 @@
   Season.statOf = (p, comp) => { const s = p.st[comp]; return { apps: s[0], g: s[1], a: s[2], avg: s[0] ? s[3] / s[0] : 0, min: s[4] }; };
 
   Season.awards = () => {
-    const S = G.S, all = Object.values(S.players).filter((p) => p.club);
+    const S = G.S, everyone = Object.values(S.players).filter((p) => p.club);
+    const inL = {}; S.league.clubs.forEach((id) => { inL[id] = true; });
+    const all = everyone.filter((p) => inL[p.club]); // جوائز الدوري تخص لاعبي دوري المستخدم؛ أما أفضل لاعب في الأبطال فعالمي
     const pick = (list, score, minApps, comp) => {
       const cand = list.filter((p) => p.st[comp][0] >= minApps);
       cand.sort((a, b) => score(b) - score(a));
@@ -255,7 +262,7 @@
     const assist = pick(all, (p) => lg(p).a + lg(p).g * 0.001, 1, 'lg');
     const ex = S.ucl ? S.ucl.exit : {};
     const bonus = { winner: 1.0, final: 0.6, sf: 0.4, qf: 0.2 };
-    const uclBest = pick(all, (p) => uc(p).avg + (uc(p).g + uc(p).a) * 0.05 + (bonus[ex[p.club]] || 0), 4, 'uc');
+    const uclBest = pick(everyone, (p) => uc(p).avg + (uc(p).g + uc(p).a) * 0.05 + (bonus[ex[p.club]] || 0), 4, 'uc');
     const young = pick(all.filter((p) => p.age <= 21), (p) => lg(p).avg + (lg(p).g + lg(p).a) * 0.03, 12, 'lg');
     const mk = (type, p, val) => (p ? { type, pid: p.id, name: p.n, club: p.club, value: val, user: !!p.user } : null);
     const out = [
@@ -265,7 +272,7 @@
     ].filter(Boolean);
     return { list: out, champion: champ };
   };
-  Season.AWARD_AR = { player: 'أفضل لاعب في الموسم', scorer: 'هداف الدوري الإسباني', assist: 'أفضل صانع أهداف', ucl: 'أفضل لاعب في دوري الأبطال', young: 'أفضل لاعب شاب' };
+  Season.AWARD_AR = { player: 'أفضل لاعب في الموسم', scorer: 'هداف الدوري', assist: 'أفضل صانع أهداف', ucl: 'أفضل لاعب في دوري الأبطال', young: 'أفضل لاعب شاب' };
 
   // ---------- نهاية الموسم ----------
   Season.endSeason = () => {
@@ -276,10 +283,12 @@
     const ucl = S.ucl;
     const lgS = Season.statOf(u, 'lg'), ucS = Season.statOf(u, 'uc');
     const uClub = u.club;
-    const trophies = { liga: aw.champion === uClub && lgS.apps >= 10, ucl: !!(ucl && ucl.winner === uClub && ucS.apps >= 3) };
+    const lgId = S.league.lg || 'ESP1', lgTop = (G.LEAGUES[lgId] || G.LEAGUES.ESP1).tier === 1;
+    const champ = aw.champion === uClub && lgS.apps >= 10 && !!C(uClub).lg;
+    const trophies = { liga: lgTop && champ, d2: !lgTop && champ, ucl: !!(ucl && ucl.winner === uClub && ucS.apps >= 3) };
     const mine = aw.list.filter((a) => a.user).map((a) => a.type);
     const row = {
-      season: S.season, label: Season.label(S.season), club: uClub, age: u.age, ovrStart: S.seasonStartOvr || u.ovr, ovrEnd: u.ovr,
+      season: S.season, label: Season.label(S.season), club: uClub, lgId, age: u.age, ovrStart: S.seasonStartOvr || u.ovr, ovrEnd: u.ovr,
       lg: lgS, uc: ucS, pos: G.League.sorted().indexOf(uClub) + 1, trophies, awards: mine, loan: !!u.parentPays,
       ucExit: ucl && ucl.exit ? ucl.exit[uClub] || null : null, val: u.val, wage: u.ct.w
     };
@@ -287,25 +296,37 @@
     mine.forEach((t) => u.awards.push({ season: S.season, type: t }));
     u.trophies = u.trophies || { liga: 0, ucl: 0 };
     if (trophies.liga) u.trophies.liga++;
+    if (trophies.d2) u.trophies.d2 = (u.trophies.d2 || 0) + 1;
     if (trophies.ucl) u.trophies.ucl++;
-    S.hist.push({ season: S.season, label: row.label, champion: aw.champion, uclWinner: ucl ? ucl.winner : null, scorer: aw.list.find((a) => a.type === 'scorer') || null, awards: aw.list });
+    S.hist.push({ season: S.season, label: row.label, lgId, champs: G.World.champions(), champion: aw.champion, uclWinner: ucl ? ucl.winner : null, scorer: aw.list.find((a) => a.type === 'scorer') || null, awards: aw.list });
     if (ucl) { S.uclHistory.push({ season: S.season, winner: ucl.winner, exit: ucl.exit }); }
     if (G.Media) G.safe(() => G.Media.seasonEnd(row), 'media');
     S.summary = { row, awards: aw.list, champion: aw.champion, table: table.map((id) => ({ id, ...S.league.table[id] })), uclWinner: ucl ? ucl.winner : null };
+    if (G.Press) G.safe(() => G.Press.seasonEnd(row), 'press');
     mine.forEach((t) => G.Inbox.add('award', 'جائزة: ' + Season.AWARD_AR[t], 'فزتَ بجائزة ' + Season.AWARD_AR[t] + ' لموسم ' + row.label + '! 🏆'));
-    if (trophies.liga) G.Inbox.add('award', 'بطل الدوري!', 'توّجتَ مع ' + C(uClub).name + ' بلقب الدوري الإسباني.');
+    if (trophies.liga) G.Inbox.add('award', 'بطل الدوري!', 'توّجتَ مع ' + C(uClub).name + ' بلقب ' + G.leagueName(lgId) + '.');
+    if (trophies.d2) G.Inbox.add('award', 'بطل الدرجة الثانية!', 'توّجتَ مع ' + C(uClub).name + ' بلقب ' + G.leagueName(lgId) + ' وصعد الفريق إلى الدوري الأعلى.');
     if (trophies.ucl) G.Inbox.add('award', 'بطل أوروبا!', 'توّجتَ مع ' + C(uClub).name + ' بلقب دوري أبطال أوروبا! 🌟');
     S.phase = 'end';
     S.window = { open: false, kind: 'none' };
+    if (G.BD) G.safe(() => G.BD.seasonEnd(), 'bd');         // إغلاق موسم الكرة الذهبية (حُسم الدوري والأبطال)
+    if (G.Intl) G.safe(() => G.Intl.onSeasonEnd(), 'intl'); // كأس العالم/آسيا في صيف نهاية الموسم عند حلول موعدها
+    if (G.BD) G.safe(() => G.BD.tryFinalize(), 'bd');       // الحفل فورًا إن لم تكن هناك بطولة منتخبات معلّقة
     G.Save.save();
   };
 
+  // الألقاب: المفتاح، الرمز، الاسم (liga/d2 يُعرَضان باسم الدوري الفعلي)
+  Season.TROPHY_DEFS = [['liga', '🥇', 'بطل الدوري'], ['d2', '🥈', 'بطل الدرجة الثانية'], ['ucl', '🌟', 'دوري أبطال أوروبا'], ['wc', '🌍', 'كأس العالم'], ['ac', '🏅', 'كأس آسيا'], ['bd', '🏆', 'الكرة الذهبية']];
+  Season.trophyTotal = (t) => ['liga', 'd2', 'ucl', 'wc', 'ac'].reduce((s, k) => s + ((t || {})[k] || 0), 0);
   Season.canRetire = () => P(G.S.user).age >= 30;
 
   // ---------- الانتقال للموسم التالي ----------
   Season.rollover = () => {
     const S = G.S;
     if (S.phase !== 'end') return { ok: false, msg: 'الموسم لم ينتهِ بعد' };
+    if (S.intl && !S.intl.done) return { ok: false, msg: 'بطولة المنتخبات لم تنتهِ بعد — العبها أو حاكِها أولًا' };
+    if (G.BD) G.safe(() => G.BD.tryFinalize(), 'bd'); // أمان: الحفل لا يضيع إن لم يُجرَ بعد
+    if (G.Intl) G.Intl.archive();
     const u = P(S.user);
     const info = { apps: Season.statOf(u, 'lg').apps + Season.statOf(u, 'uc').apps };
     const lgAvg = Season.statOf(u, 'lg'), ucAvg = Season.statOf(u, 'uc');
@@ -320,22 +341,31 @@
     const expired = G.Transfers.rollContracts();
     G.Transfers.seasonFinance();
     // 3) تصفير الإحصاءات
-    const lastOrder = G.League.sorted();
+    const orders = G.World.uclOrders(); // ترتيب الدوريات الكبرى لتحديد مقاعد الأبطال
+    const moves = G.World.promoRel();   // الصعود والهبوط (بعد حفظ الترتيب)
+    S.lastMoves = moves;
     Object.keys(S.players).forEach((id) => {
       const p = S.players[id];
-      p.st = { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0] };
+      p.st = { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0], nt: [0, 0, 0, 0, 0] };
       p.yel = 0; p.susp = 0; p.inj = Math.max(0, (p.inj || 0) - 6);
       G.Players.refresh(p);
     });
     u.fit = 95; u.form = []; u.gain = {}; u.prog = {};
     // 4) التأهل لدوري الأبطال للموسم القادم
-    S.uclTeams = G.Ucl.qualify(lastOrder.filter((id) => C(id).liga));
+    S.uclTeams = G.Ucl.qualify(orders);
+    moves.forEach((m) => {
+      const mine = C(u.club) ? u.club : null;
+      if (m.rel.indexOf(mine) >= 0) G.Inbox.add('news', 'هبوط ناديك', C(mine).name + ' هبط إلى ' + G.leagueName(m.low) + '. يمكنك البقاء لقيادة العودة أو البحث عن نادٍ أكبر في نافذة الصيف.');
+      if (m.pro.indexOf(mine) >= 0) G.Inbox.add('news', 'صعود ناديك!', C(mine).name + ' صعد إلى ' + G.leagueName(m.top) + '. تحدٍّ جديد أمامك.');
+    });
     // 5) نافذة الصيف وانتقالات الذكاء الاصطناعي
     S.season++; S.year++; S.week = 0; S.phase = 'summer'; S.preLeft = 3;
     S.window = { open: true, kind: 'summer' }; S.offers = []; S.transferRequest = false;
-    S.league = null; S.ucl = null; S.active = null; S.lastMatch = null;
+    S.league = null; S.others = null; S.ucl = null; S.active = null; S.lastMatch = null;
+    G.World.lightenAll(); // أندية الدرجة الثانية خارج دوريك تعود خفيفة (تُباع نجومها) ليبقى الحفظ صغيرًا
     G.Transfers.aiWindow('summer');
     Object.keys(S.clubs).forEach((id) => G.Transfers.fixSquad(S.clubs[id]));
+    G.World.pruneFree();
     G.Players.refresh(u);
     S.seasonStartOvr = u.ovr;
     // 6) رسائل المستخدم
@@ -372,8 +402,11 @@
     });
     const cur = Season.statOf(u, 'lg'), cu = Season.statOf(u, 'uc');
     t.apps += cur.apps + cu.apps; t.g += cur.g + cu.g; t.a += cur.a + cu.a;
+    t.nt = { apps: 0, g: 0, a: 0 };
+    (u.ntCar || []).forEach((e) => { t.nt.apps += e.apps; t.nt.g += e.g; t.nt.a += e.a; if (e.apps) { t.avgSum += e.avg * e.apps; t.avgN += e.apps; } });
+    t.apps += t.nt.apps; t.g += t.nt.g; t.a += t.nt.a;
     t.avg = t.avgN ? t.avgSum / t.avgN : 0;
-    t.liga = (u.trophies || {}).liga || 0; t.ucl = (u.trophies || {}).ucl || 0;
+    t.liga = (u.trophies || {}).liga || 0; t.ucl = (u.trophies || {}).ucl || 0; t.titles = Season.trophyTotal(u.trophies);
     return t;
   };
 })(window.G = window.G || {});

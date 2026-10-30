@@ -6,7 +6,8 @@
 
   // ---------- أدوات مشتركة للمباريات ----------
   UI.fixLabel = (f) => {
-    if (f.comp === 'LL') return 'الدوري الإسباني · الجولة ' + f.r;
+    if (f.comp === 'LL') return (G.S && G.S.league ? G.leagueName(G.S.league.lg) : 'الدوري') + ' · الجولة ' + f.r;
+    if (f.comp === 'NT') return (G.S.intl ? G.S.intl.name : 'المنتخبات') + ' · ' + (f.stage === 'group' ? 'المجموعة ' + 'ABCDEFGHIJKL'[f.g] + ' · الجولة ' + f.day : G.STAGE_NT_AR[f.stage] || f.stage) + (f.stage === 'final' || f.stage === 'third' ? ' (ملعب محايد)' : '');
     const st = G.Ucl.STAGE_AR[f.stage] || '';
     if (f.stage === 'league') return 'دوري الأبطال · ' + st + ' · الجولة ' + f.r;
     if (f.stage === 'final') return 'دوري الأبطال · النهائي (ملعب محايد)';
@@ -79,8 +80,8 @@
     const order = G.League.sorted(), mine = u.club, idx = order.indexOf(mine);
     if (idx < 0) return '';
     const lo = U.clamp(idx - 2, 0, order.length - 5), rows = order.slice(lo, lo + 5);
-    return '<div class="card"><div class="row sb"><b>🏆 الدوري الإسباني</b><button class="btn sm" data-a="go" data-v="league">الجدول كاملًا</button></div><table class="t"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>فارق</th><th>نقاط</th></tr>' +
-      rows.map((id) => { const r = S.league.table[id], pos = order.indexOf(id) + 1; return '<tr class="' + (id === mine ? 'me ' : '') + (pos <= 4 ? 'z1' : '') + '"><td>' + pos + '</td><td class="l">' + UI.clubTag(id, 18) + '</td><td>' + r.p + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') + '</table></div>';
+    return '<div class="card"><div class="row sb"><b>🏆 ' + esc(G.leagueName(S.league.lg)) + '</b><button class="btn sm" data-a="go" data-v="league">الجدول كاملًا</button></div><table class="t"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>فارق</th><th>نقاط</th></tr>' +
+      rows.map((id) => { const r = S.league.table[id], pos = order.indexOf(id) + 1; return '<tr class="' + (id === mine ? 'me ' : '') + UI.lgZone(S.league.lg, pos - 1, order.length) + '"><td>' + pos + '</td><td class="l">' + UI.clubTag(id, 18) + '</td><td>' + r.p + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') + '</table></div>';
   }
 
   function uclLine() {
@@ -100,7 +101,7 @@
     if (!lm) return '';
     const mine = lm.userSide, gf = mine === 'h' ? lm.score.h : lm.score.a, ga = mine === 'h' ? lm.score.a : lm.score.h;
     const res = gf > ga ? 'فوز' : gf < ga ? 'خسارة' : 'تعادل';
-    return '<div class="card"><div class="row sb"><b>آخر مباراة</b><span class="pill ' + (gf > ga ? 'g' : gf < ga ? 'r' : 'y') + '">' + res + '</span></div><div class="sm mut">' + (lm.comp === 'LL' ? 'الدوري' : 'دوري الأبطال') + '</div>' +
+    return '<div class="card"><div class="row sb"><b>آخر مباراة</b><span class="pill ' + (gf > ga ? 'g' : gf < ga ? 'r' : 'y') + '">' + res + '</span></div><div class="sm mut">' + (lm.comp === 'LL' ? 'الدوري' : lm.comp === 'NT' ? 'المنتخب الوطني' : 'دوري الأبطال') + '</div>' +
       '<div class="score" style="margin:8px 0"><div class="tm">' + esc(UI.cname(lm.h)) + '</div><div class="sc">' + lm.score.h + ' - ' + lm.score.a + '</div><div class="tm">' + esc(UI.cname(lm.a)) + '</div></div>' +
       '<div class="row wrap sm"><span>التقييم: ' + UI.rating(lm.rating) + '</span><span>الدقائق: ' + lm.mins + '</span><span>⚽ ' + lm.g + '</span><span>🅰️ ' + lm.as + '</span>' + (lm.motm ? '<span class="pill y">نجم المباراة</span>' : '') + '</div><button class="btn sm" style="margin-top:10px" data-a="lastMatchView">تفاصيل المباراة</button></div>';
   }
@@ -125,22 +126,34 @@
     return h + '</div>' + (S.window && S.window.open ? '<div class="card"><div class="row sb"><b>🔁 سوق الانتقالات</b><button class="btn sm" data-a="go" data-v="market">' + ((S.offers || []).length ? S.offers.length + ' عروض' : 'افتح') + '</button></div></div>' : '');
   }
 
+  // مصير النادي حسب مركزه في الجدول (هبوط/صعود/أبطال)
+  function fate(r, sm) {
+    const def = G.LEAGUES[r.lgId];
+    if (!def || !r.pos || !sm.table) return '';
+    const n = sm.table.length;
+    let t = 'بقاء في الدوري';
+    if (def.tier === 1) { if (r.pos > n - def.down) t = '<span class="neg">⬇ هبوط إلى ' + esc(G.leagueName(def.other)) + '</span>'; else if (r.pos <= (G.UCL_SLOTS[r.lgId] || 0)) t = '<span class="pos">⭐ تأهل لدوري الأبطال</span>'; }
+    else if (r.pos <= def.up) t = '<span class="pos">⬆ صعود إلى ' + esc(G.leagueName(def.other)) + '</span>';
+    return '<div class="kv"><span>مصير ناديك</span><span>' + t + '</span></div>';
+  }
+
   function endPanel() {
     const S = S_(), sm = S.summary;
-    if (!sm) return '<div class="card"><button class="btn pri" data-a="rollover">الانتقال للموسم التالي</button></div>';
+    if (!sm) return (UI.intlCard ? UI.intlCard() : '') + '<div class="card"><button class="btn pri" data-a="rollover">الانتقال للموسم التالي</button></div>';
     const r = sm.row, cl = (id) => esc(UI.cname(id));
-    let h = '<div class="card hl"><h2>🏁 انتهى موسم ' + r.label + '</h2><div class="kv"><span>بطل الدوري</span><b>' + cl(sm.champion) + '</b></div>' +
+    let h = (UI.intlCard ? UI.intlCard() : '') + (UI.bdCard ? UI.bdCard() : '') + '<div class="card hl"><h2>🏁 انتهى موسم ' + r.label + '</h2><div class="kv"><span>بطل الدوري</span><b>' + cl(sm.champion) + '</b></div>' +
       (sm.uclWinner ? '<div class="kv"><span>بطل أوروبا</span><b>' + cl(sm.uclWinner) + '</b></div>' : '') +
-      '<div class="kv"><span>مركز ناديك</span><span>' + (r.pos || '—') + '</span></div>' +
+      '<div class="kv"><span>مركز ناديك</span><span>' + (r.pos || '—') + '</span></div>' + fate(r, sm) +
       '<div class="kv"><span>الدوري</span><span>' + r.lg.apps + ' مباراة · ' + r.lg.g + ' هدف · ' + r.lg.a + ' صناعة · متوسط ' + (r.lg.apps ? r.lg.avg.toFixed(2) : '—') + '</span></div>' +
       (r.uc.apps ? '<div class="kv"><span>دوري الأبطال</span><span>' + r.uc.apps + ' · ' + r.uc.g + ' هدف · ' + r.uc.a + ' صناعة · متوسط ' + r.uc.avg.toFixed(2) + '</span></div>' : '') +
       '<div class="kv"><span>تقييمك</span><span>' + r.ovrStart + ' ← ' + r.ovrEnd + '</span></div></div>';
     const mine = (sm.awards || []).filter((a) => a.user);
-    if (r.trophies.liga || r.trophies.ucl || mine.length) {
-      h += '<div class="card"><h3>🏆 إنجازاتك</h3>' + (r.trophies.liga ? '<div>🥇 بطل الدوري الإسباني</div>' : '') + (r.trophies.ucl ? '<div>🌟 بطل دوري أبطال أوروبا</div>' : '') + mine.map((a) => '<div>🎖️ ' + G.Season.AWARD_AR[a.type] + '</div>').join('') + '</div>';
+    if (G.Season.trophyTotal(r.trophies) || mine.length) {
+      h += '<div class="card"><h3>🏆 إنجازاتك</h3>' + G.Season.TROPHY_DEFS.filter((d) => r.trophies[d[0]] && d[0] !== 'bd').map((d) => '<div>' + d[1] + ' ' + (d[0] === 'liga' || d[0] === 'd2' ? 'بطل ' + esc(G.leagueName(r.lgId)) : d[0] === 'ucl' ? 'بطل دوري أبطال أوروبا' : d[2]) + '</div>').join('') + mine.map((a) => '<div>🎖️ ' + G.Season.AWARD_AR[a.type] + '</div>').join('') + '</div>';
     }
     h += '<div class="card"><h3>🎖️ جوائز الموسم</h3>' + (sm.awards || []).map((a) => '<div class="kv"><span>' + G.Season.AWARD_AR[a.type] + '</span><span' + (a.user ? ' class="gold b"' : '') + '>' + esc(a.name) + ' <span class="mut sm">(' + cl(a.club) + ' · ' + a.value + ')</span></span></div>').join('') + '</div>';
-    h += '<button class="btn pri" data-a="rollover">⏭️ الانتقال للموسم التالي</button>';
+    if (S.intl && !S.intl.done) h += '<div class="notice">🌍 أكمل ' + esc(S.intl.name) + ' (العب مباريات منتخبك أو حاكِها) قبل الانتقال للموسم التالي.</div>';
+    else h += '<button class="btn pri" data-a="rollover">⏭️ الانتقال للموسم التالي</button>';
     if (G.Season.canRetire()) h += '<button class="btn red" data-a="retireAsk">🏁 اعتزال</button>';
     return h;
   }
@@ -151,9 +164,9 @@
     let h = playerCard(u) + (UI.pressCard ? UI.pressCard() : '');
     if (UI.noStorage) h = '<div class="notice bad">⚠️ التخزين المحلي غير متاح في هذا المتصفح (ربما وضع التصفح الخاص): لن يُحفظ تقدّمك بعد الإغلاق. استخدم «تصدير الحفظ» من الإعدادات.</div>' + h;
     if (S.phase === 'summer') h += summerPanel() + (UI.simCard ? UI.simCard() : '');
-    else if (S.phase === 'season') h += nextMatchCard() + (UI.simCard ? UI.simCard() : '') + weekCard() + lastMatch() + miniTable() + uclLine();
+    else if (S.phase === 'season') h += nextMatchCard() + (UI.simCard ? UI.simCard() : '') + weekCard() + lastMatch() + miniTable() + uclLine() + (UI.bdCard ? UI.bdCard() : '');
     else if (S.phase === 'end') h += endPanel();
-    h += inboxPreview();
+    h += (UI.newsCard ? UI.newsCard() : '') + inboxPreview();
     if (S.check && !S.check.ok) h += '<div class="notice bad">⚠️ تم رصد خلل في الجدول وإصلاحه تلقائيًا.</div>';
     return h;
   };

@@ -13,16 +13,19 @@
   UI.money = U.money;
   UI.num = (v, d) => (Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0)).toFixed(d || 0);
 
-  UI.titles = { home: 'الرئيسية', league: 'الدوري الإسباني', ucl: 'دوري أبطال أوروبا', train: 'التدريب والمدرب', market: 'سوق الانتقالات', inbox: 'الرسائل', career: 'مسيرتي', stats: 'الإحصائيات والإنجازات', match: 'المباراة', settings: 'الإعدادات' };
+  UI.titles = { home: 'الرئيسية', league: () => (G.S && G.S.league ? G.leagueTitle(G.S.league.lg) : 'الدوري'), ucl: 'دوري أبطال أوروبا', train: 'التدريب والمدرب', market: 'سوق الانتقالات', inbox: 'الرسائل', career: 'مسيرتي', stats: 'الإحصائيات والإنجازات', match: 'المباراة', settings: 'الإعدادات' };
 
   // ---------- الأدوات المرئية ----------
   const lum = (hex) => { const h = hex.replace('#', ''); const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
   UI.abbr = (name) => { const w = name.replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(Boolean); return (w.length > 1 ? w[0][0] + w[1][0] : name.slice(0, 3)).toUpperCase(); };
+  UI.badgeOf = (cols, code, size) => {
+    size = size || 28;
+    const c0 = cols[0], c1 = cols[1], tx = lum(c0) > 0.6 ? '#111' : '#fff';
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z" fill="' + c0 + '" stroke="' + c1 + '" stroke-width="2.4"/><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 Z" fill="' + c1 + '" opacity=".55"/><text x="20" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="' + tx + '" font-family="Arial,sans-serif">' + code + '</text></svg>';
+  };
   UI.badge = (id, size) => {
-    const c = G.S.clubs[id]; size = size || 28;
-    if (!c) return '';
-    const c0 = c.c[0], c1 = c.c[1], tx = lum(c0) > 0.6 ? '#111' : '#fff';
-    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z" fill="' + c0 + '" stroke="' + c1 + '" stroke-width="2.4"/><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 Z" fill="' + c1 + '" opacity=".55"/><text x="20" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="' + tx + '" font-family="Arial,sans-serif">' + UI.abbr(c.name).slice(0, 3) + '</text></svg>';
+    const c = G.S.clubs[id];
+    return c ? UI.badgeOf(c.c, c.code || UI.abbr(c.name).slice(0, 3), size) : '';
   };
   // لون التمييز (النادي): يضبط --cc وما يشتق منه (rgb للظلال، نسخة أفتح للنصوص، ولون نص مقروء فوقه). الافتراضي ذهبي.
   UI.applyAccent = (hex) => {
@@ -206,7 +209,7 @@
     UI.chrome(true);
     app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '');
     $('#bottomnav').classList.toggle('hidden', UI.cur === 'match');
-    $('#topTitle').textContent = UI.titles[UI.cur] || '';
+    { const tt = UI.titles[UI.cur]; $('#topTitle').textContent = (typeof tt === 'function' ? tt() : tt) || ''; }
     const bb = $('#backBtn');
     if (bb) bb.classList.toggle('hidden', !(UI.MAIN.indexOf(UI.cur) < 0 && UI.cur !== 'match' && (UI.stack.length > 0 || S.phase !== 'retired')));
     document.querySelectorAll('#bottomnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === UI.cur));
@@ -242,7 +245,7 @@
   UI.on('closeSheet', () => { UI.closeSheet(); return false; });
   UI.on('yes', () => { const f = UI._yes; UI._yes = null; UI.closeSheet(); if (f) f(); });
   UI.on('menu', () => {
-    UI.sheet('<h3>القائمة</h3><button class="btn" data-a="menuGo" data-v="career">📖 مسيرتي</button><button class="btn" data-a="menuGo" data-v="stats">📊 الإحصائيات والإنجازات</button><button class="btn" data-a="menuGo" data-v="settings">⚙️ الإعدادات والحفظ</button><button class="btn" data-a="tourOpen">📘 دليل اللعبة</button><button class="btn" data-a="closeSheet">إغلاق</button>');
+    UI.sheet('<h3>القائمة</h3><button class="btn" data-a="menuGo" data-v="career">📖 مسيرتي</button><button class="btn" data-a="menuGo" data-v="press">📰 الصحافة</button><button class="btn" data-a="menuGo" data-v="bd">🏆 الكرة الذهبية</button><button class="btn" data-a="menuGo" data-v="intl">🌍 المنتخبات (كأس العالم وآسيا)</button><button class="btn" data-a="menuGo" data-v="stats">📊 الإحصائيات والإنجازات</button><button class="btn" data-a="menuGo" data-v="settings">⚙️ الإعدادات والحفظ</button><button class="btn" data-a="tourOpen">📘 دليل اللعبة</button><button class="btn" data-a="closeSheet">إغلاق</button>');
     return false;
   });
   UI.on('menuGo', (v) => { UI.closeSheet(); UI.cur = v; window.scrollTo(0, 0); });

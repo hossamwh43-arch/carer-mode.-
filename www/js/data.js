@@ -7,13 +7,14 @@
   G.CONFIG = {
     startYear: 2025,        // أول موسم = 2025/26
     minAge: 16, maxAge: 21,
-    uclSpainSlots: 4,       // عدد مقاعد إسبانيا في دوري الأبطال
-    uclForeign: 32,         // أندية أجنبية تكمل الـ36
+    uclSpainSlots: 4,       // (قديم) مقاعد إسبانيا — المقاعد الفعلية في G.UCL_SLOTS
+    uclOther: 16,           // أندية من خارج الدوريات الخمسة تكمل الـ36
+    uclForeign: 32,         // (قديم)
     ligaWeeks: 38,
     maxSquad: 27, minSquad: 22,
     allowForeignDestination: true, // انتقال اللاعب لنادٍ أجنبي (يلعب الأبطال فقط) مع تحذير
     retireForcedAge: 40,
-    saveKey: 'fcc_save_v1', backupKey: 'fcc_save_v1_bak'
+    saveKey: 'fcc_save_v1', backupKey: 'fcc_save_v1_bak', saveVer: 3
   };
 
   // مستويات الصعوبة: معاملات تضرب في آليات تخص اللاعب المستخدم فقط (ولا تمسّ محرك المباراة ولا الفرق الأخرى).

@@ -18,21 +18,26 @@
   };
 
   // ---------- مسيرتي ----------
-  const trophyIcons = (t) => (t.liga ? '🥇' : '') + (t.ucl ? '🌟' : '');
+  const trophyIcons = (t) => G.Season.TROPHY_DEFS.filter((d) => (t || {})[d[0]]).map((d) => d[1]).join('');
   function profileCard(p) {
     const tot = G.Season.careerTotals();
     return '<div class="card hl"><div class="row">' + UI.avatar(p.look, p.club, 78) + '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div class="mut sm">' + UI.natName(p.nat) + ' · ' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة</div><div class="mut sm">' + p.h + ' سم · ' + p.w + ' كغ · القدم ' + (p.foot === 'R' ? 'اليمنى' : 'اليسرى') + '</div><div>' + UI.clubTag(p.club, 20) + ' <span class="mut sm">#' + p.num + '</span></div></div><div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div>' +
       '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + tot.apps + '</b><small>مباراة</small></div><div class="stat"><b>' + tot.g + '</b><small>هدف</small></div><div class="stat"><b>' + tot.a + '</b><small>صناعة</small></div>' +
-      '<div class="stat"><b>' + (tot.avg ? tot.avg.toFixed(2) : '—') + '</b><small>متوسط التقييم</small></div><div class="stat"><b>' + tot.seasons + '</b><small>مواسم كاملة</small></div><div class="stat"><b>' + (tot.liga + tot.ucl) + '</b><small>ألقاب</small></div></div></div>';
+      '<div class="stat"><b>' + (tot.avg ? tot.avg.toFixed(2) : '—') + '</b><small>متوسط التقييم</small></div><div class="stat"><b>' + tot.seasons + '</b><small>مواسم كاملة</small></div><div class="stat"><b>' + tot.titles + '</b><small>ألقاب</small></div></div></div>';
   }
 
+  // خلية المنتخب في جدول المواسم: بطولة السنة التي تنتهي بهذا الموسم (إن شارك اللاعب فيها)
+  function ntCell(p, r) {
+    const y = G.Intl ? G.Intl.endYear(r.season) : 0, e = (p.ntCar || []).find((x) => x.y === y);
+    return e && e.q ? (e.apps || 0) + '/' + e.g + '/' + e.a : '<span class="mut">—</span>';
+  }
   function seasonsTable(p) {
     const rows = p.car.slice();
-    const cur = { label: G.Season.label(G.S.season) + ' ⏳', club: p.club, age: p.age, ovrStart: G.S.seasonStartOvr || p.ovr, ovrEnd: p.ovr, lg: G.Season.statOf(p, 'lg'), uc: G.Season.statOf(p, 'uc'), pos: G.S.league ? G.League.position(p.club) : 0, trophies: {} };
+    const cur = { season: G.S.season, label: G.Season.label(G.S.season) + ' ⏳', club: p.club, age: p.age, ovrStart: G.S.seasonStartOvr || p.ovr, ovrEnd: p.ovr, lg: G.Season.statOf(p, 'lg'), uc: G.Season.statOf(p, 'uc'), pos: G.S.league ? G.League.position(p.club) : 0, trophies: {} };
     if (G.S.phase !== 'retired' && G.S.phase !== 'end') rows.push(cur);
     if (!rows.length) return '<div class="card mut c">ستظهر مواسمك هنا.</div>';
-    return '<div class="card" style="overflow-x:auto"><table class="t"><tr><th class="l">الموسم</th><th class="l">النادي</th><th>عمر</th><th>تقييم</th><th>الدوري<br><span class="sm">م/ه/ص</span></th><th>الأبطال<br><span class="sm">م/ه/ص</span></th><th></th></tr>' +
-      rows.map((r) => '<tr><td class="l">' + r.label + '</td><td class="l sm">' + esc(UI.cname(r.club)) + (r.loan ? ' (إعارة)' : '') + '</td><td>' + r.age + '</td><td>' + r.ovrStart + '→' + r.ovrEnd + '</td><td>' + r.lg.apps + '/' + r.lg.g + '/' + r.lg.a + '</td><td>' + r.uc.apps + '/' + r.uc.g + '/' + r.uc.a + '</td><td>' + trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '') + '</td></tr>').join('') + '</table></div>';
+    return '<div class="card" style="overflow-x:auto"><table class="t"><tr><th class="l">الموسم</th><th class="l">النادي</th><th>عمر</th><th>تقييم</th><th>الدوري<br><span class="sm">م/ه/ص</span></th><th>الأبطال<br><span class="sm">م/ه/ص</span></th><th>المنتخب<br><span class="sm">م/ه/ص</span></th><th></th></tr>' +
+      rows.map((r) => '<tr><td class="l">' + r.label + '</td><td class="l sm">' + esc(UI.cname(r.club)) + (r.loan ? ' (إعارة)' : '') + '</td><td>' + r.age + '</td><td>' + r.ovrStart + '→' + r.ovrEnd + '</td><td>' + r.lg.apps + '/' + r.lg.g + '/' + r.lg.a + '</td><td>' + r.uc.apps + '/' + r.uc.g + '/' + r.uc.a + '</td><td>' + ntCell(p, r) + '</td><td>' + trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '') + '</td></tr>').join('') + '</table></div>';
   }
 
   UI.screens.career = () => {
@@ -56,30 +61,31 @@
       ['🅰️', '10 صناعات', tot.a >= 10], ['🤝', '50 صناعة', tot.a >= 50],
       ['👕', '25 مباراة', tot.apps >= 25], ['🏟️', '100 مباراة', tot.apps >= 100], ['🧓', '250 مباراة', tot.apps >= 250],
       ['🎩', 'هاتريك', (p.hattricks || 0) >= 1], ['⭐', 'نجم المباراة', (p.motmN || 0) >= 1], ['🌟', 'تقييم مباراة 9.0+', (p.maxRating || 0) >= 9],
-      ['🌍', 'أول هدف في دوري الأبطال', uclG >= 1], ['🥇', 'بطل الدوري الإسباني', (p.trophies || {}).liga > 0], ['🏆', 'بطل أوروبا', (p.trophies || {}).ucl > 0],
+      ['🌍', 'أول هدف في دوري الأبطال', uclG >= 1], ['🥇', 'بطل الدوري', ((p.trophies || {}).liga > 0)], ['🥈', 'بطل الدرجة الثانية', ((p.trophies || {}).d2 > 0)], ['🏆', 'بطل أوروبا', (p.trophies || {}).ucl > 0],
       ['🎖️', 'جائزة موسمية', (p.awards || []).length > 0],
+      ['🏆', 'الكرة الذهبية', (p.trophies || {}).bd > 0], ['🎖️', 'ضمن أفضل 10 في الكرة الذهبية', (p.bdCar || []).some((e) => e.r <= 10)], ['🌍', 'أول ظهور مع المنتخب', tot.nt.apps >= 1 || G.Season.statOf(p, 'nt').apps >= 1], ['⚽', 'هدف في كأس العالم', (p.ntCar || []).some((e) => e.t === 'WC' && e.g > 0)], ['🏆', 'بطل كأس العالم', (p.trophies || {}).wc > 0], ['🥇', 'بطل كأس آسيا', (p.trophies || {}).ac > 0],
       ['📈', 'تقييم 70', maxOvr >= 70], ['🚀', 'تقييم 75', maxOvr >= 75], ['👑', 'تقييم 80', maxOvr >= 80], ['💎', 'تقييم 85', maxOvr >= 85], ['🐐', 'تقييم 90', maxOvr >= 90]
     ];
     return A;
   }
 
   function currentTab(p) {
-    const S = G.S, lg = G.Season.statOf(p, 'lg'), uc = G.Season.statOf(p, 'uc');
+    const S = G.S, lg = G.Season.statOf(p, 'lg'), uc = G.Season.statOf(p, 'uc'), nt = G.Season.statOf(p, 'nt');
     const row = (n, s) => '<div class="card"><h4>' + n + '</h4><div class="grid3"><div class="stat"><b>' + s.apps + '</b><small>مباريات</small></div><div class="stat"><b>' + s.g + '</b><small>أهداف</small></div><div class="stat"><b>' + s.a + '</b><small>صناعة</small></div><div class="stat"><b>' + (s.apps ? s.avg.toFixed(2) : '—') + '</b><small>متوسط التقييم</small></div><div class="stat"><b>' + s.min + '</b><small>دقائق</small></div><div class="stat"><b>' + (s.apps ? (s.g / s.apps).toFixed(2) : '—') + '</b><small>أهداف/مباراة</small></div></div></div>';
-    let h = row('الدوري الإسباني — ' + G.Season.label(S.season), lg) + row('دوري أبطال أوروبا — ' + G.Season.label(S.season), uc) +
+    let h = row(G.leagueName(S.league ? S.league.lg : G.World.viewLg()) + ' — ' + G.Season.label(S.season), lg) + row('دوري أبطال أوروبا — ' + G.Season.label(S.season), uc) + (nt.apps ? row((S.intl ? S.intl.name : 'المنتخب الوطني'), nt) : '') +
       '<div class="card"><h4>الانضباط</h4><div class="kv"><span>إنذارات (المسيرة)</span><b>🟨 ' + p.cards.y + '</b></div><div class="kv"><span>طرد (المسيرة)</span><b>🟥 ' + p.cards.r + '</b></div><div class="kv"><span>إنذارات حالية نحو الإيقاف</span><span>' + p.yel + ' / 5</span></div></div>';
     const log = (S.matchLog || []).slice(0, 12);
     if (log.length) h += '<div class="card"><h4>آخر مبارياتك</h4><table class="t"><tr><th class="l">المباراة</th><th>النتيجة</th><th>دق</th><th>⚽🅰️</th><th>تقييم</th></tr>' + log.map((m) => {
       const opp = m.userSide === 'h' ? m.a : m.h, gf = m.userSide === 'h' ? m.score.h : m.score.a, ga = m.userSide === 'h' ? m.score.a : m.score.h;
-      return '<tr><td class="l sm">' + (m.comp === 'LL' ? 'د' : 'أ') + ' · ' + esc(UI.cname(opp)) + '</td><td class="ltr ' + (gf > ga ? 'pos' : gf < ga ? 'neg' : '') + '">' + gf + '-' + ga + '</td><td>' + m.mins + '</td><td>' + m.g + '/' + m.as + '</td><td>' + (m.rating ? m.rating.toFixed(1) : '—') + '</td></tr>';
+      return '<tr><td class="l sm">' + (m.comp === 'LL' ? 'د' : m.comp === 'NT' ? 'م' : 'أ') + ' · ' + esc(UI.cname(opp)) + '</td><td class="ltr ' + (gf > ga ? 'pos' : gf < ga ? 'neg' : '') + '">' + gf + '-' + ga + '</td><td>' + m.mins + '</td><td>' + m.g + '/' + m.as + '</td><td>' + (m.rating ? m.rating.toFixed(1) : '—') + '</td></tr>';
     }).join('') + '</table></div>';
     return h;
   }
 
   function achTab(p) {
     const A = achievements(p), done = A.filter((x) => x[2]).length;
-    const t = p.trophies || { liga: 0, ucl: 0 };
-    let h = '<div class="card"><div class="row sb"><b>الألقاب</b><span class="pill y">' + (t.liga + t.ucl) + '</span></div><div class="kv"><span>🥇 الدوري الإسباني</span><b>' + (t.liga || 0) + '</b></div><div class="kv"><span>🌟 دوري أبطال أوروبا</span><b>' + (t.ucl || 0) + '</b></div></div>';
+    const t = p.trophies || {};
+    let h = '<div class="card"><div class="row sb"><b>الألقاب</b><span class="pill y">' + G.Season.trophyTotal(t) + '</span></div>' + G.Season.TROPHY_DEFS.map((d) => '<div class="kv"><span>' + d[1] + ' ' + d[2] + '</span><b>' + (t[d[0]] || 0) + '</b></div>').join('') + '</div>';
     h += '<div class="card"><div class="row sb"><b>الإنجازات</b><span class="pill g">' + done + ' / ' + A.length + '</span></div>' + UI.bar(done / A.length * 100, 'gold') + '<div class="grid2" style="margin-top:10px">' +
       A.map((x) => '<div class="stat" style="' + (x[2] ? 'border:1px solid var(--gold)' : 'opacity:.4') + ';text-align:center"><b>' + x[0] + '</b><small>' + x[1] + '</small></div>').join('') + '</div></div>';
     if ((p.awards || []).length) h += '<div class="card"><h4>جوائزي الفردية</h4>' + p.awards.slice().reverse().map((a) => '<div class="kv"><span>' + G.Season.label(a.season) + '</span><span>🎖️ ' + G.Season.AWARD_AR[a.type] + '</span></div>').join('') + '</div>';
@@ -115,7 +121,7 @@
       '<button class="btn sm" data-a="fxTest">🎧 جرّب المؤثرات</button></div>';
     h += '<div class="card"><h3>🧪 سلامة البيانات</h3><button class="btn" data-a="validateNow">فحص الجداول والنتائج</button>' + (S.check ? '<p class="sm ' + (S.check.ok ? 'pos' : 'neg') + '">آخر فحص: ' + (S.check.ok ? 'سليم ✔️' : S.check.errs.length + ' ملاحظات (أُصلحت تلقائيًا)') + '</p>' : '') + '</div>';
     h += '<div class="card"><h3>🔄 المسيرة</h3><button class="btn" data-a="newCareer">✨ بدء مسيرة جديدة (يبقى الحفظ الحالي كنسخة احتياطية)</button><button class="btn red" data-a="wipeAsk">🗑️ حذف كل البيانات</button></div>';
-    h += '<div class="card"><h3>ℹ️ عن البيانات</h3><p class="sm mut">أسماء الأندية حقيقية (موسم 2025/26 كمرجع) والتقييمات والقيم تقريبية وقابلة للتعديل من <span class="ltr">js/data.js</span>. اللاعبون خياليون بالكامل لعدم وجود تراخيص. المسابقتان: الدوري الإسباني ودوري أبطال أوروبا فقط.</p></div>';
+    h += '<div class="card"><h3>ℹ️ عن البيانات</h3><p class="sm mut">أسماء الأندية والمنتخبات حقيقية (موسم 2025/26 كمرجع) والتقييمات والقيم تقريبية وقابلة للتعديل من <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>. اللاعبون خياليون بالكامل لعدم وجود تراخيص. المسابقات: الدوريات الخمسة الكبرى ودرجاتها الثانية، دوري أبطال أوروبا، كأس العالم وكأس آسيا، والكرة الذهبية.</p></div>';
     if (S.errors && S.errors.length) h += '<div class="card"><h4>سجل الأخطاء (للدعم)</h4>' + S.errors.slice(-6).reverse().map((e) => '<div class="sm mut ltr">' + esc(e.label) + ': ' + esc(e.msg) + '</div>').join('') + '</div>';
     return h;
   };
@@ -128,7 +134,7 @@
     if (UI.prefs[k]) UI.fx(k === 'sound' ? 'ping' : 'done');
   });
   UI.on('fxTest', () => { UI.fx('goalMe'); UI.banner('me', '⚽ هدف!', 'هكذا تبدو المؤثرات'); return false; });
-  UI.on('saveNow', () => { UI.toast(G.Save.save() ? 'تم الحفظ ✔️' : 'تعذّر الحفظ (قد يكون التخزين ممتلئًا أو معطّلًا)'); });
+  UI.on('saveNow', () => { UI.toast(G.Save.save(true) ? 'تم الحفظ ✔️' : 'تعذّر الحفظ (قد يكون التخزين ممتلئًا أو معطّلًا)'); });
   UI.on('exportSave', () => {
     const txt = G.Save.exportText();
     const ok = (navigator.clipboard && navigator.clipboard.writeText) ? navigator.clipboard.writeText(txt).then(() => UI.toast('نُسخ نص الحفظ'), () => showText(txt)) : (showText(txt), null);
@@ -141,7 +147,7 @@
   UI.on('validateNow', () => { const c = G.Season.validateAll(); G.Save.save(); UI.toast(c.ok ? 'كل شيء سليم ✔️' : 'وُجدت ' + c.errs.length + ' ملاحظات وأُصلحت'); });
   UI.on('newCareer', () => {
     UI.confirm('بدء مسيرة جديدة؟', 'ستُفتح شاشة إنشاء لاعب جديد. حفظك الحالي لا يُحذف فورًا — يبقى كنسخة احتياطية حتى تبدأ المسيرة الجديدة.', () => {
-      G.Save.save(); G.S = null; UI.wz = null; UI.cur = 'home'; UI.sub = {}; UI.acts.wzNew(); UI.render();
+      G.Save.save(true); G.S = null; UI.wz = null; UI.cur = 'home'; UI.sub = {}; UI.acts.wzNew(); UI.render();
     }, 'متابعة');
     return false;
   });

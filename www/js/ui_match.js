@@ -185,7 +185,7 @@
     const evs = (sm.events || []).filter((e) => e.k === 'goal' || e.k === 'red' || e.k === 'yellow' || e.k === 'inj' || e.k === 'pens');
     if (evs.length) h += '<div class="card"><h4>أبرز الأحداث</h4>' + evs.map((e) => '<div class="ev ' + (e.k === 'goal' ? 'goal' : e.k === 'red' ? 'red' : e.k === 'yellow' ? 'yellow' : e.k === 'inj' ? 'inj' : '') + '"><span class="m">' + esc(e.lab) + "'</span><span>" + esc(e.txt) + '</span></div>').join('') + '</div>';
     const pend = G.Season.pending();
-    h += '<button class="btn pri" data-a="mvHome">' + (pend ? 'المباراة التالية هذا الأسبوع ←' : S.phase === 'season' ? 'متابعة (إنهاء الأسبوع)' : 'العودة للرئيسية') + '</button>';
+    h += '<button class="btn pri" data-a="mvHome">' + (fix && fix.comp === 'NT' ? 'العودة إلى البطولة' : pend ? 'المباراة التالية هذا الأسبوع ←' : S.phase === 'season' ? 'متابعة (إنهاء الأسبوع)' : 'العودة للرئيسية') + '</button>';
     return h;
   }
 
@@ -238,8 +238,9 @@
     UI.confirm('إنهاء المباراة فورًا؟', 'ستُحاكى بقية المباراة تلقائيًا (القرارات المتبقية تُحسم آليًا).', () => { UI.mv.paused = false; finish(); }, 'إنهاء');
     return false;
   });
-  UI.on('mvLeave', () => { stop(); crowdOff(); if (UI.fxClear) UI.fxClear(); G.Save.save(); UI.mv = null; UI.cur = 'home'; });
-  UI.on('mvHome', () => { UI.mv = null; UI.cur = 'home'; window.scrollTo(0, 0); });
+  const homeTab = () => (G.S.phase === 'end' && G.S.intl ? 'intl' : 'home');
+  UI.on('mvLeave', () => { stop(); crowdOff(); if (UI.fxClear) UI.fxClear(); G.Save.save(); UI.mv = null; UI.cur = homeTab(); });
+  UI.on('mvHome', () => { UI.mv = null; UI.cur = homeTab(); window.scrollTo(0, 0); });
   UI.on('lastMatchView', () => { UI.mv = { phase: 'post' }; UI.cur = 'match'; });
 
   UI.on('mvLineup', () => {

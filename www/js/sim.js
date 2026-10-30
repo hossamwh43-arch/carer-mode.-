@@ -242,7 +242,7 @@
       if (S.phase === 'end') {
         const sm = S.summary;
         if (sm && sm.row && sm.row.trophies) {
-          if (sm.row.trophies.liga) ev(run, LAST_WEEK, 'award', '🥇 توّجتَ بلقب الدوري الإسباني');
+          if (sm.row.trophies.liga || sm.row.trophies.d2) ev(run, LAST_WEEK, 'award', '🥇 توّجتَ بلقب ' + G.leagueName(sm.row.lgId));
           if (sm.row.trophies.ucl) ev(run, LAST_WEEK, 'award', '🌟 توّجتَ بلقب دوري أبطال أوروبا');
         }
         ((sm && sm.awards) || []).filter((a) => a.user).forEach((a) => ev(run, LAST_WEEK, 'award', '🎖️ جائزة: ' + G.Season.AWARD_AR[a.type]));

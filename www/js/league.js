@@ -7,7 +7,10 @@
   const emptyRow = () => ({ p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
 
   // طريقة الدائرة (Circle method) لجدول 38 جولة
-  League.make = (ids, season) => {
+  // الجولة r (من 1) تُلعب في الأسبوع: دوري بـ38 جولة = r نفسه، ودوري بـ34 جولة تتباعد جولاته على 38 أسبوعًا
+  League.weekOf = (r, R) => Math.floor((r - 1) * (G.CONFIG.ligaWeeks || 38) / R) + 1;
+
+  League.make = (ids, season, lgId) => {
     const n = ids.length;
     const arr = U.shuffle(ids.slice());
     const first = [];
@@ -33,16 +36,28 @@
     }
     const second = first.map((rd) => rd.map((f) => ({ h: f.a, a: f.h })));
     const all = first.concat(second);
+    const wk = all.map((rd, ri) => League.weekOf(ri + 1, all.length));
     const rounds = all.map((rd, ri) => rd.map((f) => ({
-      id: 'LL' + season + '-' + (ri + 1) + '-' + f.h + '-' + f.a, comp: 'LL', r: ri + 1, h: f.h, a: f.a, played: false, hg: null, ag: null
+      id: 'LL' + season + '-' + (ri + 1) + '-' + f.h + '-' + f.a, comp: 'LL', r: ri + 1, h: f.h, a: f.a, played: false, hg: null, ag: null, w: wk[ri]
     })));
     const table = {};
     ids.forEach((id) => { table[id] = emptyRow(); });
-    return { clubs: ids.slice(), rounds, table };
+    return { clubs: ids.slice(), rounds, table, wk, lg: lgId || null, season };
   };
 
   League.fixtures = () => [].concat.apply([], G.S.league.rounds);
-  League.roundFixtures = (r) => G.S.league.rounds[r - 1] || [];
+  // مباريات أسبوع تقويمي (قد تكون فارغة في أسبوع راحة الدوريات ذات 18 ناديًا)
+  League.roundFixtures = (week, L) => {
+    L = L || G.S.league;
+    if (!L) return [];
+    if (!L.wk) return L.rounds[week - 1] || []; // حفظ قديم: الجولة = الأسبوع
+    const out = [];
+    L.wk.forEach((w, i) => { if (w === week) out.push.apply(out, L.rounds[i]); });
+    return out;
+  };
+  // مباريات الجولة رقم r
+  League.round = (r, L) => (L || G.S.league).rounds[r - 1] || [];
+  League.rounds = (L) => (L || G.S.league).rounds.length;
 
   League.record = (fix, hg, ag) => {
     if (fix.played) throw new Error('مباراة مكررة: ' + fix.id);
@@ -62,7 +77,7 @@
       return (b.pts - a.pts) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf) || (G.C(x).name < G.C(y).name ? -1 : 1);
     });
   };
-  League.position = (id) => League.sorted().indexOf(id) + 1;
+  League.position = (id, L) => League.sorted(L).indexOf(id) + 1;
 
   // إعادة بناء الجدول من النتائج (أداة إصلاح)
   League.rebuild = (L) => {

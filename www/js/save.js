@@ -8,6 +8,10 @@
     try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch (e) { return null; }
   }
 
+  // ترقية الحفظ القديم: كل وحدة تسجّل دالة idempotent في G.migrations (تُنفَّذ بعد كل تحميل/استيراد)
+  G.migrations = G.migrations || [];
+  Save.migrate = () => { G.migrations.forEach((fn) => G.safe(fn, 'migrate')); };
+
   Save.valid = (S) => !!(S && S.v && S.user && S.clubs && S.players && S.players[S.user] && S.phase && typeof S.week === 'number');
 
   Save.exists = () => { const st = store(); return !!(st && (st.getItem(C().saveKey) || st.getItem(C().backupKey))); };
@@ -24,13 +28,32 @@
   };
 
   // الحفظ: نكتب أولًا إلى مفتاح مؤقت للتحقق ثم نُدوّر النسخة الاحتياطية
-  // force: يتجاوز التجميد · wantJson: يبني النص حتى لو لم يتوفر تخزين (تستعمله المحاكاة كنقطة استرجاع)
+  // force: يتجاوز التجميد والدمج · wantJson: يبني النص حتى لو لم يتوفر تخزين (تستعمله المحاكاة كنقطة استرجاع)
+  // الدمج (في المتصفح فقط): الحفظ العادي لا يكتب فورًا بل مرة واحدة في نهاية المهمة الحالية (microtask) —
+  // فالنقرة الواحدة التي تستدعي الحفظ عدة مرات (مباراة + أسبوع + إعلام) تكلّف كتابة واحدة بدل ثلاث،
+  // دون أي نافذة ضياع: الكتابة تتم قبل أن يعود المتصفح لأي نقرة أو إغلاق. الحفظ القسري يكتب فورًا.
+  Save._pend = false;
+  Save._defer = () => typeof document !== 'undefined' && typeof queueMicrotask === 'function';
+  Save.flush = () => {
+    if (!Save._pend) return true;
+    Save._pend = false;
+    return Save._write(false);
+  };
   Save.save = (force, wantJson) => {
     if (!Save.valid(G.S)) return false;
     if (Save._hold > 0 && !force) {
       if (Date.now() - Save._holdAt > 60000) { Save._hold = 0; } // تجميد مهجور
       else { Save._dirty = true; return true; }
     }
+    if (!force && !wantJson && Save._defer()) {
+      if (!Save._pend) { Save._pend = true; queueMicrotask(Save.flush); }
+      return true;
+    }
+    Save._pend = false;
+    return Save._write(wantJson);
+  };
+  Save._write = (wantJson) => {
+    if (!Save.valid(G.S)) return false;
     const st = store();
     if (!st && !wantJson) return false;
     try {
@@ -54,6 +77,7 @@
   Save.load = () => {
     const st = store();
     if (!st) return false;
+    Save._pend = false;
     for (const key of [C().saveKey, C().backupKey]) {
       try {
         const raw = st.getItem(key);
@@ -63,6 +87,7 @@
         G.S = S;
         if (S.rng) G.rngState = S.rng >>> 0;
         if (G.Media) G.safe(() => G.Media.get(), 'media'); // ترقية الحفظ القديم: إنشاء حالة الإعلام قبل أي لعب
+        Save.migrate();
         G.loadedFrom = key;
         return true;
       } catch (e) { /* ننتقل للنسخة الاحتياطية */ }
@@ -73,6 +98,7 @@
   Save.reset = () => {
     const st = store();
     if (!st) return;
+    Save._pend = false;
     st.removeItem(C().saveKey);
     st.removeItem(C().backupKey);
     G.S = null;
@@ -83,9 +109,11 @@
     try {
       const S = JSON.parse(txt);
       if (!Save.valid(S)) return false;
+      Save._pend = false;
       G.S = S;
       if (S.rng) G.rngState = S.rng >>> 0;
       if (G.Media) G.safe(() => G.Media.get(), 'media');
+      Save.migrate();
       Save.save();
       return true;
     } catch (e) { return false; }

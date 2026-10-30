@@ -19,7 +19,7 @@
   // ---------- أندية السوق ----------
   T.market = () => {
     const S = G.S, set = {};
-    Object.keys(S.clubs).forEach((id) => { if (S.clubs[id].liga) set[id] = true; });
+    Object.keys(S.clubs).forEach((id) => { const c = S.clubs[id]; if (c.liga && !c.light) set[id] = true; }); // أندية الدرجة الثانية الخفيفة (بلا لاعبين) خارج السوق
     (S.uclTeams || []).forEach((id) => { set[id] = true; });
     return Object.keys(set);
   };
@@ -45,6 +45,7 @@
       if (G.Media) G.safe(() => G.Media.onTransfer(oldClub, toId, fee, !!opts.loan), 'media');
     }
     G.Players.refresh(p);
+    if (p.user && G.World) G.World.syncUser(); // انتقال لدوري آخر أثناء الموسم
     if (!opts.loan && (fee > 0 || p.ovr >= 78 || p.user)) logTransfer({ season: S.season, p: p.id, name: p.n, from: oldClub, to: toId, fee, user: !!p.user, ovr: p.ovr });
   };
 
@@ -139,7 +140,7 @@
     const S = G.S;
     const q = T.clubQ(club);
     const group = G.COUNTRY_GROUP[club.country] || 'iber';
-    const p = G.Players.gen({ pos, ovr: U.clamp(Math.round(q - 14 + U.gauss() * 3), 45, 70), age: U.int(17, 19), nat: club.country === 'ESP' ? 'ES' : club.country.slice(0, 2), group, club: club.id });
+    const p = G.Players.gen({ pos, ovr: U.clamp(Math.round(q - 14 + U.gauss() * 3), 45, 70), age: U.int(17, 19), nat: (G.COUNTRY_NAT || {})[club.country] || club.country.slice(0, 2), group, club: club.id });
     p.pot = Math.min(95, Math.max(p.pot, p.ovr + U.int(4, 14)));
     p.ct = { y: U.int(2, 4), w: G.Players.wageFor(p) };
     S.players[p.id] = p;
@@ -156,6 +157,7 @@
   };
   T.fixSquad = (club) => {
     const cfg = G.CONFIG, S = G.S;
+    if (club.light) return;
     // نقص المراكز: توقيع أحرار أو أكاديمية
     Object.keys(G.SQUAD_TEMPLATE).forEach((pos) => {
       const have = club.squad.map(P).filter((p) => p && p.pos === pos && !p.user).length;
@@ -396,9 +398,10 @@
     if (p.age > 25) return 0;
     const home = C(p.club);
     let made = 0;
-    G.LALIGA.map((d) => d[0]).forEach((cid) => {
+    Object.keys(S.clubs).forEach((cid) => {
       if (cid === p.club || S.offers.some((o) => o.club === cid && o.type === 'loan')) return;
       const club = C(cid);
+      if (made >= 4 || !club.liga || club.light || club.squad.length < 14) return; // حدّ أقصى 4 عروض إعارة
       if (club.rep > home.rep + 6) return;
       const ev = G.Coach.evaluateAt(p, cid), gap = ev.diff;
       if (ev.role !== 'starter' && ev.role !== 'rotation') return;

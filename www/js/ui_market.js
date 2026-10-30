@@ -8,7 +8,7 @@
   const TYPE_AR = { transfer: 'عرض انتقال', loan: 'عرض إعارة', free: 'عقد لاعب حر' };
 
   const isUcl = (id) => (G.S.uclTeams || []).indexOf(id) >= 0;
-  const foreignWarn = (id) => (G.S.clubs[id].liga ? '' : '<div class="notice" style="margin:8px 0 0">⚠️ نادٍ أجنبي: ستلعب دوري الأبطال فقط ولن يكون لك دوري إسباني (لا يوجد دوري محلي له في اللعبة).</div>');
+  const foreignWarn = (id) => (G.S.clubs[id].liga ? '' : '<div class="notice" style="margin:8px 0 0">⚠️ نادٍ من خارج الدوريات الخمسة الكبرى: ستلعب دوري الأبطال فقط ولن يكون لك دوري محلي (لا يوجد دوري محاكى له في اللعبة).</div>');
 
   function windowCard() {
     const S = G.S, w = S.window || {}, p = me();

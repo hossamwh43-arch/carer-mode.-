@@ -137,7 +137,7 @@
       id: Players.newId(), n: o.name || Players.genName(group), nat: o.nat || 'ES', age: o.age, pos: o.pos,
       h: o.h || U.int(170, 192), w: o.w || U.int(65, 86), foot: U.chance(0.75) ? 'R' : 'L',
       club: o.club || null, parent: null, num: 0, pot: 0, inj: 0, susp: 0, yel: 0,
-      st: { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0] }
+      st: { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0], nt: [0, 0, 0, 0, 0] }
     };
     if (p.pos === 'GK') p.h = U.int(184, 200);
     p.a = Players.buildAttrs(p.pos, o.ovr);
@@ -161,7 +161,7 @@
     for (let i = 1; i < TB_TAB.length; i++) {
       if (rep <= TB_TAB[i][0]) {
         const [x0, y0] = TB_TAB[i - 1], [x1, y1] = TB_TAB[i];
-        return (y0 + ((rep - x0) / (x1 - x0)) * (y1 - y0)) * 1e6;
+        return Math.max(1.5e6, (y0 + ((rep - x0) / (x1 - x0)) * (y1 - y0)) * 1e6); // أندية الدرجة الثانية (سمعة < 60) بحدّ أدنى
       }
     }
     return TB_TAB[TB_TAB.length - 1][1] * 1e6;
@@ -182,7 +182,7 @@
         const foreign = U.chance(club.liga ? 0.35 : 0.3);
         let nat, group;
         if (foreign) { nat = U.pick(G.EXTRA_NATS); group = (G.NATS.find((x) => x[0] === nat) || [0, 0, 'iber'])[2]; }
-        else { nat = club.country === 'ESP' ? 'ES' : club.country.slice(0, 2); group = homeGroup; }
+        else { nat = (G.COUNTRY_NAT || {})[club.country] || club.country.slice(0, 2); group = homeGroup; }
         const p = Players.gen({ pos, ovr, age, nat, group, club: club.id });
         G.S.players[p.id] = p;
         club.squad.push(p.id);
@@ -195,13 +195,15 @@
   Players.initWorld = () => {
     const S = G.S;
     S.clubs = {}; S.players = {}; S.free = [];
-    G.LALIGA.forEach((d) => {
-      S.clubs[d[0]] = { id: d[0], name: d[1], country: 'ESP', rep: d[2], c: [d[3], d[4]], form: d[5], liga: true, squad: [], tb: Players.budgetFor(d[2]) * (0.8 + U.rnd() * 0.4) };
+    // كل أندية العالم: الدوريات الخمسة الكبرى + درجاتها الثانية + أندية الأبطال الخارجية. أندية الدرجة الثانية «خفيفة» (بلا لاعبين) حتى الحاجة.
+    G.worldClubs().forEach((d) => {
+      const light = !!(d.lg && G.LEAGUES[d.lg].tier === 2);
+      S.clubs[d.id] = { id: d.id, name: d.name, country: d.country, rep: d.rep, c: d.c, form: d.form, liga: !!d.lg, lg: d.lg, light, squad: [], tb: Players.budgetFor(d.rep) * (0.8 + U.rnd() * 0.4) };
     });
-    G.FOREIGN.forEach((d) => {
-      S.clubs[d[0]] = { id: d[0], name: d[1], country: d[2], rep: d[3], c: [d[4], d[5]], form: d[6], liga: false, squad: [], tb: Players.budgetFor(d[3]) * (0.8 + U.rnd() * 0.4) };
+    Object.keys(S.clubs).forEach((id) => {
+      const c = S.clubs[id];
+      if (c.light) c.wcap = G.World.wageEstimate(c.rep); else Players.genSquad(c);
     });
-    Object.keys(S.clubs).forEach((id) => Players.genSquad(S.clubs[id]));
   };
 
   // ---------- اللاعب المستخدم ----------
@@ -223,7 +225,7 @@
       id, user: true, n: o.name, nat: o.nat, age: o.age, pos: o.pos, h: o.h, w: o.w, foot: o.foot, look: o.look,
       num: o.num, a, club: o.clubId, parent: null, pot: Math.max(pot, ovr0 + 10), inj: 0, susp: 0, yel: 0,
       fit: 90, form: [], trust: 45, role: 'bench', xp: 0, lvl: 0, dp: 0, gain: {}, car: [], hist: [], earn: 0, awards: [],
-      st: { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0] }, cards: { y: 0, r: 0 }, startSeason: S.season
+      st: { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0], nt: [0, 0, 0, 0, 0] }, cards: { y: 0, r: 0 }, startSeason: S.season
     };
     p.ovr = Players.calcOvr(p.a, p.pos);
     p.ct = { y: 3, w: 0 };
@@ -232,6 +234,7 @@
     p.pot = Math.max(p.pot, p.ovr + 10);
     S.players[id] = p;
     S.user = id;
+    G.World.ensureSquad(o.clubId); // نادٍ من الدرجة الثانية: تُولَّد تشكيلته قبل انضمام اللاعب
     const club = G.C(o.clubId);
     club.squad.push(id);
     p.num = Players.freeNumber(o.clubId, p.pos, o.num);

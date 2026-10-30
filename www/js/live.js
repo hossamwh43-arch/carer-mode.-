@@ -15,7 +15,7 @@
   Live.create = (fix, opts) => {
     opts = opts || {};
     const S = G.S, u = P(S.user);
-    const side = fix.h === u.club ? 'h' : 'a';
+    const side = fix.h === (opts.userClub || u.club) ? 'h' : 'a'; // مباريات المنتخب: نادٍ مجسّم يضم اللاعب
     const rotStart = u.role === 'rotation' ? G.Coach.rotStart(u) : false;
     const L = { h: G.Lineup.forClub(fix.h, side === 'h' ? { role: u.role, rotStart } : { noise: 1.2 }), a: G.Lineup.forClub(fix.a, side === 'a' ? { role: u.role, rotStart } : { noise: 1.2 }) };
     const s1 = U.int(1, 3), s2 = U.int(2, 6), labs = [];
@@ -291,7 +291,7 @@
       Object.keys(m.ps).forEach((id) => {
         const p = P(id), ps = m.ps[id];
         if (!p || ps.in == null && !m.xi[s].some((x) => x.id === id) && !ps.red) return;
-        const belongs = (p.club === m[s]);
+        const belongs = (p.club === m[s]) || (p.user && s === m.side); // لاعب المنتخب ناديه الحقيقي مختلف
         if (!belongs) return;
         const start = ps.in || 0, end = ps.out != null ? ps.out : m.total;
         const mins = Math.max(0, end - start);

@@ -35,7 +35,7 @@
     elite: ['«زينيث» للرياضة', 'سيارات «أوريون»', 'عطور «ماجد»']
   };
   const MILESTONES = [100e3, 500e3, 1e6, 5e6, 10e6, 25e6, 50e6, 100e6];
-  const OUTLETS = ['صحيفة «الملعب»', 'قناة «الأبطال»', 'إذاعة «الكرة الإسبانية»', 'موقع «هدف»', 'مجلة «النجوم»'];
+  const OUTLETS = ['صحيفة «الملعب»', 'قناة «الأبطال»', 'إذاعة «الملاعب»', 'موقع «هدف»', 'مجلة «النجوم»'];
 
   // ---------- الحالة ----------
   const tierOf = (pop) => { let t = Media.TIERS[0]; Media.TIERS.forEach((x) => { if (pop >= x.min) t = x; }); return t; };
@@ -175,7 +175,7 @@
   const fill = (s, ctx) => String(s).replace(/\{(\w+)\}/g, (_, k) => (ctx[k] != null ? ctx[k] : ''));
   const ctxOf = (pr) => {
     const S = G.S, u = P(S.user), c = pr.ctx || {};
-    return { opp: c.opp ? C(c.opp).name : '', club: C(u.club) ? C(u.club).name : '', g: c.g || 0, stage: c.stage ? (G.Ucl.STAGE_AR[c.stage] || '') : '', score: c.sc || '', name: sur(u) };
+    return { opp: c.opp && C(c.opp) ? C(c.opp).name : (c.oppName || ''), club: C(u.club) ? C(u.club).name : '', g: c.g || 0, stage: c.stage ? (G.Ucl.STAGE_AR[c.stage] || G.STAGE_NT_AR[c.stage] || '') : '', score: c.sc || '', name: sur(u) };
   };
   Media.question = (pr) => fill(K[pr.kind].q[pr.v % K[pr.kind].q.length], ctxOf(pr));
   Media.outlet = (pr) => OUTLETS[pr.o % OUTLETS.length];
@@ -193,7 +193,7 @@
     const my = sum.userSide, gf = my === 'h' ? sum.score.h : sum.score.a, ga = my === 'h' ? sum.score.a : sum.score.h;
     const opp = my === 'h' ? sum.a : sum.h;
     const fix = G.Season.findFix(sum.fixId) || {};
-    const stage = sum.comp === 'UCL' ? fix.stage || null : null, knock = !!(stage && stage !== 'league');
+    const stage = sum.comp === 'UCL' || sum.comp === 'NT' ? fix.stage || null : null, knock = !!(stage && stage !== 'league' && stage !== 'group');
     const played = sum.mins > 0, r = sum.rating || 6.4;
     // 1) أثر الأداء المباشر على الشعبية
     let d = 0;
@@ -229,7 +229,7 @@
       m.lastIdx = idx;
       if (m.press) m.stat.skip++; // مؤتمر سابق لم يُجَب
       m.press = { id: (m.pid = (m.pid || 0) + 1), w: S.week, s: S.season, kind, fixId: sum.fixId, v: Math.floor(h01(seedOf() + '|v|' + key) * 30), o: Math.floor(h01(seedOf() + '|o|' + key) * 30),
-        ctx: { opp, g: sum.g, as: sum.as, r: sum.rating, sc: gf + '-' + ga, stage, comp: sum.comp } };
+        ctx: { opp, oppName: oc, g: sum.g, as: sum.as, r: sum.rating, sc: gf + '-' + ga, stage, comp: sum.comp } };
     }
     return kind;
   };
@@ -320,7 +320,8 @@
   Media.seasonEnd = (row) => {
     const S = G.S, u = P(S.user), m = Media.get();
     let bump = 0;
-    if (row.trophies.liga) { bump += 4; head(sur(u) + ' يتوّج بلقب الدوري الإسباني', 1, true); }
+    if (row.trophies.liga) { bump += 4; head(sur(u) + ' يتوّج بلقب ' + G.leagueName(row.lgId), 1, true); }
+    if (row.trophies.d2) { bump += 2; head(sur(u) + ' بطل ' + G.leagueName(row.lgId) + ' ويقود فريقه للصعود', 1, true); }
     if (row.trophies.ucl) { bump += 7; head(sur(u) + ' بطل أوروبا!', 1, true); }
     (row.awards || []).forEach((t) => { bump += 2; head('جائزة ' + (G.Season.AWARD_AR[t] || t) + ' من نصيب ' + sur(u), 1, true); });
     m.pop = r2(clamp(m.pop + bump, 0, 100));

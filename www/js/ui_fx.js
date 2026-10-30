@@ -61,7 +61,7 @@
       if (!sm || S.phase !== 'end' || !sm.row) return false;
       const tr = sm.row.trophies || {}, mine = (sm.awards || []).filter((a) => a.user);
       if (tr.ucl) { UI.fx('fanfare'); UI.banner('win', '🌟 بطل أوروبا!', 'توّجتَ بدوري أبطال أوروبا'); return true; }
-      if (tr.liga) { UI.fx('fanfare'); UI.banner('win', '🥇 بطل الدوري!', 'لقب الدوري الإسباني لك'); return true; }
+      if (tr.liga || tr.d2) { UI.fx('fanfare'); UI.banner('win', tr.d2 ? '🥈 بطل الدرجة الثانية!' : '🥇 بطل الدوري!', 'لقب ' + G.leagueName(sm.row.lgId) + ' لك'); return true; }
       if (mine.length) { UI.fx('fanfare'); UI.banner('win', '🎖️ ' + G.Season.AWARD_AR[mine[0].type], mine.length > 1 ? 'و' + (mine.length - 1) + ' جوائز أخرى' : 'جائزة الموسم'); return true; }
       UI.fx('done');
       return false;

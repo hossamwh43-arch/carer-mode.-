@@ -12,20 +12,25 @@
   const strength = (id) => G.Players.clubStrength(G.C(id));
 
   // ---------- التأهل ----------
-  // spain: ترتيب الدوري الإسباني الحالي (إن وُجد)
-  Ucl.qualify = (spainOrder) => {
+  // orders: ترتيب نهاية الموسم لكل دوري كبير { ESP1: [...], ENG1: [...] } (أو null في الموسم الأول: يُرتَّب بالسمعة)
+  // المقاعد: G.UCL_SLOTS (20 ناديًا من الدوريات الخمسة) + G.CONFIG.uclOther من الأندية خارج هذه الدوريات
+  Ucl.qualify = (orders) => {
     const S = G.S, all = Object.keys(S.clubs);
-    const spanish = (spainOrder && spainOrder.length ? spainOrder : all.filter((i) => S.clubs[i].liga).sort((a, b) => S.clubs[b].rep - S.clubs[a].rep)).slice(0, G.CONFIG.uclSpainSlots);
-    const foreign = all.filter((i) => !S.clubs[i].liga);
+    const picked = [];
+    Object.keys(G.UCL_SLOTS).forEach((lg) => {
+      const o = orders && orders[lg] && orders[lg].length ? orders[lg] : all.filter((i) => S.clubs[i].lg === lg).sort((a, b) => S.clubs[b].rep - S.clubs[a].rep);
+      o.slice(0, G.UCL_SLOTS[lg]).forEach((id) => picked.push(id));
+    });
+    const outside = all.filter((i) => !S.clubs[i].lg && !S.clubs[i].nt);
     const prev = S.uclHistory && S.uclHistory.length ? S.uclHistory[S.uclHistory.length - 1].exit || {} : {};
     const stageBonus = { final: 2, sf: 1.5, qf: 1, r16: 0.5 };
     const score = {};
-    foreign.forEach((id) => { score[id] = strength(id) + U.gauss() * 3.2 + (stageBonus[prev[id]] || 0); });
-    const chosen = foreign.sort((a, b) => score[b] - score[a]).slice(0, G.CONFIG.uclForeign);
-    // نادي اللاعب الأجنبي يتأهل دائمًا (لا يوجد دوري محلي في اللعبة)
+    outside.forEach((id) => { score[id] = strength(id) + U.gauss() * 3.2 + (stageBonus[prev[id]] || 0); });
+    const chosen = outside.sort((a, b) => score[b] - score[a]).slice(0, G.CONFIG.uclOther);
+    // نادي اللاعب الخارجي (بلا دوري محلي في اللعبة) يتأهل دائمًا
     const u = P(S.user);
-    if (u && u.club && !S.clubs[u.club].liga && chosen.indexOf(u.club) < 0) { chosen.pop(); chosen.push(u.club); }
-    return spanish.concat(chosen);
+    if (u && u.club && !S.clubs[u.club].lg && chosen.indexOf(u.club) < 0) { chosen.pop(); chosen.push(u.club); }
+    return picked.concat(chosen);
   };
 
   // ---------- القرعة والجدولة ----------
@@ -33,7 +38,7 @@
   Ucl.draw = (teams) => {
     const sorted = teams.slice().sort((a, b) => strength(b) - strength(a));
     const pots = [0, 1, 2, 3].map((k) => sorted.slice(k * 9, k * 9 + 9));
-    const isEsp = (id) => G.C(id).country === 'ESP';
+    const same = (a, b) => G.C(a).country === G.C(b).country; // لا مواجهات بين أندية الاتحاد نفسه في مرحلة الدوري (قدر الإمكان)
     let best = null, bestScore = 1e9;
     for (let attempt = 0; attempt < 400; attempt++) {
       const pp = pots.map((p) => U.shuffle(p.slice()));
@@ -45,7 +50,7 @@
       }
       // داخل الوعاء الواحد: دورة من 9
       for (let p = 0; p < 4; p++) for (let i = 0; i < 9; i++) edges.push({ h: pp[p][i], a: pp[p][(i + 1) % 9] });
-      const clash = edges.filter((e) => isEsp(e.h) && isEsp(e.a)).length;
+      const clash = edges.filter((e) => same(e.h, e.a)).length;
       if (clash < bestScore) { bestScore = clash; best = edges; if (clash === 0) break; }
     }
     return { edges: best, pots, clashes: bestScore };

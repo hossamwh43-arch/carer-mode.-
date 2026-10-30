@@ -35,7 +35,7 @@
   Match.addStat = (pid, comp, mins, g, a, rating) => {
     const p = P(pid);
     if (!p || mins <= 0) return;
-    const s = p.st[comp];
+    const s = p.st[comp] || (p.st[comp] = [0, 0, 0, 0, 0]);
     s[0]++; s[1] += g; s[2] += a; s[3] += rating; s[4] += mins;
   };
 
