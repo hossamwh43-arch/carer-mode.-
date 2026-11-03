@@ -23,7 +23,7 @@
   const fill = (s, ctx) => String(s).replace(/\{(\w+)\}/g, (_, k) => (ctx[k] != null ? ctx[k] : '')).replace(/([لبوف])ـال/g, '$1ال').replace(/لال/g, 'لال').replace(/ـ(ال)/g, '$1');
 
   // ---------- الصحف: النبرة [مديح، نقد، خبر] وميل كل صحيفة إلى أنواع الأخبار ----------
-  // ملاحظة: كل الأسماء خيالية.
+  // ملاحظة: الصحف خيالية، وأسماء اللاعبين حقيقية (data_players.js) لكن النصوص كلها مُحاكاة وتُعرَض بتنبيه في الواجهة.
   Press.OUTLETS = [
     { id: 'mal', n: 'الملعب اليوم', ic: '📰', tone: [0.22, 0.22, 0.56], aff: { lg: 3, ucl: 1.5 } },
     { id: 'sada', n: 'صدى الكرة', ic: '🔥', tone: [0.25, 0.50, 0.25], aff: { user: 2.5, hat: 1.5, stinker: 3, drought: 3, crisis: 3, injury: 1.5 } },
@@ -239,7 +239,7 @@
   // ---------- الحالة ----------
   Press.get = () => {
     const S = G.S;
-    if (!S.press) S.press = { feed: [], id: 0, seen: 0, snap: {}, cnt: {}, lr: {}, lead: {}, crisis: {}, lastW: -1 };
+    if (!S.press) S.press = { feed: [], id: 0, seen: 0, snap: {}, cnt: {}, lr: {}, lead: {}, crisis: {}, lastW: -1, cov: {} };
     return S.press;
   };
   const natName = (c) => (G.Intl ? G.Intl.name(c) : c);
@@ -335,11 +335,14 @@
       cur[4] = p.inj > 0 ? 1 : 0;
     });
     pr.snap = next;
+    const cov = pr.cov || (pr.cov = {});
+    Object.keys(cov).forEach((k) => { cov[k] *= 0.88; if (cov[k] < 0.05) delete cov[k]; });
+    evs.forEach((ev) => { ev.mag /= 1 + 0.7 * (cov[ev.pid] || 0); }); // من تكرّر ذكره مؤخرًا يخفّ وزنه ⇒ تنوّع أكبر بين النجوم
     evs.sort((a, b) => b.mag - a.mag);
     let n = 0;
     const per = {}, pick = [];
     evs.forEach((ev) => { const c = per[ev.kind] || 0; if (pick.length < 5 && c < (ev.kind === 'hat' ? 1 : 2)) { per[ev.kind] = c + 1; pick.push(ev); } });
-    pick.forEach((ev, i) => { n += write(ev, i < 2 ? 3 : 2, 'wk').length; });
+    pick.forEach((ev, i) => { cov[ev.pid] = (cov[ev.pid] || 0) + 1; n += write(ev, i < 2 ? 3 : 2, 'wk').length; });
     n += leagueStories(w);
     n += uclStories(w);
     n += specials(w);
@@ -429,7 +432,7 @@
       if (ys.length) {
         const p = ys[Math.floor(H('yg' + w) * Math.min(ys.length, 6))];
         n += write({ kind: 'young', val: 0.6, mag: 1, pid: p.id, ctx: ctxFor(p) }, 2, 'yg').length;
-        const names = ys.slice(0, 4).map((x) => sur(x) + ' (' + clubName(x.club) + ')').join('، ');
+        let names = ''; ys.slice(0, 4).forEach((x, i) => { const t = (names ? names + '، ' : '') + sur(x) + ' (' + clubName(x.club) + ')'; if (i < 2 || t.length <= 62) names = t; });
         n += write({ kind: 'young', val: 0, mag: 1, pid: p.id, ctx: ctxFor(p, { x: names }) }, 1, 'yl').length;
       }
     }

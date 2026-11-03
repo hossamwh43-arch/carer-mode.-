@@ -3,7 +3,7 @@
   'use strict';
   const UI = G.UI, U = G.U, esc = UI.esc;
 
-  const natName = (code) => { const n = G.NATS.find((x) => x[0] === code); return n ? n[1] : code; };
+  const natName = (code) => { const n = G.NATS.find((x) => x[0] === code); return n ? n[1] : (G.NATIONS && G.NATIONS[code] ? G.NATIONS[code].ar : (G.NAT_EXTRA && G.NAT_EXTRA[code]) || code); };
   UI.natName = natName;
 
   function peek() {
@@ -64,7 +64,7 @@
     }
     h += '<button class="btn ' + (sv ? '' : 'pri') + '" data-a="wzNew">✨ مسيرة جديدة</button>';
     h += '<button class="btn" data-a="importSheet">📥 استيراد حفظ من نص</button>';
-    h += '<div class="notice" style="margin-top:14px">ℹ️ أسماء الأندية حقيقية (موسم 2025/26 كمرجع)، أما اللاعبون فخياليون بالكامل لعدم وجود تراخيص رسمية. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.</div>';
+    h += '<div class="notice" style="margin-top:14px">ℹ️ أسماء الأندية واللاعبين حقيقية (تشكيلات 2026 تقريبًا) لكن التقييمات والمراكز والأعمار تقديرية وبعض اللاعبين قد يكونون انتقلوا أو غادروا، ويُكمَل النقص بأسماء مولَّدة. الأسماء غير مرخّصة رسميًا فهي للاستخدام الشخصي فقط. الأخبار والمقالات الصحفية في اللعبة كلها مُحاكاة. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.</div>';
     return h;
   };
 

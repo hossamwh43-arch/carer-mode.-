@@ -26,7 +26,7 @@
     if (ou !== 'all') f.outlet = Number(ou);
     const list = G.Press.list(f);
     G.Press.markSeen();
-    let h = '<div class="card hl"><div class="row sb"><h2 style="margin:0">📰 الصحافة</h2><span class="pill b">' + pr.feed.length + ' خبرًا</span></div><div class="sm mut" style="margin-top:6px">عشر صحف ومواقع تكتب عنك وعن نجوم العالم: مديح وانتقاد وأخبار. تتبدّل النبرة بحسب الصحيفة.</div></div>';
+    let h = '<div class="card hl"><div class="row sb"><h2 style="margin:0">📰 الصحافة</h2><span class="pill b">' + pr.feed.length + ' خبرًا</span></div><div class="sm mut" style="margin-top:6px">عشر صحف ومواقع تكتب عنك وعن نجوم العالم: مديح وانتقاد وأخبار. تتبدّل النبرة بحسب الصحيفة.</div><div class="sm mut" style="margin-top:6px">⚠️ الصحف خيالية وكل الأخبار والانتقادات مُحاكاة داخل اللعبة بحسب أداء اللاعبين فيها، وليست أخبارًا حقيقية ولا تعبّر عن أي لاعب في الواقع.</div></div>';
     h += '<div class="chips">' + TYPES.map((t) => '<button class="chip ' + (ty === t[0] ? 'on' : '') + '" data-a="pressT" data-v="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
     h += '<div class="chips" style="overflow-x:auto;flex-wrap:nowrap;white-space:nowrap"><button class="chip ' + (ou === 'all' ? 'on' : '') + '" data-a="pressO" data-v="all">كل الصحف</button>' + G.Press.OUTLETS.map((o, i) => '<button class="chip ' + (String(ou) === String(i) ? 'on' : '') + '" data-a="pressO" data-v="' + i + '">' + o.ic + ' ' + esc(o.n) + '</button>').join('') + '</div>';
     if (!list.length) return h + '<div class="card mut c">' + (pr.feed.length ? 'لا أخبار بهذا الترشيح.' : 'لم تصدر أخبار بعد — ستبدأ الصحف الكتابة مع انطلاق الموسم.') + '</div>';

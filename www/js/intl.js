@@ -21,7 +21,7 @@
     return k || null;
   };
   Intl.label = (type, year) => G.TOURS[type].ar + ' ' + year;
-  Intl.name = (code) => (G.NATIONS[code] ? G.NATIONS[code].ar : code);
+  Intl.name = (code) => (G.NATIONS[code] ? G.NATIONS[code].ar : (G.NAT_EXTRA && G.NAT_EXTRA[code]) || code);
   Intl.active = () => !!(G.S && G.S.intl && !G.S.intl.done);
   Intl.hist = () => (G.S.intlHist = G.S.intlHist || []);
 

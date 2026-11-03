@@ -169,7 +169,72 @@
   Players.wageBill = (club) => U.sum(club.squad.map((id) => { const p = G.P(id); return p && !p.parentPays ? p.ct.w : 0; }));
 
   // ---------- توليد نادٍ وتشكيلته ----------
+  // تشكيلات حقيقية (js/data_players.js): «اسم,المركز,الجنسية,سنةالميلاد,التقييم;…». تُحلَّل عند الطلب وتُخزَّن مؤقتًا.
+  const RR = {};
+  Players.realRoster = (cid) => {
+    if (RR[cid] !== undefined) return RR[cid];
+    const raw = G.REAL_SQUADS && G.REAL_SQUADS[cid];
+    RR[cid] = raw ? raw.split(';').map((e) => { const f = e.split(','); return { n: f[0], pos: f[1], nat: f[2], yr: +f[3] || 0, r: +f[4] || 0 }; }) : null;
+    return RR[cid];
+  };
+  const MINPOS = { GK: 2, CB: 3, LB: 1, RB: 1, CDM: 1, CM: 2, CAM: 1, LW: 1, RW: 1, ST: 2 };
+  const MAXSQ = 27, MINSQ = 22, CENTER = 1.4; // CENTER: متوسط (أفضل 14) − q في المولِّد العشوائي القديم (محسوب بمونت كارلو) ⇒ قوة النادي تبقى كما عُيِّرت
+  const hashNoise = (s) => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 9973; return (h % 9) - 4; }; // −4…+4 ثابتة لكل اسم (بلا استهلاك للعشوائية)
+
+  function genRealSquad(club, real) {
+    const q = 0.62 * club.rep + 31;
+    const homeGroup = G.COUNTRY_GROUP[club.country] || 'iber';
+    const homeNat = (G.COUNTRY_NAT || {})[club.country] || club.country.slice(0, 2);
+    const yearNow = G.CONFIG.startYear + ((G.S && G.S.season) || 1) - 1;
+    let list = real.map((e) => ({ n: e.n, pos: e.pos, nat: e.nat, yr: e.yr, r: e.r || 63 + hashNoise(e.n), real: true }));
+    const cnt = () => { const c = {}; Object.keys(G.SQUAD_TEMPLATE).forEach((k) => { c[k] = 0; }); list.forEach((x) => { c[x.pos]++; }); return c; };
+    // حدّ أعلى للتشكيلة: يُستبعد الأضعف من المراكز الزائدة عن الحدّ الأدنى
+    while (list.length > MAXSQ) {
+      const c = cnt();
+      const cand = list.filter((x) => c[x.pos] > MINPOS[x.pos]).sort((a, b) => a.r - b.r)[0];
+      list.splice(list.indexOf(cand || list[list.length - 1]), 1);
+    }
+    // تغطية المراكز: نعيد توظيف لاعب زائد قريب المركز، وإلا نضيف لاعبًا مولَّدًا
+    const fillers = [];
+    Object.keys(MINPOS).forEach((pos) => {
+      let c = cnt();
+      while (c[pos] < MINPOS[pos]) {
+        const cand = list.filter((x) => x.real && x.pos !== 'GK' && pos !== 'GK' && c[x.pos] > MINPOS[x.pos] && Players.posPenalty(x.pos, pos) <= 8)
+          .sort((a, b) => Players.posPenalty(a.pos, pos) - Players.posPenalty(b.pos, pos) || a.r - b.r)[0];
+        if (cand) cand.pos = pos; else list.push({ pos, filler: true });
+        c = cnt();
+      }
+    });
+    while (list.length < MINSQ) {
+      const c = cnt();
+      const pos = Object.keys(G.SQUAD_TEMPLATE).sort((a, b) => (G.SQUAD_TEMPLATE[b] - c[b]) - (G.SQUAD_TEMPLATE[a] - c[a]))[0];
+      list.push({ pos, filler: true });
+    }
+    const top = list.filter((x) => x.real).map((x) => x.r).sort((a, b) => b - a).slice(0, 14);
+    const m14 = top.length ? U.avg(top) : 64;
+    club.squad = club.squad || [];
+    list.forEach((x) => {
+      let ovr, age, nat = x.nat, group, name = x.n;
+      if (x.filler) { // متمّم مولَّد (اسم خيالي): بديل بمستوى دكّة
+        ovr = U.clamp(Math.round(q - CENTER - 5 - U.rnd() * 4 + U.gauss() * 1.2), 50, 90);
+        age = U.clamp(Math.round(24 + U.gauss() * 4), 18, 36);
+        nat = homeNat; group = homeGroup; name = null;
+      } else {
+        ovr = U.clamp(Math.round(q - CENTER + (x.r - m14) + U.gauss() * 0.8), 52, 94);
+        age = x.yr ? U.clamp(yearNow - x.yr, 18, 41) : U.clamp(Math.round(25 + U.gauss() * 4.2), 18, 37);
+        group = (G.NATS.find((n) => n[0] === nat) || [0, 0, homeGroup])[2];
+      }
+      const p = Players.gen({ pos: x.pos, ovr, age, nat, group, club: club.id, name });
+      G.S.players[p.id] = p;
+      club.squad.push(p.id);
+      p.num = Players.freeNumber(club.id, x.pos);
+    });
+    club.wcap = Math.round(Players.wageBill(club) * 1.1);
+  }
+
   Players.genSquad = (club) => {
+    const real = Players.realRoster(club.id);
+    if (real && real.length) return genRealSquad(club, real);
     const q = 0.62 * club.rep + 31;
     const homeGroup = G.COUNTRY_GROUP[club.country] || 'iber';
     club.squad = club.squad || [];

@@ -1,0 +1,1296 @@
+{
+ "ESP1": [
+  {
+   "id": "rma",
+   "name": "Real Madrid",
+   "country": "ESP",
+   "rep": 91
+  },
+  {
+   "id": "fcb",
+   "name": "Barcelona",
+   "country": "ESP",
+   "rep": 90
+  },
+  {
+   "id": "atm",
+   "name": "Atlético Madrid",
+   "country": "ESP",
+   "rep": 85
+  },
+  {
+   "id": "ath",
+   "name": "Athletic Club",
+   "country": "ESP",
+   "rep": 78
+  },
+  {
+   "id": "vil",
+   "name": "Villarreal",
+   "country": "ESP",
+   "rep": 77
+  },
+  {
+   "id": "rso",
+   "name": "Real Sociedad",
+   "country": "ESP",
+   "rep": 77
+  },
+  {
+   "id": "bet",
+   "name": "Real Betis",
+   "country": "ESP",
+   "rep": 77
+  },
+  {
+   "id": "sev",
+   "name": "Sevilla",
+   "country": "ESP",
+   "rep": 75
+  },
+  {
+   "id": "val",
+   "name": "Valencia",
+   "country": "ESP",
+   "rep": 74
+  },
+  {
+   "id": "gir",
+   "name": "Girona",
+   "country": "ESP",
+   "rep": 73
+  },
+  {
+   "id": "cel",
+   "name": "Celta Vigo",
+   "country": "ESP",
+   "rep": 72
+  },
+  {
+   "id": "osa",
+   "name": "Osasuna",
+   "country": "ESP",
+   "rep": 70
+  },
+  {
+   "id": "get",
+   "name": "Getafe",
+   "country": "ESP",
+   "rep": 69
+  },
+  {
+   "id": "mal",
+   "name": "Mallorca",
+   "country": "ESP",
+   "rep": 69
+  },
+  {
+   "id": "ray",
+   "name": "Rayo Vallecano",
+   "country": "ESP",
+   "rep": 68
+  },
+  {
+   "id": "ala",
+   "name": "Alavés",
+   "country": "ESP",
+   "rep": 67
+  },
+  {
+   "id": "esp",
+   "name": "Espanyol",
+   "country": "ESP",
+   "rep": 67
+  },
+  {
+   "id": "elc",
+   "name": "Elche",
+   "country": "ESP",
+   "rep": 65
+  },
+  {
+   "id": "lev",
+   "name": "Levante",
+   "country": "ESP",
+   "rep": 65
+  },
+  {
+   "id": "ovi",
+   "name": "Real Oviedo",
+   "country": "ESP",
+   "rep": 63
+  }
+ ],
+ "ENG1": [
+  {
+   "id": "mci",
+   "name": "Manchester City",
+   "country": "ENG",
+   "rep": 90
+  },
+  {
+   "id": "ars",
+   "name": "Arsenal",
+   "country": "ENG",
+   "rep": 90
+  },
+  {
+   "id": "liv",
+   "name": "Liverpool",
+   "country": "ENG",
+   "rep": 89
+  },
+  {
+   "id": "che",
+   "name": "Chelsea",
+   "country": "ENG",
+   "rep": 85
+  },
+  {
+   "id": "tot",
+   "name": "Tottenham",
+   "country": "ENG",
+   "rep": 81
+  },
+  {
+   "id": "new",
+   "name": "Newcastle",
+   "country": "ENG",
+   "rep": 80
+  },
+  {
+   "id": "mun",
+   "name": "Manchester United",
+   "country": "ENG",
+   "rep": 80
+  },
+  {
+   "id": "avl",
+   "name": "Aston Villa",
+   "country": "ENG",
+   "rep": 78
+  },
+  {
+   "id": "bou",
+   "name": "Bournemouth",
+   "country": "ENG",
+   "rep": 76
+  },
+  {
+   "id": "bre",
+   "name": "Brentford",
+   "country": "ENG",
+   "rep": 76
+  },
+  {
+   "id": "bri",
+   "name": "Brighton",
+   "country": "ENG",
+   "rep": 77
+  },
+  {
+   "id": "bnl",
+   "name": "Burnley",
+   "country": "ENG",
+   "rep": 68
+  },
+  {
+   "id": "cry",
+   "name": "Crystal Palace",
+   "country": "ENG",
+   "rep": 77
+  },
+  {
+   "id": "eve",
+   "name": "Everton",
+   "country": "ENG",
+   "rep": 76
+  },
+  {
+   "id": "ful",
+   "name": "Fulham",
+   "country": "ENG",
+   "rep": 75
+  },
+  {
+   "id": "lee",
+   "name": "Leeds United",
+   "country": "ENG",
+   "rep": 71
+  },
+  {
+   "id": "nfo",
+   "name": "Nottingham Forest",
+   "country": "ENG",
+   "rep": 75
+  },
+  {
+   "id": "sun",
+   "name": "Sunderland",
+   "country": "ENG",
+   "rep": 67
+  },
+  {
+   "id": "whu",
+   "name": "West Ham",
+   "country": "ENG",
+   "rep": 75
+  },
+  {
+   "id": "wol",
+   "name": "Wolves",
+   "country": "ENG",
+   "rep": 71
+  }
+ ],
+ "GER1": [
+  {
+   "id": "bay",
+   "name": "Bayern Munich",
+   "country": "GER",
+   "rep": 91
+  },
+  {
+   "id": "b04",
+   "name": "Bayer Leverkusen",
+   "country": "GER",
+   "rep": 84
+  },
+  {
+   "id": "bvb",
+   "name": "Borussia Dortmund",
+   "country": "GER",
+   "rep": 83
+  },
+  {
+   "id": "rbl",
+   "name": "RB Leipzig",
+   "country": "GER",
+   "rep": 80
+  },
+  {
+   "id": "sge",
+   "name": "Eintracht Frankfurt",
+   "country": "GER",
+   "rep": 74
+  },
+  {
+   "id": "aug",
+   "name": "Augsburg",
+   "country": "GER",
+   "rep": 68
+  },
+  {
+   "id": "uni",
+   "name": "Union Berlin",
+   "country": "GER",
+   "rep": 70
+  },
+  {
+   "id": "bmg",
+   "name": "Borussia Mönchengladbach",
+   "country": "GER",
+   "rep": 71
+  },
+  {
+   "id": "fre",
+   "name": "Freiburg",
+   "country": "GER",
+   "rep": 73
+  },
+  {
+   "id": "ham",
+   "name": "Hamburg",
+   "country": "GER",
+   "rep": 66
+  },
+  {
+   "id": "hei",
+   "name": "Heidenheim",
+   "country": "GER",
+   "rep": 65
+  },
+  {
+   "id": "hof",
+   "name": "Hoffenheim",
+   "country": "GER",
+   "rep": 70
+  },
+  {
+   "id": "kol",
+   "name": "Köln",
+   "country": "GER",
+   "rep": 66
+  },
+  {
+   "id": "mai",
+   "name": "Mainz",
+   "country": "GER",
+   "rep": 69
+  },
+  {
+   "id": "stp",
+   "name": "St. Pauli",
+   "country": "GER",
+   "rep": 65
+  },
+  {
+   "id": "stu",
+   "name": "Stuttgart",
+   "country": "GER",
+   "rep": 76
+  },
+  {
+   "id": "wer",
+   "name": "Werder Bremen",
+   "country": "GER",
+   "rep": 68
+  },
+  {
+   "id": "wob",
+   "name": "Wolfsburg",
+   "country": "GER",
+   "rep": 70
+  }
+ ],
+ "ITA1": [
+  {
+   "id": "int",
+   "name": "Inter",
+   "country": "ITA",
+   "rep": 87
+  },
+  {
+   "id": "juv",
+   "name": "Juventus",
+   "country": "ITA",
+   "rep": 83
+  },
+  {
+   "id": "nap",
+   "name": "Napoli",
+   "country": "ITA",
+   "rep": 82
+  },
+  {
+   "id": "ata",
+   "name": "Atalanta",
+   "country": "ITA",
+   "rep": 82
+  },
+  {
+   "id": "mil",
+   "name": "AC Milan",
+   "country": "ITA",
+   "rep": 81
+  },
+  {
+   "id": "rom",
+   "name": "Roma",
+   "country": "ITA",
+   "rep": 77
+  },
+  {
+   "id": "bol",
+   "name": "Bologna",
+   "country": "ITA",
+   "rep": 76
+  },
+  {
+   "id": "cag",
+   "name": "Cagliari",
+   "country": "ITA",
+   "rep": 66
+  },
+  {
+   "id": "com",
+   "name": "Como",
+   "country": "ITA",
+   "rep": 69
+  },
+  {
+   "id": "cre",
+   "name": "Cremonese",
+   "country": "ITA",
+   "rep": 63
+  },
+  {
+   "id": "fio",
+   "name": "Fiorentina",
+   "country": "ITA",
+   "rep": 77
+  },
+  {
+   "id": "gen",
+   "name": "Genoa",
+   "country": "ITA",
+   "rep": 70
+  },
+  {
+   "id": "ver",
+   "name": "Hellas Verona",
+   "country": "ITA",
+   "rep": 66
+  },
+  {
+   "id": "laz",
+   "name": "Lazio",
+   "country": "ITA",
+   "rep": 78
+  },
+  {
+   "id": "lec",
+   "name": "Lecce",
+   "country": "ITA",
+   "rep": 65
+  },
+  {
+   "id": "par",
+   "name": "Parma",
+   "country": "ITA",
+   "rep": 68
+  },
+  {
+   "id": "pis",
+   "name": "Pisa",
+   "country": "ITA",
+   "rep": 63
+  },
+  {
+   "id": "sas",
+   "name": "Sassuolo",
+   "country": "ITA",
+   "rep": 67
+  },
+  {
+   "id": "tor",
+   "name": "Torino",
+   "country": "ITA",
+   "rep": 70
+  },
+  {
+   "id": "udi",
+   "name": "Udinese",
+   "country": "ITA",
+   "rep": 68
+  }
+ ],
+ "FRA1": [
+  {
+   "id": "psg",
+   "name": "Paris Saint-Germain",
+   "country": "FRA",
+   "rep": 89
+  },
+  {
+   "id": "mar",
+   "name": "Marseille",
+   "country": "FRA",
+   "rep": 76
+  },
+  {
+   "id": "mon",
+   "name": "Monaco",
+   "country": "FRA",
+   "rep": 76
+  },
+  {
+   "id": "lyo",
+   "name": "Lyon",
+   "country": "FRA",
+   "rep": 75
+  },
+  {
+   "id": "lil",
+   "name": "Lille",
+   "country": "FRA",
+   "rep": 74
+  },
+  {
+   "id": "ang",
+   "name": "Angers",
+   "country": "FRA",
+   "rep": 62
+  },
+  {
+   "id": "aux",
+   "name": "Auxerre",
+   "country": "FRA",
+   "rep": 63
+  },
+  {
+   "id": "brt",
+   "name": "Brest",
+   "country": "FRA",
+   "rep": 66
+  },
+  {
+   "id": "leh",
+   "name": "Le Havre",
+   "country": "FRA",
+   "rep": 61
+  },
+  {
+   "id": "len",
+   "name": "Lens",
+   "country": "FRA",
+   "rep": 72
+  },
+  {
+   "id": "lor",
+   "name": "Lorient",
+   "country": "FRA",
+   "rep": 61
+  },
+  {
+   "id": "met",
+   "name": "Metz",
+   "country": "FRA",
+   "rep": 61
+  },
+  {
+   "id": "nan",
+   "name": "Nantes",
+   "country": "FRA",
+   "rep": 65
+  },
+  {
+   "id": "nic",
+   "name": "Nice",
+   "country": "FRA",
+   "rep": 72
+  },
+  {
+   "id": "pfc",
+   "name": "Paris FC",
+   "country": "FRA",
+   "rep": 64
+  },
+  {
+   "id": "ren",
+   "name": "Rennes",
+   "country": "FRA",
+   "rep": 72
+  },
+  {
+   "id": "str",
+   "name": "Strasbourg",
+   "country": "FRA",
+   "rep": 69
+  },
+  {
+   "id": "tou",
+   "name": "Toulouse",
+   "country": "FRA",
+   "rep": 66
+  }
+ ],
+ "OUT": [
+  {
+   "id": "spo",
+   "name": "Sporting CP",
+   "country": "POR",
+   "rep": 81
+  },
+  {
+   "id": "ben",
+   "name": "Benfica",
+   "country": "POR",
+   "rep": 80
+  },
+  {
+   "id": "por",
+   "name": "Porto",
+   "country": "POR",
+   "rep": 78
+  },
+  {
+   "id": "bra",
+   "name": "Braga",
+   "country": "POR",
+   "rep": 72
+  },
+  {
+   "id": "psv",
+   "name": "PSV Eindhoven",
+   "country": "NED",
+   "rep": 78
+  },
+  {
+   "id": "aja",
+   "name": "Ajax",
+   "country": "NED",
+   "rep": 75
+  },
+  {
+   "id": "fey",
+   "name": "Feyenoord",
+   "country": "NED",
+   "rep": 74
+  },
+  {
+   "id": "clb",
+   "name": "Club Brugge",
+   "country": "BEL",
+   "rep": 73
+  },
+  {
+   "id": "usg",
+   "name": "Union Saint-Gilloise",
+   "country": "BEL",
+   "rep": 69
+  },
+  {
+   "id": "gal",
+   "name": "Galatasaray",
+   "country": "TUR",
+   "rep": 74
+  },
+  {
+   "id": "fen",
+   "name": "Fenerbahçe",
+   "country": "TUR",
+   "rep": 73
+  },
+  {
+   "id": "clt",
+   "name": "Celtic",
+   "country": "SCO",
+   "rep": 69
+  },
+  {
+   "id": "sal",
+   "name": "RB Salzburg",
+   "country": "AUT",
+   "rep": 69
+  },
+  {
+   "id": "cop",
+   "name": "FC Copenhagen",
+   "country": "DEN",
+   "rep": 69
+  },
+  {
+   "id": "oly",
+   "name": "Olympiacos",
+   "country": "GRE",
+   "rep": 69
+  },
+  {
+   "id": "sla",
+   "name": "Slavia Prague",
+   "country": "CZE",
+   "rep": 68
+  },
+  {
+   "id": "sha",
+   "name": "Shakhtar Donetsk",
+   "country": "UKR",
+   "rep": 67
+  },
+  {
+   "id": "bod",
+   "name": "Bodø/Glimt",
+   "country": "NOR",
+   "rep": 66
+  },
+  {
+   "id": "yb",
+   "name": "Young Boys",
+   "country": "SUI",
+   "rep": 65
+  },
+  {
+   "id": "qar",
+   "name": "Qarabağ",
+   "country": "AZE",
+   "rep": 64
+  }
+ ],
+ "ENG2": [
+  {
+   "id": "sou",
+   "name": "Southampton",
+   "country": "ENG",
+   "rep": 67
+  },
+  {
+   "id": "lei",
+   "name": "Leicester City",
+   "country": "ENG",
+   "rep": 67
+  },
+  {
+   "id": "ips",
+   "name": "Ipswich Town",
+   "country": "ENG",
+   "rep": 66
+  },
+  {
+   "id": "cov",
+   "name": "Coventry City",
+   "country": "ENG",
+   "rep": 63
+  },
+  {
+   "id": "mid",
+   "name": "Middlesbrough",
+   "country": "ENG",
+   "rep": 63
+  },
+  {
+   "id": "wba",
+   "name": "West Bromwich Albion",
+   "country": "ENG",
+   "rep": 62
+  },
+  {
+   "id": "nor",
+   "name": "Norwich City",
+   "country": "ENG",
+   "rep": 63
+  },
+  {
+   "id": "shu",
+   "name": "Sheffield United",
+   "country": "ENG",
+   "rep": 62
+  },
+  {
+   "id": "wat",
+   "name": "Watford",
+   "country": "ENG",
+   "rep": 62
+  },
+  {
+   "id": "sto",
+   "name": "Stoke City",
+   "country": "ENG",
+   "rep": 61
+  },
+  {
+   "id": "swa",
+   "name": "Swansea City",
+   "country": "ENG",
+   "rep": 61
+  },
+  {
+   "id": "hul",
+   "name": "Hull City",
+   "country": "ENG",
+   "rep": 60
+  },
+  {
+   "id": "bbn",
+   "name": "Blackburn Rovers",
+   "country": "ENG",
+   "rep": 60
+  },
+  {
+   "id": "brc",
+   "name": "Bristol City",
+   "country": "ENG",
+   "rep": 60
+  },
+  {
+   "id": "der",
+   "name": "Derby County",
+   "country": "ENG",
+   "rep": 60
+  },
+  {
+   "id": "bir",
+   "name": "Birmingham City",
+   "country": "ENG",
+   "rep": 61
+  },
+  {
+   "id": "qpr",
+   "name": "Queens Park Rangers",
+   "country": "ENG",
+   "rep": 59
+  },
+  {
+   "id": "pmt",
+   "name": "Portsmouth",
+   "country": "ENG",
+   "rep": 59
+  },
+  {
+   "id": "mlw",
+   "name": "Millwall",
+   "country": "ENG",
+   "rep": 58
+  },
+  {
+   "id": "pre",
+   "name": "Preston North End",
+   "country": "ENG",
+   "rep": 58
+  }
+ ],
+ "ESP2": [
+  {
+   "id": "alm",
+   "name": "Almería",
+   "country": "ESP",
+   "rep": 59
+  },
+  {
+   "id": "cad",
+   "name": "Cádiz",
+   "country": "ESP",
+   "rep": 58
+  },
+  {
+   "id": "gra",
+   "name": "Granada",
+   "country": "ESP",
+   "rep": 60
+  },
+  {
+   "id": "lpa",
+   "name": "Las Palmas",
+   "country": "ESP",
+   "rep": 61
+  },
+  {
+   "id": "leg",
+   "name": "Leganés",
+   "country": "ESP",
+   "rep": 60
+  },
+  {
+   "id": "vld",
+   "name": "Real Valladolid",
+   "country": "ESP",
+   "rep": 60
+  },
+  {
+   "id": "rac",
+   "name": "Racing Santander",
+   "country": "ESP",
+   "rep": 57
+  },
+  {
+   "id": "dep",
+   "name": "Deportivo La Coruña",
+   "country": "ESP",
+   "rep": 58
+  },
+  {
+   "id": "mlg",
+   "name": "Málaga",
+   "country": "ESP",
+   "rep": 58
+  },
+  {
+   "id": "zar",
+   "name": "Real Zaragoza",
+   "country": "ESP",
+   "rep": 57
+  },
+  {
+   "id": "gij",
+   "name": "Sporting Gijón",
+   "country": "ESP",
+   "rep": 57
+  },
+  {
+   "id": "eib",
+   "name": "Eibar",
+   "country": "ESP",
+   "rep": 57
+  },
+  {
+   "id": "brg",
+   "name": "Burgos",
+   "country": "ESP",
+   "rep": 55
+  },
+  {
+   "id": "cas",
+   "name": "Castellón",
+   "country": "ESP",
+   "rep": 56
+  },
+  {
+   "id": "alb",
+   "name": "Albacete",
+   "country": "ESP",
+   "rep": 55
+  },
+  {
+   "id": "cor",
+   "name": "Córdoba",
+   "country": "ESP",
+   "rep": 55
+  },
+  {
+   "id": "hue",
+   "name": "Huesca",
+   "country": "ESP",
+   "rep": 55
+  },
+  {
+   "id": "mir",
+   "name": "Mirandés",
+   "country": "ESP",
+   "rep": 53
+  },
+  {
+   "id": "cul",
+   "name": "Cultural Leonesa",
+   "country": "ESP",
+   "rep": 52
+  },
+  {
+   "id": "and",
+   "name": "Andorra",
+   "country": "ESP",
+   "rep": 52
+  }
+ ],
+ "ITA2": [
+  {
+   "id": "ven",
+   "name": "Venezia",
+   "country": "ITA",
+   "rep": 61
+  },
+  {
+   "id": "mnz",
+   "name": "Monza",
+   "country": "ITA",
+   "rep": 62
+  },
+  {
+   "id": "pal",
+   "name": "Palermo",
+   "country": "ITA",
+   "rep": 62
+  },
+  {
+   "id": "emp",
+   "name": "Empoli",
+   "country": "ITA",
+   "rep": 61
+  },
+  {
+   "id": "sam",
+   "name": "Sampdoria",
+   "country": "ITA",
+   "rep": 61
+  },
+  {
+   "id": "spe",
+   "name": "Spezia",
+   "country": "ITA",
+   "rep": 58
+  },
+  {
+   "id": "bar",
+   "name": "Bari",
+   "country": "ITA",
+   "rep": 59
+  },
+  {
+   "id": "ces",
+   "name": "Cesena",
+   "country": "ITA",
+   "rep": 55
+  },
+  {
+   "id": "cat",
+   "name": "Catanzaro",
+   "country": "ITA",
+   "rep": 56
+  },
+  {
+   "id": "mod",
+   "name": "Modena",
+   "country": "ITA",
+   "rep": 56
+  },
+  {
+   "id": "pad",
+   "name": "Padova",
+   "country": "ITA",
+   "rep": 54
+  },
+  {
+   "id": "pes",
+   "name": "Pescara",
+   "country": "ITA",
+   "rep": 54
+  },
+  {
+   "id": "fro",
+   "name": "Frosinone",
+   "country": "ITA",
+   "rep": 57
+  },
+  {
+   "id": "car",
+   "name": "Carrarese",
+   "country": "ITA",
+   "rep": 52
+  },
+  {
+   "id": "jst",
+   "name": "Juve Stabia",
+   "country": "ITA",
+   "rep": 52
+  },
+  {
+   "id": "man",
+   "name": "Mantova",
+   "country": "ITA",
+   "rep": 52
+  },
+  {
+   "id": "reg",
+   "name": "Reggiana",
+   "country": "ITA",
+   "rep": 53
+  },
+  {
+   "id": "sud",
+   "name": "Südtirol",
+   "country": "ITA",
+   "rep": 53
+  },
+  {
+   "id": "ave",
+   "name": "Avellino",
+   "country": "ITA",
+   "rep": 54
+  },
+  {
+   "id": "ent",
+   "name": "Virtus Entella",
+   "country": "ITA",
+   "rep": 51
+  }
+ ],
+ "GER2": [
+  {
+   "id": "sch",
+   "name": "Schalke 04",
+   "country": "GER",
+   "rep": 64
+  },
+  {
+   "id": "her",
+   "name": "Hertha BSC",
+   "country": "GER",
+   "rep": 63
+  },
+  {
+   "id": "han",
+   "name": "Hannover 96",
+   "country": "GER",
+   "rep": 60
+  },
+  {
+   "id": "dus",
+   "name": "Fortuna Düsseldorf",
+   "country": "GER",
+   "rep": 61
+  },
+  {
+   "id": "ksc",
+   "name": "Karlsruher SC",
+   "country": "GER",
+   "rep": 58
+  },
+  {
+   "id": "fck",
+   "name": "Kaiserslautern",
+   "country": "GER",
+   "rep": 60
+  },
+  {
+   "id": "nur",
+   "name": "Nürnberg",
+   "country": "GER",
+   "rep": 59
+  },
+  {
+   "id": "fue",
+   "name": "Greuther Fürth",
+   "country": "GER",
+   "rep": 57
+  },
+  {
+   "id": "dar",
+   "name": "Darmstadt 98",
+   "country": "GER",
+   "rep": 58
+  },
+  {
+   "id": "pdb",
+   "name": "Paderborn",
+   "country": "GER",
+   "rep": 58
+  },
+  {
+   "id": "mag",
+   "name": "Magdeburg",
+   "country": "GER",
+   "rep": 55
+  },
+  {
+   "id": "brs",
+   "name": "Braunschweig",
+   "country": "GER",
+   "rep": 55
+  },
+  {
+   "id": "elv",
+   "name": "Elversberg",
+   "country": "GER",
+   "rep": 54
+  },
+  {
+   "id": "mue",
+   "name": "Preußen Münster",
+   "country": "GER",
+   "rep": 53
+  },
+  {
+   "id": "kie",
+   "name": "Holstein Kiel",
+   "country": "GER",
+   "rep": 57
+  },
+  {
+   "id": "bie",
+   "name": "Arminia Bielefeld",
+   "country": "GER",
+   "rep": 57
+  },
+  {
+   "id": "dre",
+   "name": "Dynamo Dresden",
+   "country": "GER",
+   "rep": 56
+  },
+  {
+   "id": "boc",
+   "name": "VfL Bochum",
+   "country": "GER",
+   "rep": 58
+  }
+ ],
+ "FRA2": [
+  {
+   "id": "ste",
+   "name": "Saint-Étienne",
+   "country": "FRA",
+   "rep": 62
+  },
+  {
+   "id": "mtp",
+   "name": "Montpellier",
+   "country": "FRA",
+   "rep": 60
+  },
+  {
+   "id": "rei",
+   "name": "Reims",
+   "country": "FRA",
+   "rep": 62
+  },
+  {
+   "id": "tro",
+   "name": "Troyes",
+   "country": "FRA",
+   "rep": 56
+  },
+  {
+   "id": "gui",
+   "name": "Guingamp",
+   "country": "FRA",
+   "rep": 56
+  },
+  {
+   "id": "rod",
+   "name": "Rodez",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "red",
+   "name": "Red Star",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "ann",
+   "name": "Annecy",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "dun",
+   "name": "Dunkerque",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "grn",
+   "name": "Grenoble",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "lav",
+   "name": "Laval",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "cle",
+   "name": "Clermont",
+   "country": "FRA",
+   "rep": 55
+  },
+  {
+   "id": "pau",
+   "name": "Pau",
+   "country": "FRA",
+   "rep": 51
+  },
+  {
+   "id": "ami",
+   "name": "Amiens",
+   "country": "FRA",
+   "rep": 54
+  },
+  {
+   "id": "bas",
+   "name": "Bastia",
+   "country": "FRA",
+   "rep": 55
+  },
+  {
+   "id": "nay",
+   "name": "Nancy",
+   "country": "FRA",
+   "rep": 53
+  },
+  {
+   "id": "lmn",
+   "name": "Le Mans",
+   "country": "FRA",
+   "rep": 52
+  },
+  {
+   "id": "cae",
+   "name": "Caen",
+   "country": "FRA",
+   "rep": 53
+  }
+ ]
+}
