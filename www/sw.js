@@ -1,5 +1,5 @@
 /* sw.js — Service Worker بسيط: يخزّن ملفات اللعبة للعمل بدون إنترنت (PWA) */
-const VER = 'fcc-v6'; // ارفع الرقم عند إضافة/تغيير ملفات ليُحدَّث المخزَّن لدى المستخدمين
+const VER = 'fcc-v7'; // ارفع الرقم عند إضافة/تغيير ملفات ليُحدَّث المخزَّن لدى المستخدمين
 const FILES = [
   './', 'index.html', 'manifest.json', 'css/style.css', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'css/fonts/barlow-700.woff',
   'css/fonts/barlow-800.woff', 'css/fonts/barlow-800i.woff', 'css/fonts/kufi.woff', 'css/fonts/plex-400.woff', 'css/fonts/plex-500.woff',
