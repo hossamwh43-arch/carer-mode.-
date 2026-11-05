@@ -146,7 +146,7 @@
     if (mins > 0) {
       u.fit = U.clamp(u.fit - mins * 0.16, 15, 100);
       u.form.push(rating); if (u.form.length > 10) u.form.shift();
-      G.Training.addXP(u, G.Training.matchXP(rating, mins));
+      G.Training.addXP(u, G.Training.matchXP(rating, mins) * (G.Growth ? G.Growth.xpMult(u) : 1)); // الزخم والزملاء النجوم يزيدان الخبرة
       u.cards.y += ps.yel; u.cards.r += ps.red;
       u.yel += ps.yel;
       if (ps.g >= 3) u.hattricks = (u.hattricks || 0) + 1;
@@ -157,6 +157,7 @@
       if (ps.red) u.susp = Math.max(u.susp, ps.direct ? U.int(2, 3) : 1);
     } else if (u.susp > 0) u.susp--; // أنهى مباراة إيقاف
     if (ps.inj) { const iw = Math.max(1, Math.round(ps.inj * G.diff().injLen)); u.inj = Math.max(u.inj, iw); summary.inj = iw; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + iw + ' أسبوعًا تقريبًا.'); }
+    if (G.Growth && mins > 0) { summary.gro = G.safe(() => G.Growth.afterMatch(u, summary, ps), 'growth') || null; }
     if (!isNT) G.Coach.afterMatch(u, rating || 6.4, mins); // ثقة مدرب النادي لا تتأثر بمباريات المنتخب
     u.trainingMinutes = 0;
     S.matchLog.unshift(summary); if (S.matchLog.length > 60) S.matchLog.length = 60;
@@ -294,6 +295,7 @@
     };
     u.car.push(row);
     mine.forEach((t) => u.awards.push({ season: S.season, type: t }));
+    if (G.Growth && mine.length) G.safe(() => G.Growth.onAwards(u, mine), 'growth');
     u.trophies = u.trophies || { liga: 0, ucl: 0 };
     if (trophies.liga) u.trophies.liga++;
     if (trophies.d2) u.trophies.d2 = (u.trophies.d2 || 0) + 1;
@@ -351,6 +353,7 @@
       G.Players.refresh(p);
     });
     u.fit = 95; u.form = []; u.gain = {}; u.prog = {};
+    if (G.Growth) G.Growth.newSeason(u);
     // 4) التأهل لدوري الأبطال للموسم القادم
     S.uclTeams = G.Ucl.qualify(orders);
     moves.forEach((m) => {

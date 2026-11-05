@@ -8,10 +8,10 @@
   const W_ASSIST = { CAM: 7, LW: 6, RW: 6, CM: 4, LB: 3, RB: 3, ST: 2.5, CDM: 2, CB: 0.7, GK: 0.05 };
   const GRP = G.POS_GROUP;
 
-  Match.scorerWeight = (p, slot) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho) / 65, 1.5);
-  Match.assistWeight = (p, slot) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas) / 65, 1.5);
-  Match.pickScorer = (list) => U.wpick(list, (x) => Match.scorerWeight(P(x.id), x.slot));
-  Match.pickAssist = (list, exceptId) => U.wpick(list.filter((x) => x.id !== exceptId), (x) => Match.assistWeight(P(x.id), x.slot));
+  Match.scorerWeight = (p, slot, bonus) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho + (p.user && bonus ? bonus : 0)) / 65, 1.5);
+  Match.assistWeight = (p, slot, bonus) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas + (p.user && bonus ? bonus : 0)) / 65, 1.5);
+  Match.pickScorer = (list, bonus) => U.wpick(list, (x) => Match.scorerWeight(P(x.id), x.slot, bonus));
+  Match.pickAssist = (list, exceptId, bonus) => U.wpick(list.filter((x) => x.id !== exceptId), (x) => Match.assistWeight(P(x.id), x.slot, bonus));
 
   Match.injWeeks = () => { const r = U.rnd(); return r < 0.55 ? U.int(1, 2) : r < 0.88 ? U.int(3, 6) : U.int(7, 16); };
 
@@ -22,6 +22,7 @@
     else r += o.res === 'w' ? 0.3 : o.res === 'l' ? -0.3 : 0;
     r += (o.g || 0) * 0.95 + (o.a || 0) * 0.6 + (o.sot || 0) * 0.06 - (o.big || 0) * 0.22;
     r += (o.momOk || 0) * 0.16 - (o.momBad || 0) * 0.14;
+    if (o.syn && o.mins >= 20) r += o.syn * (G.Growth ? G.Growth.SYN_RATING : 0.35); // زملاء من الطراز الرفيع يرفعون أداء اللاعب
     const g = GRP[pos];
     if (o.mins >= 45) {
       if (o.cs) r += g === 'gk' ? 0.55 : g === 'def' ? 0.4 : g === 'mid' ? 0.12 : 0;

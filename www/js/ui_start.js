@@ -58,7 +58,7 @@
   UI.screens.start = () => {
     if (UI.wz) return wizard();
     const sv = peek();
-    let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero">' + UI.ico('ball', 'st-ball') + '<h1>مسيرة لاعب</h1><span class="st-bar"></span><p class="mut">ابدأ ناشئًا في أحد الدوريات الخمسة الكبرى أو درجاتها الثانية، وطارد دوري الأبطال وكأس العالم والكرة الذهبية</p></div>';
+    let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero"><img class="st-logo" src="icons/logo.webp" width="240" height="274" alt="شعار مسيرة لاعب — Player Career" decoding="async"><h1 class="st-h1">مسيرة لاعب</h1><p class="mut">ابدأ ناشئًا في أحد الدوريات الخمسة الكبرى أو درجاتها الثانية، وطارد دوري الأبطال وكأس العالم والكرة الذهبية</p></div>';
     if (sv) {
       h += '<div class="card hl"><h3>مسيرة محفوظة</h3><div class="kv"><span>اللاعب</span><b>' + esc(sv.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(sv.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + sv.season + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + sv.ovr + ' / ' + sv.age + '</span></div><button class="btn pri" data-a="continueGame">▶ متابعة المسيرة</button></div>';
     }

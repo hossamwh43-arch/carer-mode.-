@@ -8,7 +8,7 @@
   const GRP = { GK: 'gk', LB: 'def', RB: 'def', CB: 'def', CDM: 'mid', CM: 'mid', CAM: 'mid', LW: 'att', RW: 'att', ST: 'att' };
 
   Lineup.avail = (p) => p && !p.inj && !p.susp;
-  Lineup.eff = (p, slot) => p.ovr - G.Players.posPenalty(p.pos, slot);
+  Lineup.eff = (p, slot) => p.ovr + (p.user && G.Growth ? G.Growth.glowOf(p) : 0) - G.Players.posPenalty(p.pos, slot);
   Lineup.slots = (club) => G.FORMATIONS[club.form] || G.FORMATIONS['4-3-3'];
 
   // يختار أفضل 11 لاعبًا من pool لخطة معيّنة

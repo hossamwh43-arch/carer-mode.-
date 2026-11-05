@@ -45,7 +45,9 @@
       const mine = sm.userSide, gf = mine === 'h' ? sm.score.h : sm.score.a, ga = mine === 'h' ? sm.score.a : sm.score.h;
       let w = gf > ga ? 1 : gf < ga ? -1 : 0;
       if (w === 0 && sm.pens) w = (mine === 'h' ? sm.pens.h - sm.pens.a : sm.pens.a - sm.pens.h) > 0 ? 1 : -1;
-      if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '⭐ نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
+      const sk = sm.gro && sm.gro.ev.find((e) => e.k === 'streak');
+      if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '🔥 ارتقى مستواك!', sm.gro.s + ' مباريات متتالية متألقة'); }
+      else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '⭐ نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
       else if (w > 0) UI.fx('done');
     }, 'resultFx');
   }
@@ -119,7 +121,7 @@
   function momentHtml(m) {
     const c = m.pending;
     if (!c) return '';
-    return '<div class="card mom-card"><div class="row sb"><h3 style="margin:0">🎯 ' + esc(c.title) + '</h3><span class="pill b">' + esc(c.lab || '') + "'</span></div><p>" + esc(c.text) + '</p>' +
+    return '<div class="card mom-card"><div class="row sb"><h3 style="margin:0">🎯 ' + esc(c.title) + '</h3><span class="pill b">' + esc(c.lab || '') + "'</span></div><p>" + esc(c.text) + '</p>' + (c.note ? '<div class="sm mut" style="margin:-4px 0 8px">📊 ' + esc(c.note) + '</div>' : '') +
       c.options.map((o) => '<button class="opt" data-a="momPick" data-v="' + o.id + '"><b>' + esc(o.label) + '</b><small>' + esc(o.hint) + '</small></button>').join('') + '</div>';
   }
 
@@ -176,6 +178,7 @@
         '<div class="grid3" style="margin-top:10px"><div class="stat"><b class="ltr">' + sm.mins + "'</b><small>الدقائق</small></div><div class=\"stat\"><b>" + sm.g + '</b><small>أهداف</small></div><div class="stat"><b>' + sm.as + '</b><small>صناعة</small></div>' +
         '<div class="stat"><b class="ltr">' + sm.sh + ' (' + sm.sot + ')</b><small>تسديدات (على المرمى)</small></div><div class="stat"><b>' + sm.pasOk + '/' + sm.pas + '</b><small>تمريرات ناجحة</small></div><div class="stat"><b>' + sm.drOk + '/' + sm.dr + '</b><small>مراوغات</small></div>' +
         '<div class="stat"><b>' + sm.tkOk + '/' + sm.tk + '</b><small>تدخلات</small></div><div class="stat"><b>' + (sm.big || 0) + '</b><small>فرص محققة ضائعة</small></div><div class="stat"><b>' + (sm.yel ? '🟨' + sm.yel : '') + (sm.red ? '🟥' + sm.red : '') + (!sm.yel && !sm.red ? '—' : '') + '</b><small>بطاقات</small></div></div>' +
+        ((sm.gro && sm.gro.ev || []).map((e) => '<div class="notice ok" style="margin-top:10px">' + esc(e.t) + '</div>').join('')) +
         (sm.inj ? '<div class="notice bad" style="margin-top:10px">🩹 أُصبتَ وستغيب ' + sm.inj + ' أسبوعًا تقريبًا.</div>' : '') +
         (sm.ban5 ? '<div class="notice bad" style="margin-top:10px">🟨 تراكمت عليك 5 إنذارات: أنت موقوف عن المباراة القادمة.</div>' : '') + '</div>';
     } else {

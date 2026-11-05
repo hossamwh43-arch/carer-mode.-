@@ -18,6 +18,15 @@
     return '<div class="score"><div class="tm">' + UI.badge(f.h, big ? 54 : 34) + '<div>' + esc(UI.cname(f.h)) + '</div></div><div class="' + (big ? 'sc' : '') + '" style="min-width:70px;text-align:center">' + sc + '</div><div class="tm">' + UI.badge(f.a, big ? 54 : 34) + '<div>' + esc(UI.cname(f.a)) + '</div></div></div>';
   };
 
+  // أوسمة الزخم: سلسلة التألق وزخم اللحظات وأثر زملاء النجوم (تظهر فقط عند وجودها)
+  function growthPills(p) {
+    const gi = G.Growth.info(p), pills = [];
+    if (gi.hot) pills.push('<span class="pill y">🔥 تألق نشط ×' + G.Growth.HOT_XP + '</span>');
+    else if (gi.streak >= 2) pills.push('<span class="pill y">🔥 ' + gi.streak + '/' + gi.need + ' مباريات متألقة</span>');
+    if (gi.glow) pills.push('<span class="pill g">🌟 زخم +' + gi.glow + '</span>');
+    if (gi.syn >= 0.25) pills.push('<span class="pill b">🤝 زملاء نجوم +' + gi.mentorPct + '٪ خبرة</span>');
+    return pills.length ? '<div class="row wrap" style="margin-top:8px;gap:6px">' + pills.join('') + '</div>' : '';
+  }
   function playerCard(p) {
     const S = S_(), club = S.clubs[p.club];
     const ft = Math.round(p.fit), tc = UI.tierCls(p);
@@ -34,7 +43,7 @@
     if (p.inj > 0) h += '<div class="notice bad" style="margin-top:10px">🩹 مصاب — يغيب ' + p.inj + ' أسبوع/أسابيع</div>';
     if (p.susp > 0) h += '<div class="notice bad" style="margin-top:10px">🟥 موقوف عن المباراة القادمة</div>';
     if (UI.mediaMini) h += UI.mediaMini();
-    h += '<div style="margin-top:12px"><div class="sm mut" style="margin-bottom:5px">آخر التقييمات</div>' + UI.formDots(p.form) + '</div>' +
+    h += '<div style="margin-top:12px"><div class="sm mut" style="margin-bottom:5px">آخر التقييمات</div>' + UI.formDots(p.form) + (G.Growth ? growthPills(p) : '') + '</div>' +
       '<button class="btn sm" style="margin-top:12px;width:100%" data-a="cardOpen">🃏 بطاقتي ومخطط السمات (' + UI.tier(p).ar + ')</button></div>';
     return h;
   }

@@ -12,11 +12,29 @@
       '<p class="sm mut" style="margin:8px 0 0">تأتي الخبرة من التدريب الأسبوعي ومن المباريات (الأداء الجيد والدقائق الأكثر = خبرة أكثر).</p></div>';
   }
 
+  // بطاقة الزخم والتألق: سلسلة المباريات، الزخم المؤقت، وبيئة النجوم
+  function growthCard(p) {
+    const gi = G.Growth ? G.Growth.info(p) : null;
+    if (!gi) return '';
+    const dots = [];
+    const filled = gi.hot ? gi.need : gi.streak % gi.need;
+    for (let i = 0; i < gi.need; i++) dots.push('<span style="display:inline-block;width:22px;height:22px;border-radius:50%;margin-inline-end:6px;background:' + (i < filled ? 'var(--gold)' : 'rgb(255 255 255 / .08)') + ';border:1px solid ' + (i < filled ? 'var(--gold)' : 'var(--line2)') + '"></span>');
+    let h = '<div class="card"><div class="row sb"><h3 style="margin:0">🔥 الزخم والتألق</h3>' + (gi.hot ? '<span class="pill y">نشط ×' + G.Growth.HOT_XP + '</span>' : '') + '</div>' +
+      '<div style="margin:10px 0 4px">' + dots.join('') + '<span class="sm mut"> ' + gi.streak + ' مباريات متتالية متألقة</span></div>' +
+      '<p class="sm mut" style="margin:6px 0 8px">تألّق بتقييم ' + gi.thr.toFixed(1) + ' فأكثر في ' + gi.need + ' مباريات متتالية (30 دقيقة فأكثر) لتنال +1 مستوى خبرة وتحسّن سماتك الأهم وتتضاعف خبرتك ما دام تألقك مستمرًا. لحظات التألق (هاتريك، نجم المباراة، تقييم 9+) ترفع تقييمك مؤقتًا، والجوائز الفردية في نهاية الموسم تُرقّي مستواك.</p>';
+    h += '<div class="kv"><span>زخم التألق الحالي</span><span class="' + (gi.glow ? 'gold b' : '') + '">' + (gi.glow ? '+' + gi.glow + ' تقييم · ' + gi.left + ' مباريات' : '—') + '</span></div>';
+    h += '<div class="kv"><span>بيئة الفريق (أفضل 8 زملاء)</span><span>' + (gi.T ? Math.round(gi.T) : '—') + '</span></div>';
+    if (gi.syn > 0.02) h += '<div class="kv"><span>أثر زملاء الطراز الرفيع</span><span class="pos">خبرة +' + gi.mentorPct + '٪</span></div><div class="kv"><span>أثره على أدائك</span><span class="pos">تقييم +' + gi.perfRating.toFixed(2) + ' · سمات اللحظات +' + gi.perfAttr + '</span></div>' + (gi.stars.length ? '<div class="sm mut">أبرزهم: ' + gi.stars.map(esc).join('، ') + '</div>' : '');
+    else h += '<div class="sm mut">الانتقال إلى فريق يضم نجومًا كبارًا (متوسط أفضل 8 زملاء 72 فأكثر) يرفع أداءك ويزيد خبرتك لأنك تحتكّ بهم يوميًا.</div>';
+    h += '<div class="kv" style="margin-top:6px"><span>مضاعف الخبرة الإجمالي</span><span class="' + (gi.xpPct ? 'pos b' : '') + '">×' + (1 + gi.xpPct / 100).toFixed(2) + '</span></div></div>';
+    return h;
+  }
+
   function trainTab(p) {
     const S = G.S, t = S.training, I = T().INTENSITY;
     const keys = T().relevant(p);
     const focusList = T().FOCUS.filter((f) => f.id === 'balanced' || keys.indexOf(f.id) >= 0 || (p.pos !== 'GK' && f.id !== 'gk'));
-    let h = levelCard(p) + '<div class="card"><h3>🎯 تركيز التدريب</h3><div class="chips">' +
+    let h = levelCard(p) + growthCard(p) + '<div class="card"><h3>🎯 تركيز التدريب</h3><div class="chips">' +
       focusList.map((f) => '<button class="chip ' + (t.focus === f.id ? 'on' : '') + '" data-a="setFocus" data-v="' + f.id + '">' + f.ar + '</button>').join('') + '</div>';
     if (t.focus !== 'balanced') {
       const pr = p.prog && p.prog[t.focus] ? p.prog[t.focus] : 0;

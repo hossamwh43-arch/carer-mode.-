@@ -49,6 +49,7 @@
       const unused = Math.max(0.05, 0.25 - u.trust / 400);
       m.uPlan.inAt = U.chance(unused) ? null : u.role === 'rotation' ? U.int(50, 75) : U.int(55, 82);
     }
+    m.gro = G.Growth ? G.Growth.matchCtx(u, m[side]) : { syn: 0, glow: 0, bonus: 0 }; // زخم اللاعب وأثر زملاء الطراز الرفيع
     Live.recalc(m);
     G.Moments.plan(m);
     m.ev.push({ i: 0, lab: '0', k: 'kick', s: null, txt: 'صافرة البداية: ' + cname(m.h) + ' × ' + cname(m.a) });
@@ -86,17 +87,17 @@
   Live.shoot = (m, s, forcedShooter, bigForced) => {
     const o = s === 'h' ? 'a' : 'h', list = m.xi[s];
     if (!list.length) return;
-    const sh = forcedShooter ? list.find((x) => x.id === forcedShooter) || list[0] : G.Match.pickScorer(list);
+    const sh = forcedShooter ? list.find((x) => x.id === forcedShooter) || list[0] : G.Match.pickScorer(list, m.gro && m.gro.bonus);
     const p = P(sh.id), big = bigForced != null ? bigForced : U.rnd() < 0.14;
     // جودة التسديد نسبةً لمتوسط فريقه (قوة الدفاع/الحارس محسوبة أصلًا داخل λ)
     let tw = 0, tf = 0;
     list.forEach((x) => { const q = P(x.id), w = G.Match.scorerWeight(q, x.slot); tw += w; tf += w * (x.slot === 'GK' ? 30 : q.a.sho); });
-    const fin = sh.slot === 'GK' ? 30 : p.a.sho;
+    const fin = sh.slot === 'GK' ? 30 : p.a.sho + (p.user && m.gro ? m.gro.bonus : 0);
     const pg = U.clamp(SHOT_BASE * (big ? 2.4 : 1) * Math.exp(0.035 * (fin - tf / Math.max(tw, 0.01))), 0.02, 0.45);
     m.st[s].sh++; m.ps[sh.id].sh++;
     if (U.rnd() < pg) {
       m.st[s].sot++; m.ps[sh.id].sot++;
-      const as = U.chance(0.72) ? G.Match.pickAssist(list, sh.id) : null;
+      const as = U.chance(0.72) ? G.Match.pickAssist(list, sh.id, m.gro && m.gro.bonus) : null;
       Live.addGoal(m, s, sh.id, as ? as.id : null);
       return 'goal';
     }
@@ -296,7 +297,7 @@
         const start = ps.in || 0, end = ps.out != null ? ps.out : m.total;
         const mins = Math.max(0, end - start);
         if (mins <= 0 && ps.in == null) return;
-        const r = G.Match.rating(p.pos, { mins, res: res[s], g: ps.g, a: ps.a, sot: ps.sot, big: ps.big, saves: ps.saves, cs: conc === 0, conc, yel: ps.yel, red: ps.red, momOk: ps.momOk, momBad: ps.momBad });
+        const r = G.Match.rating(p.pos, { mins, res: res[s], g: ps.g, a: ps.a, sot: ps.sot, big: ps.big, saves: ps.saves, cs: conc === 0, conc, yel: ps.yel, red: ps.red, momOk: ps.momOk, momBad: ps.momBad, syn: p.user && m.gro ? m.gro.syn : 0 });
         out.ratings[id] = r; out.mins[id] = mins;
         if (r > best) { best = r; out.motm = id; }
       });

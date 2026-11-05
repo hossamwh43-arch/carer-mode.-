@@ -17,6 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANDROID = os.path.join(ROOT, "android")
 RES = os.path.join(ANDROID, "app", "src", "main", "res")
 ICON = os.path.join(ROOT, "www", "icons", "icon-512.png")
+LOGO = os.path.join(ROOT, "www", "icons", "logo.webp")  # الشعار المكدّس (قميص 10 + «مسيرة لاعب» + Player Career) بخلفية شفافة
 
 if not os.path.isdir(ANDROID):
     sys.exit("مجلد android غير موجود: شغّل `npx cap add android` أولًا")
@@ -98,14 +99,25 @@ def feather(img, edge=0.16):
 @step("شاشة البداية")
 def splash():
     from PIL import Image
-    src = Image.open(ICON).convert("RGBA")
+    use_logo = os.path.exists(LOGO)
+    try:
+        src = Image.open(LOGO if use_logo else ICON).convert("RGBA")
+    except Exception:  # صيغة WebP غير مدعومة في Pillow المثبّت: نعود للأيقونة
+        use_logo = False
+        src = Image.open(ICON).convert("RGBA")
     bg = tuple(int(BG[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
     n = 0
     for p in glob.glob(os.path.join(RES, "drawable*", "splash.png")):
         w, h = Image.open(p).size
         canvas = Image.new("RGBA", (w, h), bg)
-        k = int(min(w, h) * 0.38)
-        canvas.alpha_composite(feather(src.resize((k, k), Image.LANCZOS)), ((w - k) // 2, (h - k) // 2))
+        if use_logo:
+            # الشعار الكامل: لا يتجاوز ارتفاعه 62% من الارتفاع ولا عرضه 78% من الضلع الأقصر
+            kh = min(int(h * 0.62), int(min(w, h) * 0.78 * src.height / src.width))
+            kw = int(kh * src.width / src.height)
+            canvas.alpha_composite(src.resize((kw, kh), Image.LANCZOS), ((w - kw) // 2, (h - kh) // 2))
+        else:
+            k = int(min(w, h) * 0.38)
+            canvas.alpha_composite(feather(src.resize((k, k), Image.LANCZOS)), ((w - k) // 2, (h - k) // 2))
         canvas.save(p)
         n += 1
     if n == 0:

@@ -208,6 +208,7 @@
     if (me) u.bdCar.push({ y: rec.year, r: me.rank, t: me.t });
     if (win.user) {
       u.trophies = u.trophies || {}; u.trophies.bd = (u.trophies.bd || 0) + 1;
+      if (G.Growth) G.safe(() => G.Growth.onBD(u), 'growth');
       G.Inbox.add('award', 'الكرة الذهبية ' + rec.year + '!', 'تُوِّجتَ بالكرة الذهبية ' + rec.year + ' بأعلى درجة (' + win.t.toFixed(1) + ') — أفضل لاعب في العالم! 🏆');
     } else if (me && me.rank <= 3) {
       G.Inbox.add('award', 'الكرة الذهبية ' + rec.year + ': المركز ' + me.rank, 'احتللتَ المركز ' + me.rank + ' في ترتيب الكرة الذهبية ' + rec.year + '. الفائز: ' + win.n + ' (' + win.club + ').');

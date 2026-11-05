@@ -188,6 +188,8 @@ label.f { display: block; margin: 14px 0 6px; font-size: 13px; color: var(--mut)
 .st-lights i:first-child { inset-inline-start: -18%; transform: rotate(-16deg); } .st-lights i:last-child { inset-inline-end: -18%; transform: rotate(16deg); }
 @keyframes lightsOn { 0% { opacity: 0; } 14% { opacity: .9; } 22% { opacity: .2; } 34% { opacity: 1; } 46% { opacity: .55; } 100% { opacity: 1; } }
 .st-ball { width: 92px; height: 92px; margin: 0 auto 10px; display: block; color: var(--cc); filter: drop-shadow(0 0 22px rgb(var(--cc-rgb) / .55)); }
+.hero .st-logo { display: block; width: min(64vw, 250px); height: auto; margin: 0 auto 6px; filter: drop-shadow(0 10px 34px rgb(0 0 0 / .55)); }
+.hero h1.st-h1 { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .hero h1 { font-size: 46px; line-height: 1.2; margin: 0 0 4px; text-shadow: 0 6px 30px rgb(0 0 0 / .6); }
 .hero .st-bar { display: block; width: 120px; height: 5px; margin: 6px auto 14px; background: var(--cc); transform: skewX(-24deg); border-radius: 2px; box-shadow: 0 0 20px rgb(var(--cc-rgb) / .6); }
 .hero p { font-size: 15px; line-height: 1.8; max-width: 320px; margin-inline: auto; }

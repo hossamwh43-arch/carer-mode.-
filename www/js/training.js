@@ -69,7 +69,7 @@
     const hurt = p.inj > 0;
     const fac = Training.facility(p.club);
     const am = ageMult(p.age);
-    let xp = 22 * I.xp * fac * G.diff().xp * (hurt ? 0.4 : 1) * (0.9 + U.rnd() * 0.2);
+    let xp = 22 * I.xp * fac * G.diff().xp * (hurt ? 0.4 : 1) * (0.9 + U.rnd() * 0.2) * (G.Growth ? G.Growth.xpMult(p) : 1); // الاحتكاك بنجوم كبار وسلسلة التألق
     if (p.pos === 'GK' && t.focus === 'gk') xp *= 1.1;
     res.xp = Math.round(xp);
     res.ups = Training.addXP(p, xp);
@@ -127,6 +127,8 @@
     if (apps >= 12 && avg >= 7.2) { d += 1; note = 'مكافأة الأداء المتميز'; }
     else if (apps >= 20 && avg >= 6.8) d += 0.4;
     if (apps < 5 && p.age <= 22) { d -= 0.6; note = 'قلة المشاركة أبطأت تطورك'; }
+    const aw = G.Growth ? G.Growth.takePend(p) : 0;
+    if (aw > 0) { d += aw; note = (note ? note + '، ' : '') + 'ثمرة جوائزك الفردية'; }
     if (d > 0) d *= U.clamp((p.pot - p.ovr + 2) / 6, 0.15, 1.25);
     d *= d > 0 ? G.diff().grow : G.diff().decl;
     d += U.gauss() * 0.5;
