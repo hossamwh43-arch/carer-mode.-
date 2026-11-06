@@ -157,7 +157,7 @@
   // ---------- الشاشة ----------
   UI.screens.intl = () => {
     const S = G.S, I = S.intl;
-    if (!I) return '<div class="card hl"><h2>🌍 المنتخبات</h2><p class="sm mut">كأس العالم كل 4 سنوات (48 منتخبًا) وكأس آسيا في السنة التي تليها. تُقام في صيف نهاية الموسم، وإن كان منتخبك مؤهلًا واستدعاك المدرب فستلعب مبارياته بنفسك.</p></div>' + histView();
+    if (!I) return '<div class="card hl"><h2>🌍 المنتخبات</h2><div class="sm mut">' + UI.more('بطولات المنتخبات تُقام في صيف نهاية الموسم.', 'كأس العالم كل 4 سنوات (48 منتخبًا) وكأس آسيا في السنة التي تليها. إن كان منتخبك مؤهلًا واستدعاك المدرب فستلعب مبارياته بنفسك.') + '</div></div>' + histView();
     const T = UI.tabs('intl', [['now', 'البطولة'], ['grp', 'المجموعات'], ['ko', 'الإقصاء'], ['sc', 'الهدّافون'], ['hist', 'التاريخ']], 'now'), tab = UI.curTab('intl', 'now');
     let h = '<div class="card hl"><div class="row sb"><h2 style="margin:0">🌍 ' + esc(I.name) + '</h2>' + pill(stageNow(I), I.done ? 'g' : 'b') + '</div>' +
       '<div class="sm mut" style="margin-top:6px">' + I.teams.length + ' منتخبًا · ' + (I.hosts.length ? 'استضافة: ' + I.hosts.map((c) => esc(G.Intl.name(c))).join('، ') : '') + '</div></div>' + T;

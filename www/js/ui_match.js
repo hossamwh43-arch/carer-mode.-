@@ -118,11 +118,44 @@
       (on ? UI.bar(m.fat[uid], m.fat[uid] < 40 ? 'red' : m.fat[uid] < 65 ? 'gold' : '') : '') + '</div>';
   }
 
+  // ---------- لحظة القرار: أيقونة لكل نوع، نسبة كبيرة، مقياس، وشارة مخاطرة (زينة فقط: كلها تُشتقّ من أرقام الخيار نفسها) ----------
+  const MOM_IC = { shot: 'target', pass: 'pass', drib: 'zig', press: 'flame', safe: 'shield', def: 'shield' };
+  const momVal = (o) => (o.main != null ? o.main : o.k === 'shot' ? o.pg : o.pp) || 0;
+  const momRisk = (o) => {
+    const v = momVal(o);
+    if (o.k === 'shot') return v >= 0.3 ? ['g', 'فرصة عالية'] : v >= 0.12 ? ['y', 'فرصة متوسطة'] : ['r', 'تسديدة بعيدة'];
+    if (o.k === 'safe') return ['g', 'آمن'];
+    return v >= 0.7 ? ['g', 'آمن'] : v >= 0.45 ? ['y', 'متوسط'] : ['r', 'مجازفة'];
+  };
+  function optHtml(o) {
+    const v = Math.round(U.clamp(momVal(o), 0, 1) * 100), r = momRisk(o);
+    const sub = o.sub != null ? [o.sub, o.atl && o.atl.length ? 'تعتمد على: ' + o.atl.join(' · ') : ''].filter(Boolean).join(' — ') : o.hint; // الحفظ القديم بلا الحقول المنظّمة
+    return '<button class="opt r-' + r[0] + '" data-a="momPick" data-v="' + o.id + '"><span class="oi">' + UI.ico(MOM_IC[o.k] || 'ball') + '</span>' +
+      '<span class="ob"><b>' + esc(o.label) + '</b><span class="om"><i style="width:' + v + '%"></i></span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
+      '<span class="op"><em>' + v + '%</em><span class="rk">' + r[1] + '</span></span></button>';
+  }
   function momentHtml(m) {
     const c = m.pending;
     if (!c) return '';
-    return '<div class="card mom-card"><div class="row sb"><h3 style="margin:0">🎯 ' + esc(c.title) + '</h3><span class="pill b">' + esc(c.lab || '') + "'</span></div><p>" + esc(c.text) + '</p>' + (c.note ? '<div class="sm mut" style="margin:-4px 0 8px">📊 ' + esc(c.note) + '</div>' : '') +
-      c.options.map((o) => '<button class="opt" data-a="momPick" data-v="' + o.id + '"><b>' + esc(o.label) + '</b><small>' + esc(o.hint) + '</small></button>').join('') + '</div>';
+    return '<div class="card mom-card"><div class="row sb"><h3 style="margin:0">' + UI.ico('target') + ' ' + esc(c.title) + '</h3><span class="pill b">' + esc(c.lab || '') + "'</span></div><p>" + esc(c.text) + '</p>' +
+      (c.note ? '<div class="sm mut" style="margin:-4px 0 8px">' + UI.ico('chart') + ' ' + esc(c.note) + '</div>' : '') +
+      '<div class="opt-hd"><span>اختر قرارك</span><span class="mut sm">النسبة الكبيرة = فرصة النجاح (أو الهدف في التسديد)</span></div>' +
+      c.options.map(optHtml).join('') + '</div>';
+  }
+  // بطاقة نتيجة قصيرة بعد القرار (≈ثانيتان) تُستنتج من أحداث المباراة الجديدة وعدّادات القرار
+  function momResHtml(r) {
+    return '<div class="card mom-res ' + r.cls + '"><span class="mr-ic">' + UI.ico(r.ico) + '</span><div><b>' + esc(r.title) + '</b><div class="sm">' + esc(r.txt) + '</div></div></div>';
+  }
+  function momOutcome(m, before) {
+    const ps = m.ps[G.S.user] || {}, fresh = m.ev.slice(before.n), me = m.side;
+    const goal = fresh.find((e) => e.k === 'goal' && e.s === me), conc = fresh.find((e) => e.k === 'goal' && e.s !== me);
+    const last = fresh.length ? fresh[fresh.length - 1] : null, txt = last ? last.txt : '';
+    if (goal) return { cls: 'ok gl', ico: 'ball', title: goal.p === G.S.user ? 'هدف! قرارك أثمر' : 'هدف بقرارك!', txt: goal.txt };
+    if (conc) return { cls: 'bad', ico: 'warn', title: 'قرار مكلف', txt: conc.txt };
+    if ((ps.red || 0) > before.red || (ps.yel || 0) > before.yel) return { cls: 'bad', ico: 'warn', title: 'إنذار', txt };
+    if ((ps.momBad || 0) > before.bad) return { cls: 'bad', ico: 'x', title: 'لم ينجح القرار', txt };
+    if ((ps.momOk || 0) > before.ok) return { cls: 'ok', ico: 'check2', title: 'قرار ناجح', txt };
+    return { cls: 'mid', ico: 'check2', title: 'تم القرار', txt };
   }
 
   function feedHtml(m) {
@@ -145,8 +178,9 @@
     fxEvents(m);
     a.innerHTML = headHtml(m);
     d.innerHTML = feedHtml(m);
-    const mk = m.pending ? m.pending.id : '';
-    if (mk !== lastMomKey) { b.innerHTML = momentHtml(m); lastMomKey = mk; if (mk) { window.scrollTo(0, 0); UI.fx('ping'); } }
+    const mr = !m.pending && UI._momRes ? UI._momRes : null;
+    const mk = m.pending ? m.pending.id : mr ? 'res' + mr.n : '';
+    if (mk !== lastMomKey) { b.innerHTML = m.pending ? momentHtml(m) : mr ? momResHtml(mr) : ''; lastMomKey = mk; if (m.pending) { window.scrollTo(0, 0); UI.fx('ping'); } }
     const ck = [UI.mv.paused, UI.mv.speed, G.Live.userOn(m), m.subs[m.side] > 0].join();
     if (ck !== lastCtlKey) { c.innerHTML = ctlHtml(m); lastCtlKey = ck; }
   }
@@ -155,7 +189,7 @@
     const m = activeM();
     if (!m) { UI.mv = null; UI.cur = 'home'; return UI.screens.home(); }
     if (m.done) { setTimeout(finish, 0); return '<div class="card c">جارٍ اعتماد النتيجة…</div>'; }
-    lastMomKey = null; lastCtlKey = null;
+    lastMomKey = null; lastCtlKey = null; UI._momRes = null;
     UI.after = () => {
       const mv = UI.mv;
       if (mv && mv.seen == null) { mv.seen = m.ev.length; if (m.i === 0) UI.snd('whistle'); } // صافرة البداية للمباراة الجديدة فقط
@@ -174,9 +208,13 @@
     let h = '<div class="card hl"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</div><div class="score" style="margin:8px 0"><div class="tm">' + UI.badge(sm.h, 42) + '<div>' + esc(UI.cname(sm.h)) + '</div></div><div class="sc">' + sm.score.h + ' - ' + sm.score.a + '</div><div class="tm">' + UI.badge(sm.a, 42) + '<div>' + esc(UI.cname(sm.a)) + '</div></div></div>' +
       '<div class="c"><span class="pill ' + (gf > ga || (sm.pens && res.indexOf('فوز') === 0) ? 'g' : gf < ga || sm.pens ? 'r' : 'y') + '">' + res + '</span>' + (sm.et ? ' <span class="pill">وقت إضافي</span>' : '') + (sm.pens ? ' <span class="pill">ترجيح ' + sm.pens.h + '-' + sm.pens.a + '</span>' : '') + '</div></div>';
     if (sm.mins > 0) {
-      h += '<div class="card"><div class="row sb"><h3 style="margin:0">أداؤك</h3><div>' + UI.rating(sm.rating) + (sm.motm ? ' <span class="pill y">⭐ نجم المباراة</span>' : '') + '</div></div>' +
-        '<div class="grid3" style="margin-top:10px"><div class="stat"><b class="ltr">' + sm.mins + "'</b><small>الدقائق</small></div><div class=\"stat\"><b>" + sm.g + '</b><small>أهداف</small></div><div class="stat"><b>' + sm.as + '</b><small>صناعة</small></div>' +
-        '<div class="stat"><b class="ltr">' + sm.sh + ' (' + sm.sot + ')</b><small>تسديدات (على المرمى)</small></div><div class="stat"><b>' + sm.pasOk + '/' + sm.pas + '</b><small>تمريرات ناجحة</small></div><div class="stat"><b>' + sm.drOk + '/' + sm.dr + '</b><small>مراوغات</small></div>' +
+      // التقييم رقم كبير داخل حلقة تتلوّن بمستوى الأداء، ثم إحصاءات مختصرة
+      const R = sm.rating == null ? 0 : sm.rating, rc = UI.ratingCls(R) || 'hi';
+      const verdict = R >= 8.5 ? 'أداء استثنائي' : R >= 7.5 ? 'أداء ممتاز' : R >= 6.8 ? 'أداء جيد' : R >= 6.2 ? 'أداء متوسط' : 'أداء ضعيف';
+      h += '<div class="card perf"><div class="perf-hero"><div class="pr-ring ' + rc + '" style="--p:' + Math.round(U.clamp(R, 0, 10) * 10) + '"><b>' + (sm.rating == null ? '—' : R.toFixed(1)) + '</b><small>التقييم</small></div>' +
+        '<div class="pr-side"><div class="pr-verdict">' + verdict + '</div>' + (sm.motm ? '<div><span class="pill y">' + UI.ico('star') + ' نجم المباراة</span></div>' : '') +
+        '<div class="pr-chips"><span><b>' + sm.g + '</b> ' + UI.ico('ball') + ' أهداف</span><span><b>' + sm.as + '</b> صناعة</span><span><b class="ltr">' + sm.mins + "'</b> دقيقة</span></div></div></div>" +
+        '<div class="grid3" style="margin-top:12px"><div class="stat"><b class="ltr">' + sm.sh + ' (' + sm.sot + ')</b><small>تسديدات (على المرمى)</small></div><div class="stat"><b>' + sm.pasOk + '/' + sm.pas + '</b><small>تمريرات ناجحة</small></div><div class="stat"><b>' + sm.drOk + '/' + sm.dr + '</b><small>مراوغات</small></div>' +
         '<div class="stat"><b>' + sm.tkOk + '/' + sm.tk + '</b><small>تدخلات</small></div><div class="stat"><b>' + (sm.big || 0) + '</b><small>فرص محققة ضائعة</small></div><div class="stat"><b>' + (sm.yel ? '🟨' + sm.yel : '') + (sm.red ? '🟥' + sm.red : '') + (!sm.yel && !sm.red ? '—' : '') + '</b><small>بطاقات</small></div></div>' +
         ((sm.gro && sm.gro.ev || []).map((e) => '<div class="notice ok" style="margin-top:10px">' + esc(e.t) + '</div>').join('')) +
         (sm.inj ? '<div class="notice bad" style="margin-top:10px">🩹 أُصبتَ وستغيب ' + sm.inj + ' أسبوعًا تقريبًا.</div>' : '') +
@@ -186,7 +224,7 @@
     }
     h += '<div class="card"><div class="kv"><span>ثقة المدرب</span><span>' + Math.round(u.trust) + ' — ' + G.Coach.trustLabel(u.trust) + '</span></div><div class="kv"><span>اللياقة</span><span>' + Math.round(u.fit) + '%</span></div></div>';
     const evs = (sm.events || []).filter((e) => e.k === 'goal' || e.k === 'red' || e.k === 'yellow' || e.k === 'inj' || e.k === 'pens');
-    if (evs.length) h += '<div class="card"><h4>أبرز الأحداث</h4>' + evs.map((e) => '<div class="ev ' + (e.k === 'goal' ? 'goal' : e.k === 'red' ? 'red' : e.k === 'yellow' ? 'yellow' : e.k === 'inj' ? 'inj' : '') + '"><span class="m">' + esc(e.lab) + "'</span><span>" + esc(e.txt) + '</span></div>').join('') + '</div>';
+    if (evs.length) h += '<div class="card"><h4>أبرز الأحداث</h4>' + evs.map((e) => '<div class="ev ' + (e.k === 'goal' ? 'goal' : e.k === 'red' ? 'red' : e.k === 'yellow' ? 'yellow' : e.k === 'inj' ? 'inj' : '') + (e.me ? ' me' : '') + '"><span class="m">' + esc(e.lab) + "'</span><span class=\"grow\">" + esc(e.txt) + '</span>' + (e.me ? '<span class="pill y ev-me">أنت</span>' : '') + '</div>').join('') + '</div>';
     const pend = G.Season.pending();
     h += '<button class="btn pri" data-a="mvHome">' + (fix && fix.comp === 'NT' ? 'العودة إلى البطولة' : pend ? 'المباراة التالية هذا الأسبوع ←' : S.phase === 'season' ? 'متابعة (إنهاء الأسبوع)' : 'العودة للرئيسية') + '</button>';
     return h;
@@ -219,9 +257,16 @@
   UI.on('momPick', (v) => {
     const m = activeM();
     if (!m || !m.pending) return false;
+    const ps0 = m.ps[G.S.user] || {}, before = { n: m.ev.length, ok: ps0.momOk || 0, bad: ps0.momBad || 0, yel: ps0.yel || 0, red: ps0.red || 0 };
     G.safe(() => G.Moments.resolve(m, m.pending, v), 'moment');
     m.pending = null;
     G.Save.save();
+    // بطاقة النتيجة: زينة فقط، تختفي بعد ثانيتين أو عند أول لحظة قرار جديدة
+    G.safe(() => {
+      const r = momOutcome(m, before); r.n = (UI._momN = (UI._momN || 0) + 1); UI._momRes = r;
+      clearTimeout(UI._momT);
+      UI._momT = setTimeout(() => { if (UI._momRes === r) { UI._momRes = null; const mm = activeM(); if (mm && UI.cur === 'match' && $('#mvMoment')) paint(mm); } }, 2200);
+    }, 'momRes');
     lastMomKey = null;
     paint(m);
     return false;

@@ -27,25 +27,30 @@
     if (gi.syn >= 0.25) pills.push('<span class="pill b">🤝 زملاء نجوم +' + gi.mentorPct + '٪ خبرة</span>');
     return pills.length ? '<div class="row wrap" style="margin-top:8px;gap:6px">' + pills.join('') + '</div>' : '';
   }
+  // شريط اللاعب: مضغوط افتراضيًا (الهوية، التقييم، الدور، اللياقة، الشعبية)، والتفاصيل خلف زر «تفاصيل».
+  // الدور يظهر مرة واحدة فقط (الشارة)؛ شرح المدرب وبقية الأرقام داخل التفاصيل، وحالة الإصابة/الإيقاف في بطاقة المباراة.
   function playerCard(p) {
-    const S = S_(), club = S.clubs[p.club];
-    const ft = Math.round(p.fit), tc = UI.tierCls(p);
-    let h = '<div class="card pstrip hero-club ' + tc + '"><div class="ps-top"><div class="ps-av">' + UI.avatar(p.look, p.club, 84) + '</div>' +
-      '<div class="ps-id"><div class="ps-name">' + esc(p.n) + '</div><div>' + UI.clubTag(p.club, 20) + '</div>' +
-      '<div class="ps-meta">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + ' · ' + UI.natName(p.nat) + '</div>' +
-      (p.parentPays ? '<div class="sm gold">معار من ' + esc(UI.cname(p.parent)) + '</div>' : '') + '</div>' +
+    const open = !!UI.homeOpen, ft = Math.round(p.fit), tc = UI.tierCls(p);
+    const gi = G.Growth ? G.Growth.info(p) : null;
+    const role = UI.rolePill(p.role) + (p.inj > 0 ? ' <span class="sm mut">' + p.inj + ' أسبوع</span>' : '');
+    const hot = gi && (gi.hot || gi.streak >= 2) ? '<span class="pill y">' + UI.ico('flame') + ' ' + (gi.hot ? 'تألق نشط' : gi.streak + '/' + gi.need) + '</span>' : '';
+    let h = '<div class="card pstrip cmp hero-club ' + tc + (open ? ' open' : '') + '"><div class="ps-top"><div class="ps-av">' + UI.avatar(p.look, p.club, 60) + '</div>' +
+      '<div class="ps-id"><div class="ps-name">' + esc(p.n) + '</div><div>' + UI.clubTag(p.club, 18) + '</div>' +
+      '<div class="ps-meta">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + '</div></div>' +
       '<div class="ps-ovr"><div class="ovr ' + tc + '">' + p.ovr + '</div><div class="ps-pos">' + p.pos + '</div></div></div>' +
-      '<div class="grid3"><div class="stat"><b>' + UI.stars(p.pot) + '</b><small>الإمكانات</small></div>' +
-      '<div class="stat"><b>' + UI.rolePill(p.role) + '</b><small>دورك الحالي</small></div>' +
-      '<div class="stat"><b>' + Math.round(p.trust) + '</b><small>' + G.Coach.trustLabel(p.trust) + '</small></div></div>';
-    if (p.roleInfo && p.roleInfo.text) h += '<p class="sm mut" style="margin:10px 0 2px">🗒️ ' + esc(p.roleInfo.text) + '</p>';
-    h += '<div class="gauge"><div class="row sb"><span>اللياقة</span><span>' + ft + '%</span></div>' + UI.bar(ft, ft < 50 ? 'red' : ft < 75 ? 'gold' : '') + '</div>';
-    if (p.inj > 0) h += '<div class="notice bad" style="margin-top:10px">🩹 مصاب — يغيب ' + p.inj + ' أسبوع/أسابيع</div>';
-    if (p.susp > 0) h += '<div class="notice bad" style="margin-top:10px">🟥 موقوف عن المباراة القادمة</div>';
+      '<div class="ps-chips">' + role + hot + '<span class="ps-fit"><span class="sm mut">اللياقة</span>' + UI.bar(ft, ft < 50 ? 'red' : ft < 75 ? 'gold' : '') + '<b>' + ft + '%</b></span></div>';
     if (UI.mediaMini) h += UI.mediaMini();
-    h += '<div style="margin-top:12px"><div class="sm mut" style="margin-bottom:5px">آخر التقييمات</div>' + UI.formDots(p.form) + (G.Growth ? growthPills(p) : '') + '</div>' +
-      '<button class="btn sm" style="margin-top:12px;width:100%" data-a="cardOpen">🃏 بطاقتي ومخطط السمات (' + UI.tier(p).ar + ')</button></div>';
-    return h;
+    h += '<div class="ps-act"><button class="btn sm" data-a="stripToggle" aria-expanded="' + open + '">' + (open ? 'إخفاء التفاصيل ' + UI.ico('arrowup') : 'تفاصيل اللاعب ' + UI.ico('arrowdown')) + '</button>' +
+      '<button class="btn sm" data-a="cardOpen">' + UI.ico('pcard') + ' بطاقتي</button></div>';
+    if (open) {
+      h += '<div class="ps-more"><div class="grid3"><div class="stat"><b>' + UI.stars(p.pot) + '</b><small>الإمكانات</small></div>' +
+        '<div class="stat"><b>' + Math.round(p.trust) + '</b><small>' + G.Coach.trustLabel(p.trust) + '</small></div>' +
+        '<div class="stat"><b>' + (UI.natBadge(p.nat, 28) || '—') + '</b><small>' + UI.natName(p.nat) + '</small></div></div>';
+      if (p.parentPays) h += '<div class="sm gold" style="margin-top:8px">معار من ' + esc(UI.cname(p.parent)) + '</div>';
+      if (p.roleInfo && p.roleInfo.text) h += '<p class="sm mut" style="margin:10px 0 2px">' + UI.ico('clipboard') + ' ' + esc(p.roleInfo.text) + '</p>';
+      h += '<div style="margin-top:10px"><div class="sm mut" style="margin-bottom:5px">آخر التقييمات</div>' + UI.formDots(p.form) + (G.Growth ? growthPills(p) : '') + '</div></div>';
+    }
+    return h + '</div>';
   }
 
   function nextMatchCard() {
@@ -58,11 +63,11 @@
     }
     if (pend) {
       const act = u.role === 'starter' || u.role === 'rotation' || u.role === 'bench';
-      h += '<div class="card nm"><div class="row sb"><h3>المباراة القادمة</h3><span class="pill b">' + UI.week() + '</span></div><div class="sm mut">' + UI.fixLabel(pend) + '</div>' + UI.fixLine(pend, true) + (UI.predCard ? UI.predCard(pend) : '');
+      const venue = pend.comp === 'NT' ? '' : pend.neutral ? 'ملعب محايد' : pend.h === u.club ? 'على أرضك' : 'خارج أرضك';
+      h += '<div class="card nm"><div class="row sb"><h3>المباراة القادمة</h3><span class="pill b">' + UI.week() + '</span></div><div class="nm-sub"><span>' + UI.fixLabel(pend) + '</span>' + (venue ? '<span class="venue">' + venue + '</span>' : '') + '</div>' + UI.fixLine(pend, true);
       if (u.role === 'injured' || u.role === 'suspended') h += '<div class="notice bad" style="margin-top:8px">' + (u.role === 'injured' ? 'أنت مصاب ولن تشارك' : 'أنت موقوف ولن تشارك') + ' — يمكنك مشاهدة المباراة أو محاكاتها.</div>';
-      else if (u.role === 'out') h += '<div class="notice" style="margin-top:8px">لست ضمن قائمة المباراة حسب قرار المدرب.</div>';
-      h += '<button class="btn pri" data-a="playMatch" data-v="' + pend.id + '" data-v2="i">' + (act ? '🎮 العب المباراة (تفاعلي)' : '👁️ شاهد المباراة') + '</button>' +
-        '<button class="btn" data-a="playMatch" data-v="' + pend.id + '" data-v2="s">⚡ محاكاة كاملة (نتيجة فورية)</button></div>';
+      h += '<button class="btn pri nm-go" data-a="playMatch" data-v="' + pend.id + '" data-v2="i">' + (act ? '🎮 العب المباراة (تفاعلي)' : '👁️ شاهد المباراة') + '</button>' +
+        '<button class="btn sm nm-sim" data-a="playMatch" data-v="' + pend.id + '" data-v2="s">⚡ محاكاة كاملة (نتيجة فورية)</button>' + (UI.predCard ? UI.predCard(pend) : '') + '</div>';
       return h;
     }
     const nx = G.Season.nextFixture();
@@ -76,6 +81,7 @@
     const S = S_(), u = me(), t = S.training || {};
     const fo = G.Training.FOCUS.find((x) => x.id === t.focus), it = G.Training.INTENSITY[t.intensity];
     let h = '<div class="card"><div class="row sb"><b>🏋️ تدريب الأسبوع</b><button class="btn sm" data-a="go" data-v="train">تغيير</button></div><div class="sm mut" style="margin-top:6px">تركيز: ' + (fo ? fo.ar : '—') + ' · شدة: ' + (it ? it.ar : '—') + (u.dp ? ' · <b class="gold">' + u.dp + ' نقطة تطوير غير مصروفة</b>' : '') + '</div></div>';
+    if (S.window && !S.window.open && UI.windowInfo) h += '<div class="card"><div class="row sb"><b>' + UI.ico('swap') + ' سوق الانتقالات</b><span class="pill y">مغلق</span></div><div class="sm mut" style="margin-top:6px">' + UI.windowInfo().text + '</div></div>';
     if (S.window && S.window.open) {
       const n = (S.offers || []).length;
       h += '<div class="card"><div class="row sb"><b>🔁 سوق الانتقالات مفتوح (' + (S.window.kind === 'winter' ? 'شتوي' : 'صيفي') + ')</b><button class="btn sm" data-a="go" data-v="market">' + (n ? n + ' عروض' : 'افتح') + '</button></div></div>';
@@ -170,17 +176,22 @@
   UI.screens.home = () => {
     const S = S_(), u = me();
     if (UI.autoTour) UI.autoTour();
-    let h = playerCard(u) + (UI.pressCard ? UI.pressCard() : '');
+    const press = UI.pressCard ? UI.pressCard() : '', strip = playerCard(u);
+    let h = '';
+    // الأهم أولًا: المباراة/الصيف فوق، ثم شريط اللاعب المضغوط، ثم بقية البطاقات
+    if (S.phase === 'summer') h += summerPanel() + press + strip + (UI.simCard ? UI.simCard() : '');
+    else if (S.phase === 'season') h += nextMatchCard() + press + strip + (UI.simCard ? UI.simCard() : '') + weekCard() + lastMatch() + miniTable() + uclLine() + (UI.bdCard ? UI.bdCard() : '');
+    else if (S.phase === 'end') h += strip + press + endPanel();
+    else h += strip + press;
     if (UI.noStorage) h = '<div class="notice bad">⚠️ التخزين المحلي غير متاح في هذا المتصفح (ربما وضع التصفح الخاص): لن يُحفظ تقدّمك بعد الإغلاق. استخدم «تصدير الحفظ» من الإعدادات.</div>' + h;
-    if (S.phase === 'summer') h += summerPanel() + (UI.simCard ? UI.simCard() : '');
-    else if (S.phase === 'season') h += nextMatchCard() + (UI.simCard ? UI.simCard() : '') + weekCard() + lastMatch() + miniTable() + uclLine() + (UI.bdCard ? UI.bdCard() : '');
-    else if (S.phase === 'end') h += endPanel();
     h += (UI.newsCard ? UI.newsCard() : '') + inboxPreview();
     if (S.check && !S.check.ok) h += '<div class="notice bad">⚠️ تم رصد خلل في الجدول وإصلاحه تلقائيًا.</div>';
     return h;
   };
 
   // ---------- الإجراءات ----------
+  UI.on('stripToggle', () => { UI.homeOpen = !UI.homeOpen; });
+
   UI.on('preseason', () => {
     const r = G.Season.preseason();
     if (!r) { UI.toast('لا حصص إعداد متبقية'); return; }

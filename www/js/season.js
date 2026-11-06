@@ -6,6 +6,7 @@
   const LAST_WEEK = 39, WINTER_OPEN = 19, WINTER_CLOSE = 22;
   const DIFFS = G.DIFF_ORDER;
 
+  Season.WINTER_OPEN = WINTER_OPEN; Season.WINTER_CLOSE = WINTER_CLOSE; Season.LAST_WEEK = LAST_WEEK;
   Season.label = (season) => { const y = G.CONFIG.startYear + season - 1; return y + '/' + String(y + 1).slice(2); };
   Season.userClub = () => C(P(G.S.user).club);
   Season.ligaIds = () => G.World.members(G.World.viewLg());
@@ -142,7 +143,7 @@
     const ps = m.ps[u.id], mins = res.mins[u.id] || 0, rating = res.ratings[u.id];
     const my = m.side, other = my === 'h' ? 'a' : 'h';
     const summary = { fixId: fix.id, comp: fix.comp, season: S.season, week: S.week, h: m.h, a: m.a, score: m.score, pens: m.pens, mins, rating: rating || null, g: ps.g, as: ps.a, sh: ps.sh, sot: ps.sot, pas: ps.pas, pasOk: ps.pasOk, dr: ps.dr, drOk: ps.drOk, tk: ps.tk, tkOk: ps.tkOk, yel: ps.yel, red: ps.red, big: ps.big || 0, saves: ps.saves || 0, motm: res.motm === u.id, state: m.uState, userSide: my, et: !!m.et,
-      events: m.ev.filter((e) => ['goal', 'red', 'yellow', 'inj', 'et', 'pens', 'sub'].indexOf(e.k) >= 0).slice(0, 40).map((e) => ({ lab: e.lab, k: e.k, txt: e.txt })) };
+      events: m.ev.filter((e) => ['goal', 'red', 'yellow', 'inj', 'et', 'pens', 'sub'].indexOf(e.k) >= 0).slice(0, 40).map((e) => ({ lab: e.lab, k: e.k, txt: e.txt, me: e.p === u.id || e.p2 === u.id ? 1 : 0 })) }; // me: للتمييز في تقرير المباراة فقط
     if (mins > 0) {
       u.fit = U.clamp(u.fit - mins * 0.16, 15, 100);
       u.form.push(rating); if (u.form.length > 10) u.form.shift();

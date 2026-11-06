@@ -19,7 +19,7 @@
 
   const fresh = () => ({
     step: 1, name: '', nat: 'IQ', age: 18, pos: 'ST', h: 180, w: 74, foot: 'R',
-    look: { skin: 2, hair: 0, style: 0 }, num: 9, clubId: null, lg: 'ESP1', diff: 'normal', seed: (Date.now() & 0x7fffffff) || 7, world: null
+    look: { skin: 2, hair: 0, style: 0, beard: 0, band: 0 }, num: 9, clubId: null, lg: 'ESP1', diff: 'normal', seed: (Date.now() & 0x7fffffff) || 7, world: null
   });
 
   // ---------- عالم المعاينة (نفس البذرة التي ستستخدمها newGame ⇒ نفس الفرق) ----------
@@ -64,7 +64,7 @@
     }
     h += '<button class="btn ' + (sv ? '' : 'pri') + '" data-a="wzNew">✨ مسيرة جديدة</button>';
     h += '<button class="btn" data-a="importSheet">📥 استيراد حفظ من نص</button>';
-    h += '<div class="notice" style="margin-top:14px">ℹ️ أسماء الأندية واللاعبين حقيقية (تشكيلات 2026 تقريبًا) لكن التقييمات والمراكز والأعمار تقديرية وبعض اللاعبين قد يكونون انتقلوا أو غادروا، ويُكمَل النقص بأسماء مولَّدة. الأسماء غير مرخّصة رسميًا فهي للاستخدام الشخصي فقط. الأخبار والمقالات الصحفية في اللعبة كلها مُحاكاة. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.</div>';
+    h += '<div class="notice" style="margin-top:14px">' + UI.more('ℹ️ عن بيانات اللعبة', 'أسماء الأندية واللاعبين حقيقية (تشكيلات 2026 تقريبًا) لكن التقييمات والمراكز والأعمار تقديرية وبعض اللاعبين قد يكونون انتقلوا أو غادروا، ويُكمَل النقص بأسماء مولَّدة. الأسماء غير مرخّصة رسميًا فهي للاستخدام الشخصي فقط. الأخبار والمقالات الصحفية في اللعبة كلها مُحاكاة. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.') + '</div>';
     return h;
   };
 
@@ -93,14 +93,16 @@
         '<label class="f">لون البشرة</label><div class="chips">' + L.skin.map((c, i) => '<button class="chip ' + (wz.look.skin === i ? 'on' : '') + '" data-a="wzLook" data-v="skin" data-v2="' + i + '" style="background:' + c + ';width:46px;height:46px;padding:0" aria-label="بشرة ' + (i + 1) + '"></button>').join('') + '</div>' +
         '<label class="f">لون الشعر</label><div class="chips">' + L.hair.map((c, i) => '<button class="chip ' + (wz.look.hair === i ? 'on' : '') + '" data-a="wzLook" data-v="hair" data-v2="' + i + '" style="background:' + c + ';width:46px;height:46px;padding:0" aria-label="شعر ' + (i + 1) + '"></button>').join('') + '</div>' +
         '<label class="f">قصّة الشعر</label><div class="chips">' + L.styles.map((c, i) => '<button class="chip ' + (wz.look.style === i ? 'on' : '') + '" data-a="wzLook" data-v="style" data-v2="' + i + '">' + c + '</button>').join('') + '</div>' +
+        '<label class="f">اللحية</label><div class="chips">' + L.beards.map((c, i) => '<button class="chip ' + ((wz.look.beard | 0) === i ? 'on' : '') + '" data-a="wzLook" data-v="beard" data-v2="' + i + '">' + c + '</button>').join('') + '</div>' +
+        '<label class="f">شريط الرأس</label><div class="chips">' + L.bands.map((c, i) => '<button class="chip ' + ((wz.look.band | 0) === i ? 'on' : '') + '" data-a="wzLook" data-v="band" data-v2="' + i + '">' + c + '</button>').join('') + '</div>' +
         '<label class="f">رقم القميص المفضل (إن كان محجوزًا يُعطى رقمًا قريبًا)</label><input type="number" min="1" max="99" value="' + wz.num + '" data-in="wzNum" inputmode="numeric"></div>';
     } else if (wz.step === 4) {
       const list = previews(wz), LG = G.LEAGUES[wz.lg || 'ESP1'];
       const chip = (id) => '<button class="chip ' + (wz.lg === id ? 'on' : '') + '" data-a="wzLg" data-v="' + id + '">' + esc(G.LEAGUES[id].short) + '</button>';
       h += '<div class="card"><label class="f">الدرجة الأولى</label><div class="chips">' + G.LEAGUE_ORDER.filter((x) => G.LEAGUES[x].tier === 1).map(chip).join('') + '</div>' +
         '<label class="f">الدرجة الثانية (تصعد بناديك أو تنتقل للأعلى)</label><div class="chips">' + G.LEAGUE_ORDER.filter((x) => G.LEAGUES[x].tier === 2).map(chip).join('') + '</div></div>';
-      h += '<div class="notice"><b>' + esc(LG.ar) + '</b> — ' + LG.n + ' ناديًا. ' + (LG.tier === 1 ? 'المراكز الأولى تتأهل لدوري أبطال أوروبا (' + (G.UCL_SLOTS[LG.id] || 0) + ' مقاعد) والمراكز الثلاثة الأخيرة تهبط.' : 'أول ثلاثة أندية تصعد إلى ' + esc(G.leagueName(LG.other)) + '. فرصة اللعب أكبر هنا لكن الأضواء والرواتب أقل.') +
-        '<br>التوقّع أدناه تقديري لدورك مع تقييم لاعب بعمر ' + wz.age + ' (≈' + expectedOvr(wz.age) + '). الأندية الكبرى توفّر مستوى أعلى لكن فرص اللعب أقل بكثير للناشئين. 🏆 = يشارك في دوري الأبطال هذا الموسم.</div>';
+      h += '<div class="notice"><b>' + esc(LG.ar) + '</b> — ' + LG.n + ' ناديًا. ' + UI.more('', (LG.tier === 1 ? 'المراكز الأولى تتأهل لدوري أبطال أوروبا (' + (G.UCL_SLOTS[LG.id] || 0) + ' مقاعد) والمراكز الثلاثة الأخيرة تهبط.' : 'أول ثلاثة أندية تصعد إلى ' + esc(G.leagueName(LG.other)) + '. فرصة اللعب أكبر هنا لكن الأضواء والرواتب أقل.') +
+        '<br>التوقّع أدناه تقديري لدورك مع تقييم لاعب بعمر ' + wz.age + ' (≈' + expectedOvr(wz.age) + '). الأندية الكبرى توفّر مستوى أعلى لكن فرص اللعب أقل بكثير للناشئين. 🏆 = يشارك في دوري الأبطال هذا الموسم.', 'تفاصيل الدوري والتوقّع') + '</div>';
       list.forEach((c) => {
         const sel = wz.clubId === c.id;
         h += '<button class="copt ' + (sel ? 'sel' : '') + '" data-a="wzClub" data-v="' + c.id + '" style="--cl:' + c.c[0] + '"><span>' + clubBadge(c) + '</span><div class="ci"><b>' + esc(c.name) + '</b> ' + (c.ucl ? '🏆' : '') + '<small>القوة ' + c.strength + (c.rival ? ' · المنافس: ' + esc(c.rival.n) + ' (' + c.rival.ovr + ')' : '') + '</small></div>' + UI.rolePill(c.role) + '</button>';

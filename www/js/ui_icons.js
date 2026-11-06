@@ -96,6 +96,9 @@
     arrowl: '<path d="M20 12H4M10 6l-6 6 6 6"/>',
     chevl: '<path d="m15 5-7 7 7 7"/>',
     chevr: '<path d="m9 5 7 7-7 7"/>',
+    pass: '<circle cx="5" cy="18.2" r="2.3"/><path d="M7.3 17.2C12.4 16.3 16.4 12.6 17.4 7.4M13.9 8l3.6-1.6 1.3 3.7"/>',
+    zig: '<path d="M3.8 19.5 8.6 9l4.6 7.6L19 5"/><path d="M14.6 4.6H19.4v4.8"/>',
+    shield: '<path d="M12 3 4.6 6v5.6c0 4.5 3.1 7.9 7.4 9.4 4.3-1.5 7.4-4.9 7.4-9.4V6z"/><path d="m8.8 12 2.3 2.3 4.2-4.6"/>',
     sock: '<path d="M8 3.5h8v8.8l4 4.4a3 3 0 0 1-2.2 5H11a4 4 0 0 1-3-1.4z"/>',
     pin: '<path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
     web: '<path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/><circle cx="12" cy="12" r="3.6"/><circle cx="12" cy="12" r="8"/>',
@@ -129,6 +132,7 @@
     svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
     let inner = '';
     Object.keys(D).forEach((k) => { inner += '<symbol id="i-' + k + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + D[k] + '</symbol>'; });
+    inner += '<clipPath id="crestClip"><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z"/></clipPath>'; // قصّ الدرع لأنماط شعارات الأندية
     svg.innerHTML = inner;
     document.body.insertBefore(svg, document.body.firstChild);
   }

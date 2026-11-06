@@ -21,11 +21,11 @@
     for (let i = 0; i < gi.need; i++) dots.push('<span style="display:inline-block;width:22px;height:22px;border-radius:50%;margin-inline-end:6px;background:' + (i < filled ? 'var(--gold)' : 'rgb(255 255 255 / .08)') + ';border:1px solid ' + (i < filled ? 'var(--gold)' : 'var(--line2)') + '"></span>');
     let h = '<div class="card"><div class="row sb"><h3 style="margin:0">🔥 الزخم والتألق</h3>' + (gi.hot ? '<span class="pill y">نشط ×' + G.Growth.HOT_XP + '</span>' : '') + '</div>' +
       '<div style="margin:10px 0 4px">' + dots.join('') + '<span class="sm mut"> ' + gi.streak + ' مباريات متتالية متألقة</span></div>' +
-      '<p class="sm mut" style="margin:6px 0 8px">تألّق بتقييم ' + gi.thr.toFixed(1) + ' فأكثر في ' + gi.need + ' مباريات متتالية (30 دقيقة فأكثر) لتنال +1 مستوى خبرة وتحسّن سماتك الأهم وتتضاعف خبرتك ما دام تألقك مستمرًا. لحظات التألق (هاتريك، نجم المباراة، تقييم 9+) ترفع تقييمك مؤقتًا، والجوائز الفردية في نهاية الموسم تُرقّي مستواك.</p>';
+      '<div class="sm mut" style="margin:6px 0 8px">' + UI.more('تألّق بتقييم ' + gi.thr.toFixed(1) + '+ في ' + gi.need + ' مباريات متتالية لتنال مكافأة خبرة.', 'يُشترط لعب 30 دقيقة فأكثر في كل مباراة. المكافأة: +1 مستوى خبرة وتحسّن سماتك الأهم، وتتضاعف خبرتك ما دام تألقك مستمرًا. لحظات التألق (هاتريك، نجم المباراة، تقييم 9+) ترفع تقييمك مؤقتًا، والجوائز الفردية في نهاية الموسم تُرقّي مستواك.') + '</div>';
     h += '<div class="kv"><span>زخم التألق الحالي</span><span class="' + (gi.glow ? 'gold b' : '') + '">' + (gi.glow ? '+' + gi.glow + ' تقييم · ' + gi.left + ' مباريات' : '—') + '</span></div>';
     h += '<div class="kv"><span>بيئة الفريق (أفضل 8 زملاء)</span><span>' + (gi.T ? Math.round(gi.T) : '—') + '</span></div>';
     if (gi.syn > 0.02) h += '<div class="kv"><span>أثر زملاء الطراز الرفيع</span><span class="pos">خبرة +' + gi.mentorPct + '٪</span></div><div class="kv"><span>أثره على أدائك</span><span class="pos">تقييم +' + gi.perfRating.toFixed(2) + ' · سمات اللحظات +' + gi.perfAttr + '</span></div>' + (gi.stars.length ? '<div class="sm mut">أبرزهم: ' + gi.stars.map(esc).join('، ') + '</div>' : '');
-    else h += '<div class="sm mut">الانتقال إلى فريق يضم نجومًا كبارًا (متوسط أفضل 8 زملاء 72 فأكثر) يرفع أداءك ويزيد خبرتك لأنك تحتكّ بهم يوميًا.</div>';
+    else h += '<div class="sm mut">' + UI.more('', 'الانتقال إلى فريق يضم نجومًا كبارًا (متوسط أفضل 8 زملاء 72 فأكثر) يرفع أداءك ويزيد خبرتك لأنك تحتكّ بهم يوميًا.', 'كيف يؤثر زملاء النجوم؟') + '</div>';
     h += '<div class="kv" style="margin-top:6px"><span>مضاعف الخبرة الإجمالي</span><span class="' + (gi.xpPct ? 'pos b' : '') + '">×' + (1 + gi.xpPct / 100).toFixed(2) + '</span></div></div>';
     return h;
   }
@@ -75,7 +75,7 @@
       '<div style="margin-top:8px"><div class="sm mut" style="margin-bottom:4px">آخر التقييمات</div>' + UI.formDots(p.form) + '</div></div>';
     h += '<div class="card"><h4>المنافسون على مركزك</h4>' + (comp.length ? '<table class="t"><tr><th class="l">اللاعب</th><th>المركز</th><th>العمر</th><th>التقييم</th><th>فارق</th></tr>' +
       comp.map((q) => { const d = p.ovr - q.ovr; return '<tr><td class="l">' + esc(q.n) + '</td><td>' + q.pos + '</td><td>' + q.age + '</td><td><b>' + q.ovr + '</b></td><td class="ltr ' + (d >= 0 ? 'pos' : 'neg') + '">' + (d > 0 ? '+' : '') + d + '</td></tr>'; }).join('') + '</table>' : '<div class="mut">لا منافسين مباشرين.</div>') + '</div>';
-    h += '<div class="notice">لتكسب مكانك: ارفع تقييمك، اجتهد في الدقائق القليلة (تقييم فوق 6.5 يرفع ثقة المدرب)، حافظ على اللياقة، وفكّر في الإعارة إن طالت فترة الجلوس.</div>';
+    h += '<div class="notice">' + UI.more('كيف تكسب مكانك في التشكيلة؟', 'ارفع تقييمك، اجتهد في الدقائق القليلة (تقييم فوق 6.5 يرفع ثقة المدرب)، حافظ على اللياقة، وفكّر في الإعارة إن طالت فترة الجلوس.', 'النصائح') + '</div>';
     return h;
   }
 
@@ -84,7 +84,7 @@
     return '<div class="card"><div class="kv"><span>مركزك الحالي</span><b>' + G.POS_AR[p.pos] + ' (' + p.pos + ')</b></div><div class="kv"><span>تقييمك فيه</span><b>' + p.ovr + '</b></div></div>' +
       '<div class="card"><h4>المراكز البديلة (بحسب سماتك الحالية)</h4>' + opts.map((o) => '<div class="row sb" style="padding:7px 0;border-bottom:1px solid rgba(36,50,79,.5)"><span class="grow"><b>' + G.POS_AR[o.pos] + '</b> <span class="mut sm">' + o.pos + '</span></span><span class="ovr sm">' + o.ovr + '</span>' +
         (o.ok ? '<button class="btn sm" data-a="posAsk" data-v="' + o.pos + '">تغيير</button>' : '<span class="pill r">غير مناسب</span>') + '</div>').join('') + '</div>' +
-      '<p class="sm mut">يُسمح بالتغيير إذا كان انخفاض التقييم ≤ 4. التغيير يكلّفك قليلًا من ثقة المدرب، وقد يمنحك فرص لعب أكثر إن كان المركز الجديد أقل ازدحامًا في ناديك.</p>';
+      '<div class="sm mut">' + UI.more('', 'يُسمح بالتغيير إذا كان انخفاض التقييم ≤ 4. التغيير يكلّفك قليلًا من ثقة المدرب، وقد يمنحك فرص لعب أكثر إن كان المركز الجديد أقل ازدحامًا في ناديك.', 'شروط تغيير المركز') + '</div>';
   }
 
   UI.screens.train = () => {

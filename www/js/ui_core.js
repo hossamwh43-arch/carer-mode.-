@@ -18,14 +18,42 @@
   // ---------- الأدوات المرئية ----------
   const lum = (hex) => { const h = hex.replace('#', ''); const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
   UI.abbr = (name) => { const w = name.replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(Boolean); return (w.length > 1 ? w[0][0] + w[1][0] : name.slice(0, 3)).toUpperCase(); };
-  UI.badgeOf = (cols, code, size) => {
+  // ---------- شعارات الأندية: ثمانية أنماط (أنصاف، خطوط، أطواق، شريط مائل، شيفرون، أرباع، شريط وسطي، حلقة) ----------
+  // النمط واتجاه الألوان يُشتقّان من معرّف النادي فقط (ثابتان لكل نادٍ ولا يمسّان مولّد الأرقام العشوائي للّعبة).
+  const hashStr = (s) => { let h = 2166136261; s = String(s); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  UI.crestPattern = (seed) => { const h = hashStr(seed); return { pat: h % 8, flip: (h >>> 3) % 2 === 1 }; };
+  const SHIELD = 'M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z';
+  UI.SHIELD = SHIELD;
+  // لونان متقاربان جدًا لا يُظهران النمط: نستبدل الثاني بأبيض أو أسود حسب سطوع الأول
+  const sep = (a, b) => (Math.abs(lum(a) - lum(b)) < 0.16 ? (lum(a) > 0.5 ? '#16202e' : '#f4f6fa') : b);
+  const PATS = [
+    (a, b) => '<rect x="20" y="0" width="20" height="40" fill="' + b + '"/>',                                                         // نصفان
+    (a, b) => '<rect x="10.5" y="0" width="6.4" height="40" fill="' + b + '"/><rect x="23.1" y="0" width="6.4" height="40" fill="' + b + '"/><rect x="35.7" y="0" width="6" height="40" fill="' + b + '"/><rect x="0" y="0" width="4.2" height="40" fill="' + b + '"/>', // خطوط رأسية
+    (a, b) => '<rect x="0" y="12" width="40" height="7" fill="' + b + '"/><rect x="0" y="26" width="40" height="7" fill="' + b + '"/>', // أطواق أفقية
+    (a, b) => '<polygon points="0,6 0,17 40,34 40,23" fill="' + b + '"/>',                                                             // شريط مائل
+    (a, b) => '<polyline points="4,14 20,26 36,14" fill="none" stroke="' + b + '" stroke-width="7" stroke-linejoin="miter"/>',         // شيفرون
+    (a, b) => '<rect x="0" y="0" width="20" height="21" fill="' + b + '"/><rect x="20" y="21" width="20" height="20" fill="' + b + '"/>', // أرباع
+    (a, b) => '<rect x="15.5" y="0" width="9" height="40" fill="' + b + '"/>',                                                         // شريط وسطي
+    (a, b) => '<circle cx="20" cy="20" r="12.5" fill="' + b + '"/><circle cx="20" cy="20" r="8.5" fill="' + a + '"/>'                  // حلقة
+  ];
+  UI.badgeOf = (cols, code, size, seed) => {
     size = size || 28;
-    const c0 = cols[0], c1 = cols[1], tx = lum(c0) > 0.6 ? '#111' : '#fff';
-    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z" fill="' + c0 + '" stroke="' + c1 + '" stroke-width="2.4"/><path d="M20 2 L36 8 V20 C36 30 28 36 20 39 Z" fill="' + c1 + '" opacity=".55"/><text x="20" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="' + tx + '" font-family="Arial,sans-serif">' + code + '</text></svg>';
+    const c0 = cols[0], c1 = sep(c0, cols[1] || '#ffffff');
+    let a = c0, b = c1, body;
+    if (seed == null) {
+      // شعار بسيط (المنتخبات والاستخدامات القديمة): نصف الدرع الأيمن بلون ثانٍ
+      body = '<path d="M20 2 L36 8 V20 C36 30 28 36 20 39 Z" fill="' + c1 + '" opacity=".55"/>';
+    } else {
+      const q = UI.crestPattern(seed);
+      if (q.flip) { a = c1; b = c0; }
+      body = '<g clip-path="url(#crestClip)">' + PATS[q.pat](a, b) + '</g>';
+    }
+    // الكود بحروف بيضاء بحدّ غامق: يُقرأ فوق أي نمط وأي لونين
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-hidden="true"><path d="' + SHIELD + '" fill="' + a + '"/>' + body + '<path d="' + SHIELD + '" fill="none" stroke="' + (seed == null ? c1 : b) + '" stroke-width="2.4" stroke-linejoin="round"/><text x="20" y="25" text-anchor="middle" font-size="' + (String(code).length > 2 ? 11 : 12.5) + '" font-weight="800" fill="#fff" stroke="rgba(8,12,22,.78)" stroke-width="2.3" paint-order="stroke" stroke-linejoin="round" font-family="Arial,sans-serif">' + code + '</text></svg>';
   };
   UI.badge = (id, size) => {
     const c = G.S.clubs[id];
-    return c ? UI.badgeOf(c.c, c.code || UI.abbr(c.name).slice(0, 3), size) : '';
+    return c ? UI.badgeOf(c.c, c.code || UI.abbr(c.name).slice(0, 3), size, id) : '';
   };
   // لون التمييز (النادي): يضبط --cc وما يشتق منه (rgb للظلال، نسخة أفتح للنصوص، ولون نص مقروء فوقه). الافتراضي ذهبي.
   UI.applyAccent = (hex) => {
@@ -62,9 +90,22 @@
       '<path d="M28 44 Q28 18 50 18 Q72 18 72 44 L72 62 L66 50 Q62 30 50 30 Q38 30 34 50 L28 62Z" fill="' + hair + '"/>',
       '',
       '<path d="M30 40 Q32 20 50 20 Q68 20 70 40 Q62 30 50 30 Q38 30 30 40Z" fill="' + hair + '"/><circle cx="74" cy="34" r="6" fill="' + hair + '"/>',
-      '<path d="M44 20 Q50 12 56 20 L56 32 L44 32Z" fill="' + hair + '"/>'
+      '<path d="M44 20 Q50 12 56 20 L56 32 L44 32Z" fill="' + hair + '"/>',
+      '<path d="M26 42 Q21 13 50 11 Q79 13 74 42 Q68 28 50 28 Q32 28 26 42Z" fill="' + hair + '"/>',                                         // أفرو
+      '<path d="M29 42 Q29 19 52 19 Q71 20 71 42 Q65 33 53 30 Q41 28 36 37 Q33 40 29 42Z" fill="' + hair + '"/>',                           // جانبي
+      '<path d="M30 40 Q32 20 50 20 Q68 20 70 40 Q62 30 50 30 Q38 30 30 40Z" fill="' + hair + '"/><circle cx="50" cy="13" r="8.5" fill="' + hair + '"/>' // عقدة
     ][st] || '';
-    return '<svg class="avatar" width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 100 Q14 70 50 66 Q86 70 88 100Z" fill="' + c[0] + '"/><path d="M40 68 L50 80 L60 68" fill="none" stroke="' + c[1] + '" stroke-width="5" stroke-linejoin="round"/><rect x="43" y="52" width="14" height="16" rx="5" fill="' + skin + '"/><ellipse cx="50" cy="40" rx="21" ry="24" fill="' + skin + '"/>' + hairSvg + '<circle cx="42" cy="42" r="2.3" fill="#1a1a1a"/><circle cx="58" cy="42" r="2.3" fill="#1a1a1a"/><path d="M43 53 Q50 58 57 53" fill="none" stroke="#7a3b2e" stroke-width="2" stroke-linecap="round"/></svg>';
+    // اللحية (0 بدون، 1 خفيفة، 2 كثّة، 3 سكسوكة، 4 شارب) وشريط الرأس (0 بدون، 1 بلون النادي، 2 أبيض): اختياريان ومتوافقان مع الحفظ القديم
+    const bd = look.beard | 0, bn = look.band | 0;
+    const beardSvg = [
+      '',
+      '<path d="M30 46 Q32 66 50 66 Q68 66 70 46 Q64 58 50 58 Q36 58 30 46Z" fill="' + hair + '" opacity=".4"/>',
+      '<path d="M29 44 Q27 71 50 71 Q73 71 71 44 Q66 53 61 55 Q50 51 39 55 Q34 53 29 44Z" fill="' + hair + '"/><ellipse cx="50" cy="55.5" rx="7" ry="3.2" fill="' + skin + '"/>',
+      '<ellipse cx="50" cy="62" rx="6.5" ry="6" fill="' + hair + '"/><path d="M42 51 Q50 47 58 51 Q54 53.6 50 52 Q46 53.6 42 51Z" fill="' + hair + '"/>',
+      '<path d="M40 51.5 Q50 46.5 60 51.5 Q54.5 55 50 52.5 Q45.5 55 40 51.5Z" fill="' + hair + '"/>'
+    ][bd] || '';
+    const bandSvg = bn ? '<path d="M29 34 Q50 25 71 34 L71 39.5 Q50 31 29 39.5Z" fill="' + (bn === 2 ? '#f4f6fa' : c[0]) + '" stroke="rgba(0,0,0,.25)" stroke-width=".8"/>' : '';
+    return '<svg class="avatar" width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 100 Q14 70 50 66 Q86 70 88 100Z" fill="' + c[0] + '"/><path d="M40 68 L50 80 L60 68" fill="none" stroke="' + c[1] + '" stroke-width="5" stroke-linejoin="round"/><rect x="43" y="52" width="14" height="16" rx="5" fill="' + skin + '"/><ellipse cx="50" cy="40" rx="21" ry="24" fill="' + skin + '"/>' + beardSvg + hairSvg + bandSvg + '<circle cx="42" cy="42" r="2.3" fill="#1a1a1a"/><circle cx="58" cy="42" r="2.3" fill="#1a1a1a"/><path d="M43 53 Q50 58 57 53" fill="none" stroke="#7a3b2e" stroke-width="2" stroke-linecap="round"/></svg>';
   };
 
   UI.stars = (pot) => { const n = U.clamp(Math.round((pot - 62) / 6), 1, 5); return '<span class="stars">' + '★'.repeat(n) + '<span class="mut">' + '☆'.repeat(5 - n) + '</span></span>'; };
@@ -73,6 +114,8 @@
   UI.rolePill = (role) => { const m = { starter: 'g', rotation: 'y', bench: 'b', out: 'r', injured: 'r', suspended: 'r' }; return '<span class="pill ' + (m[role] || '') + '">' + (G.Coach.ROLE_AR[role] || role) + '</span>'; };
   UI.bar = (pct, cls) => '<div class="bar ' + (cls || '') + '"><i style="width:' + U.clamp(pct, 0, 100) + '%"></i></div>';
   UI.formDots = (form) => (form && form.length ? form.slice(-5).map((r) => '<span class="rating ' + UI.ratingCls(r) + '" style="min-width:34px;height:26px;font-size:12px">' + r.toFixed(1) + '</span>').join(' ') : '<span class="mut sm">لا مباريات بعد</span>');
+  // نص طويل يُطوى خلف «اعرف المزيد» (عنصر details الأصلي: بلا حالة ولا إعادة رسم). الملخّص يبقى ظاهرًا دائمًا
+  UI.more = (summary, html, label) => '<details class="more"><summary>' + (summary ? '<span>' + summary + '</span>' : '') + '<em>' + (label || 'اعرف المزيد') + '</em></summary><div class="more-b">' + html + '</div></details>';
   UI.week = () => 'الأسبوع ' + G.S.week + ' / 39';
 
   // ---------- النوافذ والرسائل ----------

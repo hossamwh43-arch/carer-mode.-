@@ -71,6 +71,12 @@
         h += ' — تعتمد على: ' + ks.map((x) => AT[x] + ' ' + Math.round(a[x] != null ? a[x] : 50)).join(' · ');
       }
       o2.hint = h;
+      // حقول عرض منظّمة للواجهة (تزيين فقط؛ لا تدخل في أي حساب): النسبة الرئيسية، سطر ثانوي، السمات المؤثرة
+      o2.main = o2.k === 'shot' ? o2.pg : o2.pp;
+      o2.sub = o2.k === 'shot' ? '' : o2.k === 'safe' ? 'مخاطرة منخفضة جدًا'
+        : o2.k === 'def' ? [o2.foul ? 'خطر الإنذار ' + pct(o2.foul) : '', o2.pc ? 'إن فشلتَ: خطر هدف ' + pct(o2.pc) : ''].filter(Boolean).join(' • ')
+        : 'عند النجاح: فرصة هدف ' + pct(o2.pg);
+      o2.atl = o2.at ? Object.keys(o2.at).sort((x, y) => o2.at[y] - o2.at[x]).slice(0, 2).map((x) => AT[x] + ' ' + Math.round(a[x] != null ? a[x] : 50)) : [];
       return o2;
     };
 

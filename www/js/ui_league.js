@@ -38,6 +38,17 @@
     return i < slots || i < up ? 'z1' : down && i >= n - down ? 'z3' : '';
   };
 
+  // آخر 5 نتائج لكل ناد (فوز/تعادل/خسارة) من جدول المباريات: الدوري الكامل (rounds) أو المضغوط (sched/res)
+  UI.lgForm = (L) => {
+    const out = {};
+    const add = (id, t) => { (out[id] = out[id] || []).push(t); if (out[id].length > 5) out[id].shift(); };
+    const res = (hg, ag) => (hg > ag ? 'w' : hg < ag ? 'l' : 'd');
+    if (L.rounds) L.rounds.forEach((rd) => rd.forEach((f) => { if (f.played) { add(f.h, res(f.hg, f.ag)); add(f.a, res(f.ag, f.hg)); } }));
+    else if (L.sched && L.res) L.sched.forEach((rd, ri) => { const r = L.res[ri]; if (!r) return; rd.forEach((m, k) => { const x = r[k]; if (x) { add(L.clubs[m[0]], res(x[0], x[1])); add(L.clubs[m[1]], res(x[1], x[0])); } }); });
+    return out;
+  };
+  const LBL = { w: 'فوز', d: 'تعادل', l: 'خسارة' };
+  const formDots5 = (arr) => '<span class="f5" aria-label="آخر النتائج">' + (arr && arr.length ? arr.map((t) => '<i class="' + t + '" title="' + LBL[t] + '"></i>').join('') : '<em class="mut">لا مباريات بعد</em>') + '</span>';
   // جدول ترتيب أي دوري (كامل أو مضغوط) مع مناطق التأهل والهبوط والصعود
   function tableFor(lgId) {
     const S = G.S, mine = me().club, L = World().leagueOf(lgId), def = G.LEAGUES[lgId];
@@ -47,8 +58,9 @@
     const legend = def.tier === 1
       ? '<span class="pos">▌</span> المراكز 1–' + slots + ': التأهل لدوري الأبطال · <span class="neg">▌</span> المراكز ' + (n - down + 1) + '–' + n + ': الهبوط إلى ' + esc(G.leagueName(def.other))
       : '<span class="pos">▌</span> المراكز 1–' + up + ': الصعود المباشر إلى ' + esc(G.leagueName(def.other));
-    return '<div class="card"><table class="t"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>فارق</th><th>نقاط</th></tr>' +
-      order.map((id, i) => { const r = L.table[id]; return '<tr class="' + (id === mine ? 'me ' : '') + zone(i) + '"><td>' + (i + 1) + '</td><td class="l">' + UI.clubTag(id, 18) + '</td><td>' + r.p + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') +
+    const fm = UI.lgForm(L);
+    return '<div class="card"><table class="t lgt"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>فارق</th><th>نقاط</th></tr>' +
+      order.map((id, i) => { const r = L.table[id]; return '<tr class="' + (id === mine ? 'me ' : '') + zone(i) + '"><td>' + (i + 1) + '</td><td class="l">' + UI.clubTag(id, 18) + '<div class="f5row">' + formDots5(fm[id]) + (id === mine ? '<span class="mine-tag">ناديك</span>' : '') + '</div></td><td>' + r.p + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') +
       '</table><p class="sm mut" style="margin:8px 0 0">' + legend + '</p></div>';
   }
   UI.lgTable = tableFor;

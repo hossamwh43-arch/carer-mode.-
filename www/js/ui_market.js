@@ -37,10 +37,28 @@
       (o.type === 'transfer' && !o.pressed ? '<button class="btn sm" style="width:100%" data-a="offerPress" data-v="' + o.id + '">📈 استغلّ المنافسة</button>' : '') + '</div></div>';
   }
 
+  // حالة «لا عروض»: تشرح أين نحن من نوافذ الانتقال وتعدّ الأسابيع للنافذة التالية (زينة/معلومة فقط)
+  UI.windowInfo = () => {
+    const S = G.S, w = S.week || 1, SE = G.Season, wo = SE.WINTER_OPEN, wc = SE.WINTER_CLOSE, last = SE.LAST_WEEK, pl = (n) => (n === 1 ? 'أسبوع واحد' : n === 2 ? 'أسبوعان' : n <= 10 ? n + ' أسابيع' : n + ' أسبوعًا');
+    if (S.window && S.window.open) {
+      if (S.window.kind === 'winter') { const n = Math.max(1, wc - w); return { open: true, pct: ((w - wo + 1) / (wc - wo)) * 100, title: 'السوق الشتوي مفتوح', text: 'يُغلق بعد ' + pl(n) + '. العروض تصل بحسب أدائك وتقييمك ودورك.' }; }
+      return { open: true, pct: 100, title: 'السوق الصيفي مفتوح', text: 'يبقى مفتوحًا حتى بدء الموسم. العروض تصل بحسب أدائك وتقييمك ودورك.' };
+    }
+    if (S.phase === 'season' && w < wo) return { open: false, pct: ((w - 1) / (wo - 1)) * 100, title: 'السوق مغلق الآن', text: 'يُفتح السوق الشتوي بعد ' + pl(wo - w) + ' (الأسبوع ' + wo + ').' };
+    if (S.phase === 'season' && w < last) return { open: false, pct: ((w - wc) / (last - wc)) * 100, title: 'أُغلق السوق الشتوي', text: 'السوق الصيفي يُفتح بعد نهاية الموسم، أي بعد ' + pl(last - w) + '.' };
+    return { open: false, pct: 100, title: 'السوق مغلق الآن', text: 'يُفتح السوق الصيفي عند الانتقال للموسم التالي.' };
+  };
+  function windowEmpty() {
+    const i = UI.windowInfo();
+    return '<div class="card empty-st"><div class="es-ic">' + UI.ico('swap') + '</div><h3>لا عروض الآن</h3>' +
+      '<div style="margin:6px 0 8px">' + UI.bar(i.pct, i.open ? '' : 'gold') + '</div><p class="sm" style="margin:0"><b>' + i.title + '</b> — ' + i.text + '</p>' +
+      '<p class="sm mut" style="margin:8px 0 0">وللحصول على عروض أكثر: العب أساسيًا، ارفع تقييمك، وحافظ على ثقة المدرب.</p></div>';
+  }
+
   function offersTab() {
     const S = G.S, p = me(), list = S.offers || [];
     let h = '';
-    if (!list.length) h += '<div class="card c"><div style="font-size:36px">📭</div><p class="mut">لا توجد عروض الآن. تأتي العروض في فترات الانتقالات بحسب أدائك وتقييمك ودورك في الفريق.</p></div>';
+    if (!list.length) h += windowEmpty();
     else h += list.map(offerCard).join('');
     if (S.userExpired) h += '<div class="card"><h4>الخيار الأخير</h4><p class="sm mut">إن لم يعجبك أي عرض: سنة واحدة مع ناديك الحالي بأجر مخفّض.</p><button class="btn" data-a="emergency">عقد قصير بالحد الأدنى</button></div>';
     return h;
@@ -80,7 +98,7 @@
       h += '<div class="card"><h4>طلبات خاصة</h4>' +
         '<button class="btn" data-a="reqTransfer"' + (S.transferRequest ? ' disabled' : '') + '>🚪 ' + (S.transferRequest ? 'تم تقديم طلب الانتقال' : 'قدّم طلب انتقال') + '</button>' +
         '<button class="btn" data-a="reqLoan">🔁 اطلب إعارة لزيادة دقائق اللعب</button>' +
-        '<p class="sm mut" style="margin:8px 0 0">طلب الانتقال يخفض ثقة المدرب (−8) لكنه يزيد العروض ويجعل ناديك أكثر استعدادًا للبيع. الإعارة متاحة فقط لأندية الدوري الإسباني وللاعبين حتى 25 سنة.</p></div>';
+        '<div class="sm mut" style="margin:8px 0 0">' + UI.more('', 'طلب الانتقال يخفض ثقة المدرب (−8) لكنه يزيد العروض ويجعل ناديك أكثر استعدادًا للبيع. الإعارة متاحة فقط لأندية الدوري الإسباني وللاعبين حتى 25 سنة.', 'ماذا يفعل طلب الانتقال؟') + '</div></div>';
     }
     h += '<div class="card"><h4>تاريخي مع الأندية</h4>' + p.hist.slice().reverse().map((x) => '<div class="kv"><span>' + G.Season.label(x.season) + ' · ' + esc(UI.cname(x.club)) + '</span><span class="mut sm">' + (x.type === 'join' ? 'بداية المسيرة' : x.type === 'loan' ? 'إعارة' : x.type === 'free' ? 'لاعب حر' : 'انتقال ' + UI.money(x.fee)) + '</span></div>').join('') + '</div>';
     return h;
