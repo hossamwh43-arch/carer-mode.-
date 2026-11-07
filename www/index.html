@@ -13,17 +13,17 @@
 <body>
 <div id="boot" class="boot"><div class="boot-ball">⚽</div><div>جارٍ تحميل اللعبة…</div></div>
 <header id="topbar" class="topbar hidden">
-  <div class="tb-side"><button class="icon-btn" data-a="menu" aria-label="القائمة"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-menu"/></svg></button><button id="backBtn" class="icon-btn hidden" data-a="goBack" aria-label="رجوع"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrowr"/></svg></button></div>
+  <div class="tb-side"><span id="tbCrest" class="tb-crest" aria-hidden="true"></span><button id="backBtn" class="icon-btn hidden" data-a="goBack" aria-label="رجوع"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrowr"/></svg></button></div>
   <div id="topTitle" class="top-title"></div>
   <div class="tb-side tb-end"><button class="icon-btn" data-a="go" data-v="inbox" aria-label="الرسائل"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg><span id="inboxBadge" class="badge hidden">0</span></button></div>
 </header>
 <main id="app" class="app"></main>
 <nav id="bottomnav" class="bottomnav hidden" aria-label="التنقل الرئيسي">
-  <button data-a="go" data-v="home"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg></span><small>الرئيسية</small></button>
-  <button data-a="go" data-v="league"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-podium"/></svg></span><small>الدوري</small></button>
-  <button data-a="go" data-v="ucl"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ucl"/></svg></span><small>الأبطال</small></button>
-  <button data-a="go" data-v="train"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dumbbell"/></svg></span><small>التدريب</small></button>
-  <button data-a="go" data-v="market"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-swap"/></svg></span><small>الانتقالات</small></button>
+  <button data-a="goGroup" data-v="home" data-g="home"><span class="bn-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg></span><small>الرئيسية</small></button>
+  <button data-a="goGroup" data-v="me" data-g="me"><span class="bn-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg></span><small>مسيرتي</small></button>
+  <button data-a="goGroup" data-v="matches" data-g="matches" class="bn-mid"><span class="bn-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pitch"/></svg><i id="matchDot" class="bn-dot hidden"></i></span><small>المباريات</small></button>
+  <button data-a="goGroup" data-v="club" data-g="club"><span class="bn-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-club"/></svg></span><small>النادي</small></button>
+  <button data-a="goGroup" data-v="more" data-g="more"><span class="bn-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-grid"/></svg><i id="moreDot" class="bn-dot hidden"></i></span><small>المزيد</small></button>
 </nav>
 <div id="sheetWrap" class="sheet-wrap hidden"><div class="sheet-back" data-a="closeSheet"></div><div id="sheet" class="sheet"></div></div>
 <div id="toast" class="toast hidden"></div>
@@ -70,6 +70,9 @@
 <script src="js/ui_train.js"></script>
 <script src="js/ui_market.js"></script>
 <script src="js/ui_career.js"></script>
+<script src="js/ui_nav.js"></script>
+<script src="js/ui_profile.js"></script>
+<script src="js/ui_center.js"></script>
 <script src="js/ui_sim.js"></script>
 <script src="js/main.js"></script>
 </body>

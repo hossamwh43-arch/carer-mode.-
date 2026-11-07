@@ -167,7 +167,7 @@
     while (UI.stack.length) {
       const c = UI.stack.pop();
       if (c === UI.cur || !UI.screens[c]) continue;
-      if (S && S.phase === 'retired' && ['career', 'stats', 'settings'].indexOf(c) < 0) continue;
+      if (S && S.phase === 'retired' && (UI.RETIRED_OK || ['career', 'stats', 'settings']).indexOf(c) < 0) continue;
       prev = c; break;
     }
     if (!prev) return false;
@@ -245,23 +245,26 @@
     const S = G.S, app = $('#app');
     const boot = $('#boot'); if (boot) boot.remove();
     if (!S) { UI.chrome(false); app.className = 'app nonav'; app.innerHTML = G.safe(() => UI.screens.start(), 'start') || ''; return; }
-    if (S.phase === 'retired' && UI.cur !== 'career' && UI.cur !== 'stats' && UI.cur !== 'settings') UI.cur = 'career';
+    if (S.phase === 'retired' && (UI.RETIRED_OK || ['career', 'stats', 'settings']).indexOf(UI.cur) < 0) UI.cur = 'career';
     UI._track();
     try { UI.applyAccent(UI.clubAccent ? UI.clubAccent(S.players[S.user].club) : null); } catch (e) { /* لون النادي زينة فقط */ }
     if (UI.cur !== 'match' && G.Audio && G.Audio.crowdSrc) G.Audio.crowd(false); // أمان: لا ضجيج ملعب خارج شاشة المباراة
     UI.chrome(true);
-    app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '');
+    // حركة الدخول تُشغَّل فقط عند تغيّر الشاشة (لا عند إعادة الرسم بعد كل ضغطة)
+    const entering = UI._seen !== UI.cur; UI._seen = UI.cur;
+    if (UI.groupOf && UI.cur !== 'match') UI.lastIn[UI.groupOf(UI.cur)] = UI.cur;
+    app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '') + (entering ? ' scr-in' : '');
     $('#bottomnav').classList.toggle('hidden', UI.cur === 'match');
     { const tt = UI.titles[UI.cur]; $('#topTitle').textContent = (typeof tt === 'function' ? tt() : tt) || ''; }
     const bb = $('#backBtn');
     if (bb) bb.classList.toggle('hidden', !(UI.MAIN.indexOf(UI.cur) < 0 && UI.cur !== 'match' && (UI.stack.length > 0 || S.phase !== 'retired')));
-    document.querySelectorAll('#bottomnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === UI.cur));
+    if (UI.navSync) UI.navSync(); else document.querySelectorAll('#bottomnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === UI.cur));
     const ub = G.Inbox.unread(), bd = $('#inboxBadge');
     bd.textContent = ub; bd.classList.toggle('hidden', !ub);
     const scr = UI.screens[UI.cur] || UI.screens.home;
     let html = G.safe(scr, 'render:' + UI.cur);
     if (html == null) html = '<div class="card notice bad">حدث خطأ أثناء عرض هذه الصفحة. بياناتك محفوظة. ' + UI.esc(G.lastError ? G.lastError.msg : '') + '</div><button class="btn" data-a="go" data-v="home">العودة للرئيسية</button>';
-    app.innerHTML = html;
+    app.innerHTML = (UI.switcher ? G.safe(UI.switcher, 'switcher') || '' : '') + html;
     if (UI._sheetFn && !$('#sheetWrap').classList.contains('hidden')) $('#sheet').innerHTML = UI._sheetFn();
     if (UI.after) { const f = UI.after; UI.after = null; f(); }
   };

@@ -106,6 +106,9 @@
     ten: '<circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="800" fill="currentColor" stroke="none" style="font-family:Num,sans-serif">10</text>',
     crown2: '<path d="m3.6 19-1.2-9.4 5 3.5L12 6.6l4.6 6.5 5-3.5L20.4 19z"/><path d="M12 2.4v1.8M8.8 3.4l.9 1.4M15.2 3.4l-.9 1.4"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.2M12 7.8v.1"/>',
+    club: '<path d="M12 3 4.6 6v5.6c0 4.5 3.1 7.9 7.4 9.4 4.3-1.5 7.4-4.9 7.4-9.4V6z"/><path d="M12 7.6v8.4M8.4 11h7.2"/>',
+    grid: '<rect x="4" y="4" width="6.6" height="6.6" rx="1.8"/><rect x="13.4" y="4" width="6.6" height="6.6" rx="1.8"/><rect x="4" y="13.4" width="6.6" height="6.6" rx="1.8"/><rect x="13.4" y="13.4" width="6.6" height="6.6" rx="1.8"/>',
+    pitch: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14M3 9.5h3v5H3M21 9.5h-3v5h3"/><circle cx="12" cy="12" r="2.4"/>',
     old: '<circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4.2 3.4-7 7.5-7s7.5 2.8 7.5 7M10 8.6h4"/>'
   };
 
