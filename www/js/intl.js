@@ -393,6 +393,7 @@
     const nat = I.user.nat, qs = I.user.qualified, st = u.st.nt || [0, 0, 0, 0, 0];
     const entry = { y: I.year, t: I.type, nat, q: qs, called: I.user.called, res: qs ? Intl.finalRes(I, nat) : null, apps: st[0], g: st[1], a: st[2], avg: st[0] ? Math.round(st[3] / st[0] * 100) / 100 : 0, min: st[4], title: false, mvp: !!(I.mvp && I.mvp.user), boot: !!(I.boot && I.boot.pid === u.id) };
     if (qs && I.winner === nat && st[0] >= 2) { entry.title = true; u.trophies = u.trophies || {}; u.trophies[T.key] = (u.trophies[T.key] || 0) + 1; }
+    if (G.Trophies && qs && st[0] >= 2) { if (entry.title) G.Trophies.add(u, T.key, { y: I.year }); else if (entry.res === 'final') G.Trophies.add(u, T.key, { y: I.year, r: 'f' }); }
     u.ntCar = u.ntCar || []; u.ntCar.push(entry);
     I.userEntry = entry;
     // التاريخ العام

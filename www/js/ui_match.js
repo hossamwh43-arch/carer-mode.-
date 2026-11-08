@@ -45,6 +45,8 @@
       const mine = sm.userSide, gf = mine === 'h' ? sm.score.h : sm.score.a, ga = mine === 'h' ? sm.score.a : sm.score.h;
       let w = gf > ga ? 1 : gf < ga ? -1 : 0;
       if (w === 0 && sm.pens) w = (mine === 'h' ? sm.pens.h - sm.pens.a : sm.pens.a - sm.pens.h) > 0 ? 1 : -1;
+      const fo = G.Cups ? G.Cups.finalOutcome(sm) : null; // نهائي كأس/سوبر
+      if (fo && fo.won) { UI.fx('fanfare'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك'); return; }
       const sk = sm.gro && sm.gro.ev.find((e) => e.k === 'streak');
       if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '🔥 ارتقى مستواك!', sm.gro.s + ' مباريات متتالية متألقة'); }
       else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '⭐ نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
@@ -207,6 +209,7 @@
     const fix = G.Season.findFix(sm.fixId);
     let h = '<div class="card hl"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</div><div class="score" style="margin:8px 0"><div class="tm">' + UI.badge(sm.h, 42) + '<div>' + esc(UI.cname(sm.h)) + '</div></div><div class="sc">' + sm.score.h + ' - ' + sm.score.a + '</div><div class="tm">' + UI.badge(sm.a, 42) + '<div>' + esc(UI.cname(sm.a)) + '</div></div></div>' +
       '<div class="c"><span class="pill ' + (gf > ga || (sm.pens && res.indexOf('فوز') === 0) ? 'g' : gf < ga || sm.pens ? 'r' : 'y') + '">' + res + '</span>' + (sm.et ? ' <span class="pill">وقت إضافي</span>' : '') + (sm.pens ? ' <span class="pill">ترجيح ' + sm.pens.h + '-' + sm.pens.a + '</span>' : '') + '</div></div>';
+    if (UI.cupNote) h += UI.cupNote(fix, sm);
     if (sm.mins > 0) {
       // التقييم رقم كبير داخل حلقة تتلوّن بمستوى الأداء، ثم إحصاءات مختصرة
       const R = sm.rating == null ? 0 : sm.rating, rc = UI.ratingCls(R) || 'hi';

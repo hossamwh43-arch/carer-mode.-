@@ -46,6 +46,7 @@
     }
     G.Players.refresh(p);
     if (p.user && G.World) G.World.syncUser(); // انتقال لدوري آخر أثناء الموسم
+    if (p.user && G.Cups) G.Cups.prepareUser(); // تشكيلات خصوم الكأس/السوبر لنادي المستخدم الجديد
     if (!opts.loan && (fee > 0 || p.ovr >= 78 || p.user)) logTransfer({ season: S.season, p: p.id, name: p.n, from: oldClub, to: toId, fee, user: !!p.user, ovr: p.ovr });
   };
 

@@ -289,7 +289,7 @@
     const p = {
       id, user: true, n: o.name, nat: o.nat, age: o.age, pos: o.pos, h: o.h, w: o.w, foot: o.foot, look: o.look,
       num: o.num, a, club: o.clubId, parent: null, pot: Math.max(pot, ovr0 + 10), inj: 0, susp: 0, yel: 0,
-      fit: 90, form: [], trust: 45, role: 'bench', xp: 0, lvl: 0, dp: 0, gain: {}, car: [], hist: [], earn: 0, awards: [],
+      fit: 90, form: [], trust: 45, role: 'bench', xp: 0, lvl: 0, dp: 0, gain: {}, car: [], hist: [], earn: 0, awards: [], tlog: [],
       st: { lg: [0, 0, 0, 0, 0], uc: [0, 0, 0, 0, 0], nt: [0, 0, 0, 0, 0] }, cards: { y: 0, r: 0 }, startSeason: S.season
     };
     p.ovr = Players.calcOvr(p.a, p.pos);

@@ -12,6 +12,13 @@
   // أهمية المباراة: 2 حاسمة (إقصائيات/نهائي)، 1 كبيرة (قمة، ليلة أبطال، بقاء)، 0 عادية
   UI.matchImportance = (f) => {
     const S = G.S, u = me();
+    if (f.comp === 'SUP') return { lvl: 2, tag: 'نهائي ' + G.supName(f.cn, true) };
+    if (f.comp === 'CUP') {
+      if (f.stage === 'final') return { lvl: 2, tag: 'نهائي ' + G.cupName(f.cn, true) };
+      if (f.stage === 'sf') return { lvl: 2, tag: 'نصف نهائي الكأس' };
+      if (f.stage === 'qf' || f.stage === 'r16') return { lvl: 1, tag: 'مباراة إقصائية' };
+      return { lvl: 0, tag: '' };
+    }
     if (f.comp !== 'LL' && f.comp !== 'NT') {
       if (f.stage === 'final') return { lvl: 2, tag: 'نهائي دوري الأبطال' };
       if (f.stage && f.stage !== 'league') return { lvl: 2, tag: 'مباراة إقصائية' };
@@ -88,7 +95,8 @@
     const S = G.S, u = me();
     let h = (UI.predCard ? '<div class="card pred-card">' + UI.predCard(fix) + '</div>' : '') + vsBars(fix) + standings(fix);
     h += '<div class="card"><h4>أدائك الأخير</h4>' + UI.formDots(u.form) + '</div>';
-    if (UI.uclLine && fix.comp !== 'LL') h += UI.uclLine();
+    if (UI.uclLine && fix.comp === 'UCL') h += UI.uclLine();
+    if (UI.cupLine && (fix.comp === 'CUP' || fix.comp === 'SUP')) h += UI.cupLine(fix);
     return h;
   }
   function xiTab(fix) {
@@ -111,7 +119,7 @@
     const log = (S.matchLog || []).slice(0, 6);
     h += '<div class="card"><h4>آخر النتائج</h4>' + (log.length ? log.map((m) => {
       const opp = m.userSide === 'h' ? m.a : m.h, gf = m.userSide === 'h' ? m.score.h : m.score.a, ga = m.userSide === 'h' ? m.score.a : m.score.h, k = gf > ga ? 'w' : gf < ga ? 'l' : 'd';
-      return '<div class="rs"><span class="rs-w ' + k + '">' + (k === 'w' ? 'ف' : k === 'l' ? 'خ' : 'ت') + '</span><span class="rs-m">' + UI.clubTag(opp, 22) + '<small class="mut">' + (m.comp === 'LL' ? 'الدوري' : m.comp === 'NT' ? 'المنتخب' : 'دوري الأبطال') + '</small></span><b class="sco">' + gf + ' - ' + ga + '</b>' + (m.rating ? UI.rating(m.rating) : '') + '</div>';
+      return '<div class="rs"><span class="rs-w ' + k + '">' + (k === 'w' ? 'ف' : k === 'l' ? 'خ' : 'ت') + '</span><span class="rs-m">' + UI.clubTag(opp, 22) + '<small class="mut">' + UI.compName(m.comp) + '</small></span><b class="sco">' + gf + ' - ' + ga + '</b>' + (m.rating ? UI.rating(m.rating) : '') + '</div>';
     }).join('') + '<button class="btn sm" style="margin-top:10px;width:100%" data-a="lastMatchView">تفاصيل آخر مباراة</button>' : '<div class="mut sm c">لا مباريات بعد.</div>') + '</div>';
     return h;
   }

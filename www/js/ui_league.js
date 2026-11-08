@@ -30,6 +30,8 @@
     return listTable(list, comp, kind);
   }
 
+  UI.statTop = top; UI.statTable = listTable; // تُستخدم في شاشة الكأس (comp = 'cp')
+
   // لون منطقة المركز i (من 0) في دوري: تأهل الأبطال/الصعود (z1) أو الهبوط (z3)
   UI.lgZone = (lgId, i, n) => {
     const def = G.LEAGUES[lgId];

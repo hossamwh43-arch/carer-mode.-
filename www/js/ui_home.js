@@ -8,11 +8,13 @@
   UI.fixLabel = (f) => {
     if (f.comp === 'LL') return (G.S && G.S.league ? G.leagueName(G.S.league.lg) : 'الدوري') + ' · الجولة ' + f.r;
     if (f.comp === 'NT') return (G.S.intl ? G.S.intl.name : 'المنتخبات') + ' · ' + (f.stage === 'group' ? 'المجموعة ' + 'ABCDEFGHIJKL'[f.g] + ' · الجولة ' + f.day : G.STAGE_NT_AR[f.stage] || f.stage) + (f.stage === 'final' || f.stage === 'third' ? ' (ملعب محايد)' : '');
+    if (f.comp === 'CUP' || f.comp === 'SUP') return G.Cups.label(f).replace(' (ملعب محايد)', '');
     const st = G.Ucl.STAGE_AR[f.stage] || '';
     if (f.stage === 'league') return 'دوري الأبطال · ' + st + ' · الجولة ' + f.r;
     if (f.stage === 'final') return 'دوري الأبطال · النهائي (ملعب محايد)';
     return 'دوري الأبطال · ' + st + (f.leg ? ' · ' + (f.leg === 1 ? 'الذهاب' : 'الإياب') : '');
   };
+  UI.compName = (c) => ({ LL: 'الدوري', NT: 'المنتخب', CUP: 'الكأس', SUP: 'السوبر' })[c] || 'دوري الأبطال';
   UI.fixLine = (f, big) => {
     const sc = f.played ? '<b class="sco">' + f.hg + ' - ' + f.ag + '</b>' + (f.pens ? '<div class="sm mut ltr">(' + f.pens.h + '-' + f.pens.a + ' ر.ج)</div>' : '') : '<span class="vstag">ضد</span>';
     return '<div class="score"><div class="tm">' + UI.badge(f.h, big ? 54 : 34) + '<div>' + esc(UI.cname(f.h)) + '</div></div><div class="' + (big ? 'sc' : '') + '" style="min-width:70px;text-align:center">' + sc + '</div><div class="tm">' + UI.badge(f.a, big ? 54 : 34) + '<div>' + esc(UI.cname(f.a)) + '</div></div></div>';

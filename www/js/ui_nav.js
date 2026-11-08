@@ -9,8 +9,8 @@
   // ---------- المجموعات: كل تبويب سفلي له قسم افتراضي وأقسام فرعية (شريط علوي لاصق) ----------
   UI.GROUPS = {
     home: { ar: 'الرئيسية', ico: 'home', def: 'home', items: [['home', 'الرئيسية']] },
-    me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['market', 'الانتقالات'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
-    matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
+    me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['trophies', 'البطولات'], ['market', 'الانتقالات'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
+    matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['cup', 'الكأس'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
     club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب']] },
     more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الصحافة'], ['inbox', 'الرسائل'], ['settings', 'الإعدادات']] }
   };
@@ -21,7 +21,7 @@
   // كل مسار داخل مجموعة لا يعرض زر الرجوع (التنقل الجانبي بالشريط العلوي)؛ الباقي (المباراة، تقرير المحاكاة) يعرضه
   UI.MAIN = Object.keys(R2G).filter((r) => r !== 'match' && r !== 'simreport');
   // بعد الاعتزال: مسارات السجل فقط
-  UI.RETIRED_OK = ['career', 'stats', 'settings', 'profile', 'more'];
+  UI.RETIRED_OK = ['career', 'stats', 'settings', 'profile', 'more', 'trophies'];
   UI.lastIn = {};
 
   UI.titles.profile = 'ملف اللاعب';
@@ -32,6 +32,8 @@
   UI.titles.bd = 'الكرة الذهبية';
   UI.titles.intl = 'المنتخبات';
   UI.titles.press = 'الصحافة والأخبار';
+  UI.titles.cup = 'الكأس والسوبر';
+  UI.titles.trophies = 'سجل البطولات';
 
   const allowed = (r) => !(G.S && G.S.phase === 'retired') || UI.RETIRED_OK.indexOf(r) >= 0;
 
@@ -125,8 +127,10 @@
       tiles.push(tile('press', 'mic', 'الصحافة والأخبار', pr ? 'مؤتمر صحفي ينتظرك' : 'أخبار وشعبية', pr ? '!' : ''));
       tiles.push(tile('intl', 'globe', 'المنتخبات', S.intl ? esc(S.intl.name) : 'كأس العالم وآسيا'));
       tiles.push(tile('league', 'podium', 'المسابقات', 'الدوري ودوري الأبطال'));
+      tiles.push(tile('cup', 'shield', 'الكأس والسوبر', 'القرعة والنتائج والأبطال'));
       tiles.push(tile('bd', 'crown', 'الكرة الذهبية', 'ترتيب المرشحين'));
     }
+    tiles.push(tile('trophies', 'trophy', 'سجل البطولات', 'ألقابك ووصافاتك موسمًا بموسم'));
     tiles.push(tile('stats', 'chart', 'الإحصائيات', 'الموسم والإنجازات والسجل'));
     tiles.push(tile('career', 'book', 'سجل المسيرة', 'موسمًا بموسم'));
     if (!retired && S.simReport) tiles.push(tile('simreport', 'ffwd', 'تقرير المحاكاة', 'آخر تقرير'));
@@ -134,6 +138,6 @@
     tiles.push(tile('settings', 'gear', 'الإعدادات والحفظ', 'الصوت · التصدير · الصعوبة'));
     return '<div class="tiles">' + tiles.join('') + '</div>' +
       '<div class="card more-foot"><div class="row sb"><span class="sm mut">آخر حفظ</span><span class="sm">' + (S.savedAt ? new Date(S.savedAt).toLocaleString('ar') : '—') + '</span></div>' +
-      '<div class="row sb" style="margin-top:6px"><span class="sm mut">اللعبة</span><span class="sm">مسيرة لاعب · الإصدار 3.3</span></div></div>';
+      '<div class="row sb" style="margin-top:6px"><span class="sm mut">اللعبة</span><span class="sm">مسيرة لاعب · الإصدار 3.4</span></div></div>';
   };
 })(window.G = window.G || {});

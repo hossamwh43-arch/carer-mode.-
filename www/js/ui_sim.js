@@ -4,10 +4,10 @@
   const UI = G.UI, U = G.U, esc = UI.esc, $ = (s) => document.querySelector(s);
   const me = () => G.S.players[G.S.user];
   UI.titles.simreport = 'تقرير المحاكاة';
-  const COMP = { LL: ['الدوري', '🏆'], UCL: ['الأبطال', '⭐'] };
+  const COMP = { LL: ['الدوري', '🏆'], UCL: ['الأبطال', '⭐'], CUP: ['الكأس', '🏆'], SUP: ['السوبر', '🛡️'], NT: ['المنتخب', '🌍'] };
   const STOP_CLS = { end: 'ok', limit: 'ok', started: 'ok', cancel: '', error: 'bad', blocked: 'bad' };
   const STOP_ICON = { end: '🏁', limit: '✅', started: '▶️', offers: '🔁', window: '🏟️', injury: '🩹', dp: '💪', role: '📋', press: '🎤', key: '⭐', cancel: '⏹', error: '⚠️', blocked: '⛔' };
-  const EV_ICON = { inj: '🩹', red: '🟥', susp: '🟨', goal: '⚽', offer: '🔁', window: '🏟️', lvl: '💪', ucl: '⭐', role: '📋', award: '🏆', summer: '☀️', press: '🎤', media: '📣' };
+  const EV_ICON = { inj: '🩹', red: '🟥', susp: '🟨', goal: '⚽', offer: '🔁', window: '🏟️', lvl: '💪', ucl: '⭐', cup: '🏆', role: '📋', award: '🏆', summer: '☀️', press: '🎤', media: '📣' };
 
   // ---------- بطاقة الرئيسية ----------
   UI.simCard = () => {
@@ -177,7 +177,8 @@
       prow('اللياقة', fr.fit, to.fit, (v) => v + '%', true) +
       (fr.role !== to.role ? '<div class="kv"><span>دورك</span><span>' + esc(G.Coach.ROLE_AR[fr.role] || '—') + ' ← <b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></span></div>' : '<div class="kv"><span>دورك</span><b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></div>') +
       (to.pos ? prow('مركز ' + esc(UI.cname(rep.club)) + ' في الدوري', fr.pos || to.pos, to.pos, (v) => v, true, true) : '') +
-      (to.ucl ? '<div class="kv"><span>دوري الأبطال</span><span class="sm" style="text-align:end">' + esc(to.ucl) + '</span></div>' : '') + '</div>';
+      (to.ucl ? '<div class="kv"><span>دوري الأبطال</span><span class="sm" style="text-align:end">' + esc(to.ucl) + '</span></div>' : '') +
+      (to.cup ? '<div class="kv"><span>' + esc(to.cupName || 'الكأس') + '</span><span class="sm" style="text-align:end">' + esc(to.cup) + '</span></div>' : '') + '</div>';
 
     // التدريب
     const tr = rep.train, attrs = Object.keys(tr.attr || {});

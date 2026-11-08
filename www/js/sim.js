@@ -66,14 +66,27 @@
     return { key: 'out:' + ex, text: 'ودّع البطولة عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex) };
   }
 
+  // حالة الكأس المحلية للاعب (نصًّا) — للتقرير
+  function cupStatus() {
+    const S = G.S, u = P(S.user), cup = G.Cups && S.cups ? G.Cups.userCup() : null;
+    if (!cup) return null;
+    const st = G.Cups.status(cup, u.club), nm = G.cupName(cup.cn, true), RA = G.Cups.ROUND_AR;
+    if (st.state === 'none') return null;
+    if (st.state === 'winner') return { key: 'win', text: 'بطل ' + nm + ' 🏆', name: nm };
+    if (st.state === 'out') return { key: 'out:' + st.round, text: 'ودّع ' + nm + ' عند: ' + RA[st.round], name: nm };
+    return { key: 'alive:' + st.round + (st.tie && st.tie.played ? '+' : ''), text: st.bye ? 'معفى من الدور التمهيدي — يدخل في دور الـ32' : 'ناديك في ' + RA[st.round], name: nm };
+  }
+
+  Sim.uclStatus = uclStatus; Sim.cupStatus = cupStatus;
+
   function snap() {
     const S = G.S, u = P(S.user), inL = !!(S.league && S.league.table[u.club]);
-    const uc = uclStatus();
+    const uc = uclStatus(), cc = cupStatus();
     return {
       ovr: u.ovr, pot: u.pot, val: u.val, trust: Math.round(u.trust), fit: Math.round(u.fit), role: u.role, lvl: u.lvl, dp: u.dp,
       inj: u.inj, susp: u.susp, club: u.club, age: u.age, week: S.week, phase: S.phase,
       pos: inL ? G.League.position(u.club) : null, pts: inL ? S.league.table[u.club].pts : null,
-      ucl: uc ? uc.text : null, uclKey: uc ? uc.key : null,
+      ucl: uc ? uc.text : null, uclKey: uc ? uc.key : null, cup: cc ? cc.text : null, cupKey: cc ? cc.key : null, cupName: cc ? cc.name : null,
       pop: G.Media ? G.Media.pop() : null, fans: G.Media ? G.Media.fans() : null
     };
   }
@@ -90,7 +103,10 @@
   Sim.weeksLeft = () => (G.S.phase === 'season' ? LAST_WEEK - G.S.week + 1 : G.S.phase === 'summer' ? LAST_WEEK : 0);
 
   // أقرب مباراة إقصائية للاعب في الأسبوع w (دوري الأبطال)
-  Sim.keyFixture = (w) => G.Season.userFixtures(w).find((f) => f.comp === 'UCL' && f.stage && f.stage !== 'league' && !f.played) || null;
+  // (+ نهائي السوبر وأدوار الكأس المحلية من ربع النهائي)
+  const isKey = (f) => !f.played && ((f.comp === 'UCL' && f.stage && f.stage !== 'league') || f.comp === 'SUP' || (f.comp === 'CUP' && ['qf', 'sf', 'final'].indexOf(f.stage) >= 0));
+  Sim.keyFixture = (w) => G.Season.userFixtures(w).find(isKey) || null;
+  const keyLabel = (k) => (k.comp === 'UCL' ? G.Ucl.STAGE_AR[k.stage] + (k.leg ? ' (' + (k.leg === 1 ? 'الذهاب' : 'الإياب') + ')' : '') : G.Cups.label(k).replace(' (ملعب محايد)', ''));
 
   // ---------- الإنفاق التلقائي لنقاط التطوير ----------
   // الأفضل قيمةً أولًا: وزن السمة في تقييم المركز ÷ كلفتها، مع احترام السقوف الموسمية وحدّ الإمكانات
@@ -184,7 +200,7 @@
     if (run.weeks >= run.maxWeeks) return stopRun(run, 'limit');
     const before = {
       head: S.matchLog.length ? S.matchLog[0].fixId : null, offers: ids(S.offers), role: u.role, dp: u.dp, win: !!(S.window && S.window.open),
-      lvl: u.lvl, uclKey: (uclStatus() || {}).key || null, w: S.week, susp: u.susp,
+      lvl: u.lvl, uclKey: (uclStatus() || {}).key || null, cupKey: (cupStatus() || {}).key || null, tl: (u.tlog || []).length, w: S.week, susp: u.susp,
       hid: G.Media ? G.Media.headId() : 0, pid: S.media && S.media.press ? S.media.press.id : 0
     };
     // حماية اللياقة: تخفيض مؤقت لشدة تدريب هذا الأسبوع فقط
@@ -221,6 +237,9 @@
     if (tr.ups) ev(run, before.w, 'lvl', 'مستوى جديد: +' + dpAr(tr.ups));
     const uc = uclStatus();
     if (uc && uc.key !== before.uclKey && S.phase !== 'end') ev(run, before.w, 'ucl', 'دوري الأبطال: ' + uc.text);
+    const cc = cupStatus();
+    if (cc && cc.key !== before.cupKey && !(cc.key === 'win' && S.phase === 'end')) ev(run, before.w, 'cup', cc.name + ': ' + cc.text);
+    (u.tlog || []).slice(before.tl).filter((e) => e.k === 'cup' || e.k === 'sup').forEach((e) => ev(run, before.w, 'award', e.r === 'w' ? '🏆 توّجتَ بلقب ' + G.Trophies.name(e) : '🥈 وصيف ' + G.Trophies.name(e)));
     if (u.role !== before.role && isFieldRole(u.role) && isFieldRole(before.role)) ev(run, S.week, 'role', 'تغيّر دورك: ' + ROLE_ADJ[before.role] + ' ← ' + ROLE_ADJ[u.role]);
 
     // أخبار الإعلام الجديدة (العناوين البارزة فقط)
@@ -258,7 +277,7 @@
     if (R.role && u.role !== before.role && isFieldRole(u.role) && isFieldRole(before.role)) return stopRun(run, 'role', 'دورك الآن: ' + ROLE_ADJ[u.role]);
     if (R.key) {
       const k = Sim.keyFixture(S.week);
-      if (k) return stopRun(run, 'key', 'قبل مباراتك في ' + G.Ucl.STAGE_AR[k.stage] + (k.leg ? ' (' + (k.leg === 1 ? 'الذهاب' : 'الإياب') + ')' : '') + ' ضد ' + cname(k.h === u.club ? k.a : k.h));
+      if (k) return stopRun(run, 'key', 'قبل مباراتك في ' + keyLabel(k) + ' ضد ' + cname(k.h === u.club ? k.a : k.h));
     }
     if (run.weeks >= run.maxWeeks) return stopRun(run, 'limit');
   }
@@ -340,6 +359,7 @@
     }
     if (from.pos && to.pos) H.push('🏆 ترتيب ' + cname(u.club) + ' في الدوري: ' + (from.pos === to.pos ? 'المركز ' + to.pos : 'من ' + from.pos + ' إلى ' + to.pos) + ' (' + ptsAr(to.pts) + ').');
     if (to.ucl && run.weeks) H.push('⭐ دوري الأبطال: ' + to.ucl + '.');
+    if (to.cup && run.weeks) H.push('🏆 ' + to.cupName + ': ' + to.cup + '.');
     if (to.ovr !== from.ovr) H.push('📈 تقييمك العام ' + from.ovr + ' ← ' + to.ovr + '.');
     if (run.train.ups) H.push('💪 ارتقيتَ ' + lvlAr(run.train.ups) + (attrTotal ? ' وتحسّنت ' + attrAr(attrTotal) + ' بالتدريب' : '') + '.');
     else if (attrTotal) H.push('💪 تحسّنت ' + attrAr(attrTotal) + ' بالتدريب.');

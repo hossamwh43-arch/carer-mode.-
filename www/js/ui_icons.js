@@ -123,7 +123,7 @@
     '🌍': 'globe', '🚀': 'rocket', '📥': 'download', '📤': 'upload', '📘': 'book', '📖': 'book', '🧤': 'glove', '😬': 'face', '😮': 'face', '👌': 'check2', '🎉': 'party',
     '🎚': 'sliders', '⏹': 'stop', '⏸': 'pause', '📅': 'calendar', '🗓': 'calendar', '🟢': 'dotg', '🔴': 'dotr', '🎽': 'shirt', '👕': 'shirt', '💡': 'bulb', '👁': 'eye',
     '🏃': 'bolt', '🕸': 'web', '🔟': 'ten', '💯': 'hundred', '🧓': 'old', '💎': 'gem', '🐐': 'crown2', '🔊': 'speaker', '🧪': 'flask', '🗑': 'trash', '✈': 'plane',
-    '🚪': 'door', '🔮': 'crystal', '☰': 'menu', '⏩': 'ffwd', '✍': 'pen', '⚙': 'gear', '🧰': 'gear', 'ℹ': 'info'
+    '🚪': 'door', '🔮': 'crystal', '☰': 'menu', '⏩': 'ffwd', '✍': 'pen', '⚙': 'gear', '🧰': 'gear', 'ℹ': 'info', '🛡': 'shield'
   };
 
   // ---------- الرمز المرجعي (sprite) ----------

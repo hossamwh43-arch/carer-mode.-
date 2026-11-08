@@ -123,6 +123,21 @@
     G.WORLD_EXTRA.forEach((d) => out.push({ id: d[0], name: d[1], country: G.LEAGUES[d[2]].country, lg: d[2], rep: d[3], c: [d[4], d[5]], form: d[6] }));
     return out;
   };
+  // الكؤوس المحلية (إقصاء مباشر بمشاركة الدرجتين) والسوبر (بطل الدوري ضد بطل الكأس) لكل بلد من الدوريات الخمسة الكبرى
+  G.CUPS = {
+    ESP: { cup: 'كأس ملك إسبانيا', cupShort: 'كأس الملك', sup: 'كأس السوبر الإسباني', supShort: 'السوبر الإسباني' },
+    ENG: { cup: 'كأس الاتحاد الإنجليزي', cupShort: 'كأس الاتحاد', sup: 'درع المجتمع الإنجليزي', supShort: 'درع المجتمع' },
+    ITA: { cup: 'كأس إيطاليا', cupShort: 'كأس إيطاليا', sup: 'كأس السوبر الإيطالي', supShort: 'السوبر الإيطالي' },
+    GER: { cup: 'كأس ألمانيا', cupShort: 'كأس ألمانيا', sup: 'كأس السوبر الألماني', supShort: 'السوبر الألماني' },
+    FRA: { cup: 'كأس فرنسا', cupShort: 'كأس فرنسا', sup: 'كأس أبطال فرنسا', supShort: 'كأس الأبطال' }
+  };
+  // أبطال موسم 2024/25 (مرجع الموسم الأول فقط): بطل الدوري، بطل الكأس، ووصيف الدوري إن تطابق البطلان
+  G.PREV_WINNERS = {
+    ESP: { champ: 'fcb', cup: 'fcb', runner: 'rma' }, ENG: { champ: 'liv', cup: 'cry' }, ITA: { champ: 'nap', cup: 'bol' },
+    GER: { champ: 'bay', cup: 'stu' }, FRA: { champ: 'psg', cup: 'psg', runner: 'mar' }
+  };
+  G.cupName = (cn, short) => (G.CUPS[cn] ? G.CUPS[cn][short ? 'cupShort' : 'cup'] : 'الكأس');
+  G.supName = (cn, short) => (G.CUPS[cn] ? G.CUPS[cn][short ? 'supShort' : 'sup'] : 'السوبر');
   G.leagueName = (lg) => (G.LEAGUES[lg] ? G.LEAGUES[lg].ar : 'دوري');
   // اسم مختصر يتسع لشريط العنوان
   G.leagueTitle = (lg) => { const d = G.LEAGUES[lg]; return d ? (d.tier === 1 ? d.ar.replace(' الممتاز', '') : d.short) : 'الدوري'; };

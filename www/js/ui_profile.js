@@ -47,6 +47,7 @@
     h += '<div class="card"><div class="row sb"><b>دورك في الفريق</b>' + UI.rolePill(p.role) + '</div>' + (p.roleInfo && p.roleInfo.text ? '<p class="sm mut" style="margin:8px 0 0">' + esc(p.roleInfo.text) + '</p>' : '') +
       '<div class="grid2" style="margin-top:12px"><button class="btn sm" data-a="cardOpen" style="width:100%">' + UI.ico('pcard') + ' بطاقتي</button><button class="btn sm" data-a="goSub" data-v="train" data-v2="tr:coach" style="width:100%">' + UI.ico('clipboard') + ' قرار المدرب</button></div></div>';
     h += contractCard(p);
+    if (UI.trophyCard) h += UI.trophyCard();
     if (UI.bdCard) h += UI.bdCard();
     if (UI.mediaCard) h += UI.mediaCard();
     return h;

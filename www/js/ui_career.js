@@ -33,11 +33,11 @@
   }
   function seasonsTable(p) {
     const rows = p.car.slice();
-    const cur = { season: G.S.season, label: G.Season.label(G.S.season) + ' ⏳', club: p.club, age: p.age, ovrStart: G.S.seasonStartOvr || p.ovr, ovrEnd: p.ovr, lg: G.Season.statOf(p, 'lg'), uc: G.Season.statOf(p, 'uc'), pos: G.S.league ? G.League.position(p.club) : 0, trophies: {} };
+    const cur = { season: G.S.season, label: G.Season.label(G.S.season) + ' ⏳', club: p.club, age: p.age, ovrStart: G.S.seasonStartOvr || p.ovr, ovrEnd: p.ovr, lg: G.Season.statOf(p, 'lg'), uc: G.Season.statOf(p, 'uc'), cp: G.Season.statOf(p, 'cp'), pos: G.S.league ? G.League.position(p.club) : 0, trophies: {} };
     if (G.S.phase !== 'retired' && G.S.phase !== 'end') rows.push(cur);
     if (!rows.length) return '<div class="card mut c">ستظهر مواسمك هنا.</div>';
-    return '<div class="card" style="overflow-x:auto"><table class="t"><tr><th class="l">الموسم</th><th class="l">النادي</th><th>عمر</th><th>تقييم</th><th>الدوري<br><span class="sm">م/ه/ص</span></th><th>الأبطال<br><span class="sm">م/ه/ص</span></th><th>المنتخب<br><span class="sm">م/ه/ص</span></th><th></th></tr>' +
-      rows.map((r) => '<tr><td class="l">' + r.label + '</td><td class="l sm">' + esc(UI.cname(r.club)) + (r.loan ? ' (إعارة)' : '') + '</td><td>' + r.age + '</td><td>' + r.ovrStart + '→' + r.ovrEnd + '</td><td>' + r.lg.apps + '/' + r.lg.g + '/' + r.lg.a + '</td><td>' + r.uc.apps + '/' + r.uc.g + '/' + r.uc.a + '</td><td>' + ntCell(p, r) + '</td><td>' + trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '') + '</td></tr>').join('') + '</table></div>';
+    return '<div class="card" style="overflow-x:auto"><table class="t"><tr><th class="l">الموسم</th><th class="l">النادي</th><th>عمر</th><th>تقييم</th><th>الدوري<br><span class="sm">م/ه/ص</span></th><th>الأبطال<br><span class="sm">م/ه/ص</span></th><th>الكأس<br><span class="sm">م/ه/ص</span></th><th>المنتخب<br><span class="sm">م/ه/ص</span></th><th></th></tr>' +
+      rows.map((r) => '<tr><td class="l">' + r.label + '</td><td class="l sm">' + esc(UI.cname(r.club)) + (r.loan ? ' (إعارة)' : '') + '</td><td>' + r.age + '</td><td>' + r.ovrStart + '→' + r.ovrEnd + '</td><td>' + r.lg.apps + '/' + r.lg.g + '/' + r.lg.a + '</td><td>' + r.uc.apps + '/' + r.uc.g + '/' + r.uc.a + '</td><td>' + (r.cp ? r.cp.apps + '/' + r.cp.g + '/' + r.cp.a : '—') + '</td><td>' + ntCell(p, r) + '</td><td>' + trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '') + '</td></tr>').join('') + '</table></div>';
   }
 
   UI.screens.career = () => {
@@ -55,13 +55,14 @@
   function achievements(p) {
     const tot = G.Season.careerTotals(), car = p.car || [];
     const uclG = car.reduce((s, r) => s + r.uc.g, 0) + G.Season.statOf(p, 'uc').g;
+    const cupG = car.reduce((s, r) => s + (r.cp ? r.cp.g : 0), 0) + G.Season.statOf(p, 'cp').g;
     const maxOvr = Math.max(p.ovr, p.maxOvr || 0, ...car.map((r) => r.ovrEnd));
     const A = [
       ['⚽', 'أول هدف', tot.g >= 1], ['🔟', '10 أهداف في مسيرتك', tot.g >= 10], ['🎯', '25 هدفًا', tot.g >= 25], ['🔥', '50 هدفًا', tot.g >= 50], ['💯', '100 هدف', tot.g >= 100],
       ['🅰️', '10 صناعات', tot.a >= 10], ['🤝', '50 صناعة', tot.a >= 50],
       ['👕', '25 مباراة', tot.apps >= 25], ['🏟️', '100 مباراة', tot.apps >= 100], ['🧓', '250 مباراة', tot.apps >= 250],
       ['🎩', 'هاتريك', (p.hattricks || 0) >= 1], ['⭐', 'نجم المباراة', (p.motmN || 0) >= 1], ['🌟', 'تقييم مباراة 9.0+', (p.maxRating || 0) >= 9],
-      ['🌍', 'أول هدف في دوري الأبطال', uclG >= 1], ['🥇', 'بطل الدوري', ((p.trophies || {}).liga > 0)], ['🥈', 'بطل الدرجة الثانية', ((p.trophies || {}).d2 > 0)], ['🏆', 'بطل أوروبا', (p.trophies || {}).ucl > 0],
+      ['🌍', 'أول هدف في دوري الأبطال', uclG >= 1], ['🥇', 'بطل الدوري', ((p.trophies || {}).liga > 0)], ['🥈', 'بطل الدرجة الثانية', ((p.trophies || {}).d2 > 0)], ['🎯', 'أول هدف في الكأس المحلية', cupG >= 1], ['🏆', 'بطل الكأس المحلية', ((p.trophies || {}).cup > 0)], ['🛡️', 'بطل السوبر', ((p.trophies || {}).sup > 0)], ['🏆', 'بطل أوروبا', (p.trophies || {}).ucl > 0],
       ['🎖️', 'جائزة موسمية', (p.awards || []).length > 0],
       ['🏆', 'الكرة الذهبية', (p.trophies || {}).bd > 0], ['🎖️', 'ضمن أفضل 10 في الكرة الذهبية', (p.bdCar || []).some((e) => e.r <= 10)], ['🌍', 'أول ظهور مع المنتخب', tot.nt.apps >= 1 || G.Season.statOf(p, 'nt').apps >= 1], ['⚽', 'هدف في كأس العالم', (p.ntCar || []).some((e) => e.t === 'WC' && e.g > 0)], ['🏆', 'بطل كأس العالم', (p.trophies || {}).wc > 0], ['🥇', 'بطل كأس آسيا', (p.trophies || {}).ac > 0],
       ['📈', 'تقييم 70', maxOvr >= 70], ['🚀', 'تقييم 75', maxOvr >= 75], ['👑', 'تقييم 80', maxOvr >= 80], ['💎', 'تقييم 85', maxOvr >= 85], ['🐐', 'تقييم 90', maxOvr >= 90]
@@ -77,7 +78,7 @@
     const log = (S.matchLog || []).slice(0, 12);
     if (log.length) h += '<div class="card"><h4>آخر مبارياتك</h4><table class="t"><tr><th class="l">المباراة</th><th>النتيجة</th><th>دق</th><th>⚽🅰️</th><th>تقييم</th></tr>' + log.map((m) => {
       const opp = m.userSide === 'h' ? m.a : m.h, gf = m.userSide === 'h' ? m.score.h : m.score.a, ga = m.userSide === 'h' ? m.score.a : m.score.h;
-      return '<tr><td class="l sm">' + (m.comp === 'LL' ? 'د' : m.comp === 'NT' ? 'م' : 'أ') + ' · ' + esc(UI.cname(opp)) + '</td><td class="ltr ' + (gf > ga ? 'pos' : gf < ga ? 'neg' : '') + '">' + gf + '-' + ga + '</td><td>' + m.mins + '</td><td>' + m.g + '/' + m.as + '</td><td>' + (m.rating ? m.rating.toFixed(1) : '—') + '</td></tr>';
+      return '<tr><td class="l sm">' + (m.comp === 'LL' ? 'د' : m.comp === 'NT' ? 'م' : m.comp === 'CUP' ? 'ك' : m.comp === 'SUP' ? 'س' : 'أ') + ' · ' + esc(UI.cname(opp)) + '</td><td class="ltr ' + (gf > ga ? 'pos' : gf < ga ? 'neg' : '') + '">' + gf + '-' + ga + '</td><td>' + m.mins + '</td><td>' + m.g + '/' + m.as + '</td><td>' + (m.rating ? m.rating.toFixed(1) : '—') + '</td></tr>';
     }).join('') + '</table></div>';
     return h;
   }
@@ -86,16 +87,24 @@
     const A = achievements(p), done = A.filter((x) => x[2]).length;
     const t = p.trophies || {};
     let h = '<div class="card"><div class="row sb"><b>الألقاب</b><span class="pill y">' + G.Season.trophyTotal(t) + '</span></div>' + G.Season.TROPHY_DEFS.map((d) => '<div class="kv"><span>' + d[1] + ' ' + d[2] + '</span><b>' + (t[d[0]] || 0) + '</b></div>').join('') + '</div>';
+    h += '<button class="btn" style="margin-bottom:12px" data-a="go" data-v="trophies">' + UI.ico('trophy') + ' سجل البطولات الكامل</button>';
     h += '<div class="card"><div class="row sb"><b>الإنجازات</b><span class="pill g">' + done + ' / ' + A.length + '</span></div>' + UI.bar(done / A.length * 100, 'gold') + '<div class="grid2" style="margin-top:10px">' +
       A.map((x) => '<div class="stat" style="' + (x[2] ? 'border:1px solid var(--gold)' : 'opacity:.4') + ';text-align:center"><b>' + x[0] + '</b><small>' + x[1] + '</small></div>').join('') + '</div></div>';
     if ((p.awards || []).length) h += '<div class="card"><h4>جوائزي الفردية</h4>' + p.awards.slice().reverse().map((a) => '<div class="kv"><span>' + G.Season.label(a.season) + '</span><span>🎖️ ' + G.Season.AWARD_AR[a.type] + '</span></div>').join('') + '</div>';
     return h;
   }
 
+  // أبطال الكأس والسوبر في دوري المستخدم لذلك الموسم (من أرشيف cupHist)
+  function cupLines(h) {
+    const e = (G.S.cupHist || []).find((x) => x.season === h.season), cn = G.Cups && G.Cups.userCountry ? G.Cups.userCountry() : null;
+    if (!e || !cn || !e.cup || !e.cup[cn]) return '';
+    return '<div class="kv"><span>🏆 ' + esc(G.cupName(cn, true)) + '</span><b>' + esc(UI.cname(e.cup[cn])) + '</b></div>' + (e.sup && e.sup[cn] ? '<div class="kv"><span>🛡️ ' + esc(G.supName(cn, true)) + '</span><b>' + esc(UI.cname(e.sup[cn])) + '</b></div>' : '');
+  }
+
   function histTab() {
     const hist = G.S.hist || [];
     if (!hist.length) return '<div class="card mut c">ستظهر نتائج المواسم المكتملة هنا.</div>';
-    return hist.slice().reverse().map((h) => '<div class="card"><h4>موسم ' + h.label + '</h4><div class="kv"><span>🥇 بطل الدوري</span><b>' + esc(UI.cname(h.champion)) + '</b></div>' + (h.uclWinner ? '<div class="kv"><span>🌟 بطل أوروبا</span><b>' + esc(UI.cname(h.uclWinner)) + '</b></div>' : '') +
+    return hist.slice().reverse().map((h) => '<div class="card"><h4>موسم ' + h.label + '</h4><div class="kv"><span>🥇 بطل الدوري</span><b>' + esc(UI.cname(h.champion)) + '</b></div>' + (h.uclWinner ? '<div class="kv"><span>🌟 بطل أوروبا</span><b>' + esc(UI.cname(h.uclWinner)) + '</b></div>' : '') + cupLines(h) +
       (h.awards || []).map((a) => '<div class="kv"><span>' + G.Season.AWARD_AR[a.type] + '</span><span' + (a.user ? ' class="gold b"' : '') + '>' + esc(a.name) + ' <span class="mut sm">(' + esc(UI.cname(a.club)) + ' · ' + a.value + ')</span></span></div>').join('') + '</div>').join('');
   }
 
