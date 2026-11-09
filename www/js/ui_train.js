@@ -6,10 +6,11 @@
   const T = () => G.Training;
 
   function levelCard(p) {
-    const need = T().need(p.lvl);
-    return '<div class="card"><div class="row sb"><div><h3 style="margin:0">المستوى ' + p.lvl + '</h3><div class="sm mut">الخبرة ' + Math.round(p.xp) + ' / ' + need + '</div></div>' +
-      '<div class="stat" style="min-width:90px"><b class="' + (p.dp ? 'gold' : '') + '">' + p.dp + '</b><small>نقاط تطوير</small></div></div>' + UI.bar(p.xp / need * 100, 'blue') +
-      '<p class="sm mut" style="margin:8px 0 0">تأتي الخبرة من التدريب الأسبوعي ومن المباريات (الأداء الجيد والدقائق الأكثر = خبرة أكثر).</p></div>';
+    const need = T().need(p.lvl), pct = Math.round(U.clamp(p.xp / need * 100, 0, 100));
+    return '<div class="card lv-hero"><div class="lv-ring" style="--p:' + pct + '"><b>' + p.lvl + '</b><small>المستوى</small></div>' +
+      '<div class="lv-side"><div class="lv-xp"><span class="sm mut">الخبرة</span><span class="lv-xpn"><b>' + Math.round(p.xp) + '</b> / ' + need + '</span></div>' + UI.bar(p.xp / need * 100, 'blue') +
+      '<div class="lv-dp ' + (p.dp ? 'on' : '') + '">' + UI.ico('bolt') + '<b>' + p.dp + '</b> نقاط تطوير متاحة</div></div>' +
+      '<p class="sm mut lv-note">تأتي الخبرة من التدريب الأسبوعي ومن المباريات (الأداء الجيد والدقائق الأكثر = خبرة أكثر).</p></div>';
   }
 
   // بطاقة الزخم والتألق: سلسلة المباريات، الزخم المؤقت، وبيئة النجوم
@@ -18,15 +19,16 @@
     if (!gi) return '';
     const dots = [];
     const filled = gi.hot ? gi.need : gi.streak % gi.need;
-    for (let i = 0; i < gi.need; i++) dots.push('<span style="display:inline-block;width:22px;height:22px;border-radius:50%;margin-inline-end:6px;background:' + (i < filled ? 'var(--gold)' : 'rgb(255 255 255 / .08)') + ';border:1px solid ' + (i < filled ? 'var(--gold)' : 'var(--line2)') + '"></span>');
+    for (let i = 0; i < gi.need; i++) dots.push('<span class="lv-dot' + (i < filled ? ' on' : '') + '"></span>');
     let h = '<div class="card"><div class="row sb"><h3 style="margin:0">🔥 الزخم والتألق</h3>' + (gi.hot ? '<span class="pill y">نشط ×' + G.Growth.HOT_XP + '</span>' : '') + '</div>' +
-      '<div style="margin:10px 0 4px">' + dots.join('') + '<span class="sm mut"> ' + gi.streak + ' مباريات متتالية متألقة</span></div>' +
+      '<div class="lv-dots">' + dots.join('') + '<span class="sm mut"> ' + gi.streak + ' مباريات متتالية متألقة</span></div>' +
       '<div class="sm mut" style="margin:6px 0 8px">' + UI.more('تألّق بتقييم ' + gi.thr.toFixed(1) + '+ في ' + gi.need + ' مباريات متتالية لتنال مكافأة خبرة.', 'يُشترط لعب 30 دقيقة فأكثر في كل مباراة. المكافأة: +1 مستوى خبرة وتحسّن سماتك الأهم، وتتضاعف خبرتك ما دام تألقك مستمرًا. لحظات التألق (هاتريك، نجم المباراة، تقييم 9+) ترفع تقييمك مؤقتًا، والجوائز الفردية في نهاية الموسم تُرقّي مستواك.') + '</div>';
-    h += '<div class="kv"><span>زخم التألق الحالي</span><span class="' + (gi.glow ? 'gold b' : '') + '">' + (gi.glow ? '+' + gi.glow + ' تقييم · ' + gi.left + ' مباريات' : '—') + '</span></div>';
-    h += '<div class="kv"><span>بيئة الفريق (أفضل 8 زملاء)</span><span>' + (gi.T ? Math.round(gi.T) : '—') + '</span></div>';
+    h += '<div class="lv-tiles"><div class="trt"><small>زخم التألق</small><b class="' + (gi.glow ? 'gold' : '') + '">' + (gi.glow ? '+' + gi.glow : '—') + '</b><em>' + (gi.glow ? gi.left + ' مباريات' : 'غير نشط') + '</em></div>' +
+      '<div class="trt"><small>بيئة الفريق</small><b>' + (gi.T ? Math.round(gi.T) : '—') + '</b><em>أفضل 8 زملاء</em></div>' +
+      '<div class="trt ' + (gi.xpPct ? 'hi' : '') + '"><small>مضاعف الخبرة</small><b class="' + (gi.xpPct ? 'pos' : '') + '">×' + (1 + gi.xpPct / 100).toFixed(2) + '</b><em>إجمالي</em></div></div>';
     if (gi.syn > 0.02) h += '<div class="kv"><span>أثر زملاء الطراز الرفيع</span><span class="pos">خبرة +' + gi.mentorPct + '٪</span></div><div class="kv"><span>أثره على أدائك</span><span class="pos">تقييم +' + gi.perfRating.toFixed(2) + ' · سمات اللحظات +' + gi.perfAttr + '</span></div>' + (gi.stars.length ? '<div class="sm mut">أبرزهم: ' + gi.stars.map(esc).join('، ') + '</div>' : '');
     else h += '<div class="sm mut">' + UI.more('', 'الانتقال إلى فريق يضم نجومًا كبارًا (متوسط أفضل 8 زملاء 72 فأكثر) يرفع أداءك ويزيد خبرتك لأنك تحتكّ بهم يوميًا.', 'كيف يؤثر زملاء النجوم؟') + '</div>';
-    h += '<div class="kv" style="margin-top:6px"><span>مضاعف الخبرة الإجمالي</span><span class="' + (gi.xpPct ? 'pos b' : '') + '">×' + (1 + gi.xpPct / 100).toFixed(2) + '</span></div></div>';
+    h += '</div>';
     return h;
   }
 
@@ -34,16 +36,17 @@
     const S = G.S, t = S.training, I = T().INTENSITY;
     const keys = T().relevant(p);
     const focusList = T().FOCUS.filter((f) => f.id === 'balanced' || keys.indexOf(f.id) >= 0 || (p.pos !== 'GK' && f.id !== 'gk'));
-    let h = levelCard(p) + growthCard(p) + '<div class="card"><h3>🎯 تركيز التدريب</h3><div class="chips">' +
+    let h = levelCard(p) + growthCard(p) + '<div class="card"><h3>🎯 تركيز التدريب</h3><div class="chips foc">' +
       focusList.map((f) => '<button class="chip ' + (t.focus === f.id ? 'on' : '') + '" data-a="setFocus" data-v="' + f.id + '">' + f.ar + '</button>').join('') + '</div>';
     if (t.focus !== 'balanced') {
       const pr = p.prog && p.prog[t.focus] ? p.prog[t.focus] : 0;
       h += '<div class="row sb sm" style="margin-top:10px"><span>تقدّم ' + G.Players.ATTR_AR[t.focus] + '</span><span>' + Math.round(pr) + '%</span></div>' + UI.bar(pr, 'gold') + '<p class="sm mut" style="margin:6px 0 0">عند 100% ترتفع السمة تلقائيًا نقطة واحدة (ضمن سقف الموسم وإمكاناتك).</p>';
     } else h += '<p class="sm mut" style="margin:8px 0 0">التدريب المتوازن يوزّع التقدّم على أهم 3 سمات لمركزك.</p>';
-    h += '</div><div class="card"><h3>💪 شدة التدريب</h3><div class="chips">' +
+    const inj = t.intensity === 'heavy' ? 'مرتفع' : t.intensity === 'normal' ? 'متوسط' : 'منخفض';
+    h += '</div><div class="card"><h3>💪 شدة التدريب</h3><div class="seg3">' +
       Object.keys(I).map((k) => '<button class="chip ' + (t.intensity === k ? 'on' : '') + '" data-a="setIntensity" data-v="' + k + '">' + I[k].ar + '</button>').join('') + '</div>' +
-      '<div class="kv" style="margin-top:8px"><span>الخبرة الأسبوعية</span><span>×' + I[t.intensity].xp + '</span></div><div class="kv"><span>استشفاء اللياقة</span><span>+' + I[t.intensity].rec + '% أسبوعيًا</span></div><div class="kv"><span>خطر الإصابة</span><span>' + (t.intensity === 'heavy' ? 'مرتفع' : t.intensity === 'normal' ? 'متوسط' : 'منخفض') + '</span></div>' +
-      '<div class="kv"><span>مرافق ' + esc(UI.cname(p.club)) + '</span><span>×' + T().facility(p.club).toFixed(2) + '</span></div></div>';
+      '<div class="lv-tiles four"><div class="trt"><small>الخبرة الأسبوعية</small><b>×' + I[t.intensity].xp + '</b></div><div class="trt"><small>استشفاء اللياقة</small><b>+' + I[t.intensity].rec + '%</b></div>' +
+      '<div class="trt ' + (t.intensity === 'heavy' ? 'warn' : '') + '"><small>خطر الإصابة</small><b class="sm-b">' + inj + '</b></div><div class="trt"><small>مرافق ' + esc(UI.cname(p.club)) + '</small><b>×' + T().facility(p.club).toFixed(2) + '</b></div></div></div>';
     h += '<div class="notice">⚠️ التطور تدريجي بالتصميم: حدّ أقصى ' + T().seasonCap(p.age) + ' نقاط لكل سمة في الموسم بعمر ' + p.age + '، ولا تتجاوز السمة حدّ إمكاناتك.</div>';
     return h;
   }

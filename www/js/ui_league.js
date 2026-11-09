@@ -62,7 +62,7 @@
       : '<span class="pos">▌</span> المراكز 1–' + up + ': الصعود المباشر إلى ' + esc(G.leagueName(def.other));
     const fm = UI.lgForm(L);
     return '<div class="card"><table class="t lgt"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>فارق</th><th>نقاط</th></tr>' +
-      order.map((id, i) => { const r = L.table[id]; return '<tr class="' + (id === mine ? 'me ' : '') + zone(i) + '"><td>' + (i + 1) + '</td><td class="l">' + UI.clubTag(id, 18) + '<div class="f5row">' + formDots5(fm[id]) + (id === mine ? '<span class="mine-tag">ناديك</span>' : '') + '</div></td><td>' + r.p + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') +
+      order.map((id, i) => { const r = L.table[id]; return '<tr class="' + (id === mine ? 'me ' : '') + zone(i) + '"><td>' + (i + 1) + '</td><td class="l">' + UI.clubTag(id, 18) + ((fm[id] && fm[id].length) || id === mine ? '<div class="f5row">' + (fm[id] && fm[id].length ? formDots5(fm[id]) : '') + (id === mine ? '<span class="mine-tag">ناديك</span>' : '') + '</div>' : '') + '</td><td>' + r.p + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') +
       '</table><p class="sm mut" style="margin:8px 0 0">' + legend + '</p></div>';
   }
   UI.lgTable = tableFor;

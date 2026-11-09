@@ -46,7 +46,7 @@
       let w = gf > ga ? 1 : gf < ga ? -1 : 0;
       if (w === 0 && sm.pens) w = (mine === 'h' ? sm.pens.h - sm.pens.a : sm.pens.a - sm.pens.h) > 0 ? 1 : -1;
       const fo = G.Cups ? G.Cups.finalOutcome(sm) : null; // نهائي كأس/سوبر
-      if (fo && fo.won) { UI.fx('fanfare'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك'); return; }
+      if (fo && fo.won) { UI.fx('fanfare'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك', { art: fo.key === 'cup' ? 'cup' : 'sup', ms: 3400 }); return; }
       const sk = sm.gro && sm.gro.ev.find((e) => e.k === 'streak');
       if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '🔥 ارتقى مستواك!', sm.gro.s + ' مباريات متتالية متألقة'); }
       else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '⭐ نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
@@ -108,15 +108,25 @@
     return U.clamp(Math.round(r * 10) / 10, 3, 10);
   }
 
+  // ---------- هيدر البث: ملعب خلفية + شعارات كبيرة + نتيجة + ساعة وشريط تقدّم + شريط إحصاءات ----------
+  const phaseTxt = (m) => (m.done ? 'صافرة النهاية' : m.i === 0 ? 'قبل البداية' : m.i > m.reg ? 'وقت إضافي' : m.i <= m.t1 ? 'الشوط الأول' : 'الشوط الثاني');
+  // شريط مقارنة (تسديدات/على المرمى): طول كل جانب نسبةً إلى المجموع، فريقك بلون النادي
+  function statBar(lab, a, b, mine) {
+    const t = (a + b) || 1, pa = Math.round(a / t * 100);
+    return '<div class="sb-row"><b class="ltr' + (mine === 'h' ? ' me' : '') + '">' + a + '</b><div class="sb-mid"><span>' + lab + '</span><div class="sb-bar"><i class="' + (mine === 'h' ? 'me' : '') + '" style="width:' + (a + b ? pa : 50) + '%"></i><i class="' + (mine === 'a' ? 'me' : '') + '" style="width:' + (a + b ? 100 - pa : 50) + '%"></i></div></div><b class="ltr' + (mine === 'a' ? ' me' : '') + '">' + b + '</b></div>';
+  }
   function headHtml(m) {
     const uid = G.S.user, ps = m.ps[uid], fix = G.Season.findFix(m.id);
     const on = G.Live.userOn(m);
-    const st = on ? '🟢 في الملعب · لياقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? '🔁 تم استبدالك' : m.uState === 'bench' ? '🪑 على مقاعد البدلاء' : '🚫 خارج قائمة المباراة';
+    const st = on ? UI.ico('dotg') + ' في الملعب · لياقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? UI.ico('swap') + ' تم استبدالك' : m.uState === 'bench' ? UI.ico('bench') + ' على مقاعد البدلاء' : UI.ico('ban') + ' خارج قائمة المباراة';
     const lr = liveRating(m);
-    return '<div class="card nm"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + (m.neutral ? ' · ملعب محايد' : '') + '</div>' +
-      '<div class="score" style="margin-top:6px"><div class="tm">' + UI.badge(m.h, 52) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + m.score.h + ' - ' + m.score.a + '</div><div class="tm">' + UI.badge(m.a, 52) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
-      '<div class="minute">' + (!m.done && m.i > 0 ? '<span class="livebadge"><i></i>مباشر</span>' : '') + minTxt(m) + '</div>' +
-      '<div class="row sb sm" style="margin-top:8px"><span>' + st + '</span><span>⚽ ' + ps.g + ' · 🅰️ ' + ps.a + (lr ? ' · ' + UI.rating(lr) : '') + '</span></div>' +
+    const pct = U.clamp(Math.round(m.i / (m.total || 1) * 100), 0, 100), htp = Math.round(m.t1 / (m.total || 1) * 100);
+    return '<div class="card mv-hero"><div class="mvh-top"><span class="mvh-comp">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</span>' + (m.neutral ? '<span class="mvh-ven">' + UI.ico('stadium') + ' ملعب محايد</span>' : '') + '</div>' +
+      '<div class="score"><div class="tm">' + UI.badge(m.h, 58) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + m.score.h + ' - ' + m.score.a + '</div><div class="tm">' + UI.badge(m.a, 58) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
+      '<div class="minute">' + (!m.done && m.i > 0 ? '<span class="livebadge"><i></i>مباشر</span>' : '') + '<span class="mvh-min">' + minTxt(m) + '</span><small>' + phaseTxt(m) + '</small></div>' +
+      '<div class="mvh-prog" aria-hidden="true"><i style="width:' + pct + '%"></i>' + (m.i > 0 ? '<b style="inset-inline-start:' + htp + '%"></b>' : '') + '</div>' +
+      '<div class="mvh-st">' + statBar('تسديدات', m.st.h.sh, m.st.a.sh, m.side) + statBar('على المرمى', m.st.h.sot, m.st.a.sot, m.side) + '</div>' +
+      '<div class="mvh-me"><span class="mvh-state">' + st + '</span><span class="mvh-chips"><span>' + UI.ico('ball') + ' ' + ps.g + '</span><span>' + UI.ico('assist') + ' ' + ps.a + '</span>' + (lr ? UI.rating(lr) : '') + '</span></div>' +
       (on ? UI.bar(m.fat[uid], m.fat[uid] < 40 ? 'red' : m.fat[uid] < 65 ? 'gold' : '') : '') + '</div>';
   }
 
@@ -160,16 +170,31 @@
     return { cls: 'mid', ico: 'check2', title: 'تم القرار', txt };
   }
 
+  // صفّ حدث واحد (يُستعمل في البث وفي أبرز الأحداث بعد المباراة): دقيقة · أيقونة بنوع الحدث · نص بلا رموز بادئة
+  const EV_IC = { goal: 'ball', save: 'shield', miss: 'target', sub: 'swap', inj: 'plus', et: 'timer', pens: 'target', kick: 'whistle', mom: 'target' };
+  const evTxt = (t) => String(t == null ? '' : t).replace(/^[^\p{L}\p{N}]+/u, '');
+  function evRow(e, side, extra) {
+    const k = e.k;
+    if (k === 'ht' || k === 'ft' || k === 'et' || k === 'kick') {
+      return '<div class="ev brk ' + k + '"><span class="ev-line"></span><span class="ev-lab">' + UI.ico(k === 'ft' ? 'flag' : k === 'kick' ? 'whistle' : 'timer') + ' ' + esc(evTxt(e.txt)) + '</span><span class="ev-line"></span></div>';
+    }
+    const ic = k === 'yellow' ? '<i class="cdk y"></i>' : k === 'red' ? '<i class="cdk r"></i>' : UI.ico(EV_IC[k] || 'dotg');
+    const who = e.s === 1 || (side != null && e.s === side) ? ' mine' : e.s === 2 || (side != null && e.s && e.s !== side) ? ' opp' : '';
+    return '<div class="ev ' + (k || '') + who + (extra || '') + '"><span class="m">' + esc(e.lab) + "'</span><span class=\"ei\">" + ic + '</span><span class="grow">' + esc(evTxt(e.txt)) + '</span></div>';
+  }
   function feedHtml(m) {
-    const cls = { goal: 'goal', mom: 'mom', red: 'red', yellow: 'yellow', inj: 'inj' };
-    return m.ev.slice(-45).reverse().map((e) => '<div class="ev ' + (cls[e.k] || '') + '"><span class="m">' + esc(e.lab) + "'</span><span>" + esc(e.txt) + '</span></div>').join('');
+    if (m.ev.length <= 1) return '<div class="feed-empty">' + UI.ico('whistle') + '<div>المباراة على وشك البدء… ستظهر هنا الأهداف والفرص والبطاقات لحظة بلحظة.</div></div>';
+    return m.ev.slice(-45).reverse().map((e) => evRow(e, m.side)).join('');
   }
 
+  // شريط تحكّم مضغوط: أربع بلاطات أيقونية + زرّان ثانويان (كل data-a كما كانت)
   function ctlHtml(m) {
     const mv = UI.mv, on = G.Live.userOn(m), canSub = on && m.subs[m.side] > 0;
-    return '<div class="grid2"><button class="btn" data-a="mvPause">' + (mv.paused ? '▶ استئناف' : '⏸ إيقاف مؤقت') + '</button><button class="btn" data-a="mvSpeed">⏩ السرعة ×' + (mv.speed || 1) + '</button>' +
-      '<button class="btn ' + (canSub ? '' : 'dis') + '" data-a="reqSub">🔄 اطلب استبدالك</button><button class="btn" data-a="mvLineup">👥 التشكيلة والإحصاءات</button></div>' +
-      '<div class="grid2"><button class="btn red" data-a="mvFinish">⏭ إنهاء المباراة فورًا</button><button class="btn" data-a="mvLeave">🏠 خروج (تُحفظ المباراة)</button></div>';
+    return '<div class="mvc"><button class="mvb' + (mv.paused ? ' on' : '') + '" data-a="mvPause">' + UI.ico(mv.paused ? 'play' : 'pause') + '<span>' + (mv.paused ? 'استئناف' : 'إيقاف') + '</span></button>' +
+      '<button class="mvb" data-a="mvSpeed">' + UI.ico('ffwd') + '<span>سرعة ×<b class="ltr">' + (mv.speed || 1) + '</b></span></button>' +
+      '<button class="mvb ' + (canSub ? '' : 'dis') + '" data-a="reqSub">' + UI.ico('swap') + '<span>استبدال</span></button>' +
+      '<button class="mvb" data-a="mvLineup">' + UI.ico('users') + '<span>التشكيلة</span></button></div>' +
+      '<div class="mvc2"><button class="mvb2 red" data-a="mvFinish">' + UI.ico('skip') + ' إنهاء المباراة فورًا</button><button class="mvb2" data-a="mvLeave">' + UI.ico('door') + ' خروج وحفظ</button></div>';
   }
 
   // تحديث الأجزاء المتغيّرة فقط حتى لا تضيع النقرات
@@ -207,8 +232,10 @@
     let res = gf > ga ? 'فوز' : gf < ga ? 'خسارة' : 'تعادل';
     if (sm.pens) { const pf = mine === 'h' ? sm.pens.h : sm.pens.a, pa = mine === 'h' ? sm.pens.a : sm.pens.h; res = pf > pa ? 'فوز بركلات الترجيح' : 'خسارة بركلات الترجيح'; }
     const fix = G.Season.findFix(sm.fixId);
-    let h = '<div class="card hl"><div class="sm mut c">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</div><div class="score" style="margin:8px 0"><div class="tm">' + UI.badge(sm.h, 42) + '<div>' + esc(UI.cname(sm.h)) + '</div></div><div class="sc">' + sm.score.h + ' - ' + sm.score.a + '</div><div class="tm">' + UI.badge(sm.a, 42) + '<div>' + esc(UI.cname(sm.a)) + '</div></div></div>' +
-      '<div class="c"><span class="pill ' + (gf > ga || (sm.pens && res.indexOf('فوز') === 0) ? 'g' : gf < ga || sm.pens ? 'r' : 'y') + '">' + res + '</span>' + (sm.et ? ' <span class="pill">وقت إضافي</span>' : '') + (sm.pens ? ' <span class="pill">ترجيح ' + sm.pens.h + '-' + sm.pens.a + '</span>' : '') + '</div></div>';
+    const rcls = gf > ga || (sm.pens && res.indexOf('فوز') === 0) ? 'w' : gf < ga || sm.pens ? 'l' : 'd';
+    let h = '<div class="card mv-hero ft ' + rcls + '"><div class="mvh-top"><span class="mvh-comp">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</span><span class="mvh-ven">' + UI.ico('flag') + ' صافرة النهاية</span></div>' +
+      '<div class="score"><div class="tm">' + UI.badge(sm.h, 58) + '<div>' + esc(UI.cname(sm.h)) + '</div></div><div class="sc">' + sm.score.h + ' - ' + sm.score.a + '</div><div class="tm">' + UI.badge(sm.a, 58) + '<div>' + esc(UI.cname(sm.a)) + '</div></div></div>' +
+      '<div class="ft-res"><span class="ft-pill ' + rcls + '">' + res + '</span>' + (sm.et ? '<span class="pill">وقت إضافي</span>' : '') + (sm.pens ? '<span class="pill">ترجيح <span class="ltr">' + sm.pens.h + '-' + sm.pens.a + '</span></span>' : '') + '</div></div>';
     if (UI.cupNote) h += UI.cupNote(fix, sm);
     if (sm.mins > 0) {
       // التقييم رقم كبير داخل حلقة تتلوّن بمستوى الأداء، ثم إحصاءات مختصرة
@@ -227,7 +254,7 @@
     }
     h += '<div class="card"><div class="kv"><span>ثقة المدرب</span><span>' + Math.round(u.trust) + ' — ' + G.Coach.trustLabel(u.trust) + '</span></div><div class="kv"><span>اللياقة</span><span>' + Math.round(u.fit) + '%</span></div></div>';
     const evs = (sm.events || []).filter((e) => e.k === 'goal' || e.k === 'red' || e.k === 'yellow' || e.k === 'inj' || e.k === 'pens');
-    if (evs.length) h += '<div class="card"><h4>أبرز الأحداث</h4>' + evs.map((e) => '<div class="ev ' + (e.k === 'goal' ? 'goal' : e.k === 'red' ? 'red' : e.k === 'yellow' ? 'yellow' : e.k === 'inj' ? 'inj' : '') + (e.me ? ' me' : '') + '"><span class="m">' + esc(e.lab) + "'</span><span class=\"grow\">" + esc(e.txt) + '</span>' + (e.me ? '<span class="pill y ev-me">أنت</span>' : '') + '</div>').join('') + '</div>';
+    if (evs.length) h += '<div class="card"><h4>أبرز الأحداث</h4><div class="feed post">' + evs.map((e) => evRow(e, null, e.me ? ' me' : '').replace(/<\/div>$/, (e.me ? '<span class="pill y ev-me">أنت</span>' : '') + '</div>')).join('') + '</div></div>';
     const pend = G.Season.pending();
     h += '<button class="btn pri" data-a="mvHome">' + (fix && fix.comp === 'NT' ? 'العودة إلى البطولة' : pend ? 'المباراة التالية هذا الأسبوع ←' : S.phase === 'season' ? 'متابعة (إنهاء الأسبوع)' : 'العودة للرئيسية') + '</button>';
     return h;
@@ -301,14 +328,14 @@
     const uid = G.S.user;
     UI.mv.pt = m.side;
     const xi = (s) => m.xi[s].map((x) => { const p = P(x.id); return '<div class="kv"><span>' + (x.id === uid ? '⭐ ' : '') + esc(p.n) + ' <span class="mut sm">' + x.slot + '</span></span><b>' + p.ovr + '</b></div>'; }).join('');
-    const stat = (lab, a, b) => '<div class="kv"><b class="ltr">' + a + '</b><span class="mut">' + lab + '</span><b class="ltr">' + b + '</b></div>';
     UI.sheetRender(() => {
       const mm = activeM(), s = (UI.mv && UI.mv.pt) || mm.side;
-      return '<h3>إحصاءات المباراة</h3>' + stat('تسديدات', mm.st.h.sh, mm.st.a.sh) + stat('على المرمى', mm.st.h.sot, mm.st.a.sot) + stat('تبديلات متبقية', mm.subs.h, mm.subs.a) +
+      return '<h3 class="mv-sh">إحصاءات المباراة</h3><div class="mvh-st in-sh"><div class="sb-teams"><span>' + UI.badge(mm.h, 22) + ' ' + esc(UI.cname(mm.h)) + '</span><span>' + esc(UI.cname(mm.a)) + ' ' + UI.badge(mm.a, 22) + '</span></div>' +
+        statBar('تسديدات', mm.st.h.sh, mm.st.a.sh, mm.side) + statBar('على المرمى', mm.st.h.sot, mm.st.a.sot, mm.side) + statBar('تبديلات متبقية', mm.subs.h, mm.subs.a, mm.side) + '</div>' +
         '<div class="chips" style="margin-top:12px"><button class="chip ' + (s === mm.side ? 'on' : '') + '" data-a="mvPitch" data-v="' + mm.side + '">فريقك</button><button class="chip ' + (s === mm.side ? '' : 'on') + '" data-a="mvPitch" data-v="' + (mm.side === 'h' ? 'a' : 'h') + '">الخصم</button></div>' +
         '<div class="sm mut c" style="margin-top:6px">' + esc(UI.cname(mm[s])) + ' · الآن في الملعب (' + mm.xi[s].length + ')</div>' + UI.pitch(mm.xi[s], mm[s], { hi: uid }) +
         '<details style="margin-top:6px"><summary class="sm mut">القوائم النصية</summary><h4 style="margin-top:10px">' + esc(UI.cname(mm.h)) + '</h4>' + xi('h') + '<h4 style="margin-top:14px">' + esc(UI.cname(mm.a)) + '</h4>' + xi('a') + '</details>' +
-        '<button class="btn pri" data-a="mvResume">▶ إغلاق ومتابعة</button>';
+        '<button class="btn pri" data-a="mvResume">' + UI.ico('play') + ' إغلاق ومتابعة</button>';
     });
     return false;
   });

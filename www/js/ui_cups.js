@@ -171,16 +171,52 @@
   const T = () => G.Trophies;
   const chip = (e) => '<span class="tl-chip' + (e.r === 'f' ? ' f' : '') + '"><i>' + T().icon(e) + '</i><b>' + esc(T().name(e)) + '</b>' + (e.r === 'f' ? '<em>وصيف</em>' : '') + '</span>';
 
+  // ---------- غرفة الكؤوس: أرفف بكؤوس مرسومة، تضيء ما فزتَ به وتعتّم ما لم تفز به بعد ----------
+  const AW = [['scorer', 'الحذاء الذهبي', 'هداف الدوري'], ['player', 'أفضل لاعب', 'لاعب الموسم'], ['assist', 'أفضل صانع', 'صانع الأهداف'], ['uclp', 'نجم الأبطال', 'أفضل لاعب في دوري الأبطال'], ['young', 'أفضل شاب', 'أفضل لاعب شاب']];
+  const AWT = { scorer: 'scorer', player: 'player', assist: 'assist', ucl: 'uclp', young: 'young' };
+  const awardList = (p, k) => (p.awards || []).filter((a) => (AWT[a.type] || a.type) === k).map((a) => ({ s: a.season }));
+  const fresh = (list) => list.some((e) => e.s === G.S.season && G.S.phase !== 'summer') ? ' fresh' : '';
+
+  function tile(k, name, n, f, isFresh, sub) {
+    return '<button class="vt-c tr-tile' + (n ? ' on' : '') + isFresh + '" data-a="trophyOpen" data-v="' + k + '" aria-label="' + esc(name) + '"><span class="vt-a">' + UI.trophyArt(k) + '</span><b>' + n + '</b><small>' + esc(name) + '</small>' + (f ? '<em>+' + f + ' وصيف</em>' : sub ? '<em>' + esc(sub) + '</em>' : '') + '</button>';
+  }
   function vault(p) {
     const t = T(), tiers = G.LEAGUES[(G.S.lgId || 'ESP1')] ? G.LEAGUES[G.S.lgId].tier : 1;
-    const main = ['cup', 'sup', tiers === 2 ? 'd2' : 'liga', 'ucl'], keys = t.ORDER.filter((k) => main.indexOf(k) >= 0 || t.count(p, k) > 0 || t.count(p, k, 'f') > 0);
+    const main = ['liga', 'cup', 'sup', 'ucl', 'wc', 'bd'];
+    if (tiers === 2) main[0] = 'd2';
+    const keys = t.ORDER.filter((k) => main.indexOf(k) >= 0 || t.count(p, k) > 0 || t.count(p, k, 'f') > 0);
     const total = t.total(p), runner = t.list(p, 'f').length;
-    return '<section class="vault"><div class="vt-top"><div class="vt-n"><b>' + total + '</b><small>' + (total === 1 ? 'لقب' : 'ألقاب') + '</small></div><div class="vt-in"><h2>خزانة الألقاب</h2><div class="sm mut">' + (runner ? runner + (runner === 1 ? ' وصافة' : ' وصافات') + ' في النهائيات' : 'ابدأ بجمع الألقاب') + '</div></div></div>' +
-      '<div class="vt-grid">' + keys.map((k) => {
+    return '<section class="vault room"><div class="vt-top"><div class="vt-n"><b>' + total + '</b><small>' + (total === 1 ? 'لقب' : 'ألقاب') + '</small></div><div class="vt-in"><h2>غرفة الكؤوس</h2><div class="sm mut">' + (runner ? runner + (runner === 1 ? ' وصافة' : ' وصافات') + ' في النهائيات · ' : '') + 'اضغط أي كأس لتفاصيله</div></div></div>' +
+      '<div class="vt-grid shelf">' + keys.map((k) => {
         const n = t.count(p, k), f = t.count(p, k, 'f');
-        return '<div class="vt-c' + (n ? ' on' : '') + '"><span class="vt-i">' + t.KEYS[k][0] + '</span><b>' + n + '</b><small>' + esc(t.KEYS[k][1]) + '</small>' + (f ? '<em>+' + f + ' وصيف</em>' : '') + '</div>';
+        return tile(k, t.KEYS[k][1], n, f, fresh(t.list(p, 'w').filter((e) => e.k === k)));
       }).join('') + '</div></section>';
   }
+  function awardsCard(p) {
+    const tot = AW.reduce((s, a) => s + awardList(p, a[0]).length, 0);
+    return '<section class="vault room aw"><div class="vt-top"><div class="vt-n sm2"><b>' + tot + '</b><small>جوائز</small></div><div class="vt-in"><h2>الجوائز الفردية</h2><div class="sm mut">الحذاء الذهبي ولاعب العام وغيرها</div></div></div>' +
+      '<div class="vt-grid shelf">' + AW.map((a) => { const l = awardList(p, a[0]); return tile(a[0], a[1], l.length, 0, fresh(l)); }).join('') + '</div></section>';
+  }
+  function milestones() {
+    let A = [];
+    try { A = UI.achievements ? UI.achievements(me()) : []; } catch (e) { A = []; }
+    if (!A.length) return '';
+    const done = A.filter((x) => x[2]);
+    return '<div class="card ms"><div class="row sb"><h4 style="margin:0">محطات المسيرة</h4><span class="pill ' + (done.length ? 'y' : '') + '">' + done.length + ' / ' + A.length + '</span></div>' +
+      (done.length ? '<div class="ms-l">' + done.map((x) => '<span class="ms-c"><i>' + x[0] + '</i>' + esc(x[1]) + '</span>').join('') + '</div>' : '<p class="sm mut" style="margin:8px 0 0">لا محطات بعد — أول هدف أو أول مباراة تفتح أولها.</p>') +
+      '<button class="btn sm" data-a="goSub" data-v="stats" data-v2="st:ach" style="width:100%;margin-top:10px">كل الإنجازات</button></div>';
+  }
+
+  UI.on('trophyOpen', (k) => {
+    const p = me(), t = T(), aw = AW.filter((a) => a[0] === k)[0];
+    const name = aw ? aw[1] : t.KEYS[k][1];
+    const w = aw ? awardList(p, k) : t.list(p, 'w').filter((e) => e.k === k), f = aw ? [] : t.list(p, 'f').filter((e) => e.k === k);
+    const row = (e, win) => '<div class="kv"><span>' + (win ? '🏆' : '🥈') + ' ' + esc(aw ? aw[2] : t.name(e)) + (win ? '' : ' <em class="mut">(وصيف)</em>') + '</span><span class="sm" style="text-align:end">' + esc(t.when(e)) + (e.c && G.S.clubs[e.c] ? ' · ' + esc(UI.cname(e.c)) : '') + '</span></div>';
+    UI.sheet('<div class="tr-sheet' + (w.length ? ' on' : '') + '"><div class="tr-hero">' + UI.trophyArt(k, 'big') + '</div><h3>' + esc(name) + '</h3><div class="tr-n"><b>' + w.length + '</b> ' + (w.length === 1 ? 'لقب' : 'مرات') + (f.length ? ' · ' + f.length + ' وصيف' : '') + '</div>' +
+      (w.length || f.length ? T().sorted ? '<div class="card">' + (aw ? w.map((e) => row(e, true)).join('') : t.sorted(p).filter((e) => e.k === k).map((e) => row(e, e.r === 'w')).join('')) + '</div>' : '' : '<p class="sm mut" style="text-align:center">لم تفز به بعد — هو بانتظارك.</p>') +
+      '<button class="btn pri" data-a="closeSheet">إغلاق</button></div>');
+    return false;
+  });
 
   // المنافسات الجارية: ما الذي يمكن الفوز به هذا الموسم
   function ongoing() {
@@ -218,12 +254,12 @@
   UI.screens.trophies = () => {
     const p = me(), t = T();
     const hasAny = t.list(p).length > 0;
-    let h = vault(p) + ongoing();
+    let h = vault(p) + awardsCard(p) + ongoing();
     if (!hasAny) {
-      return h + UI.empty('trophy', 'لا ألقاب بعد', 'الدوري والكأس والسوبر ودوري الأبطال بانتظارك. كل لقب يُسجَّل هنا مع موسمه ونادٍ تحقق معه.');
+      return h + milestones() + UI.empty('trophy', 'لا ألقاب بعد', 'الدوري والكأس والسوبر ودوري الأبطال بانتظارك. كل لقب يُسجَّل هنا مع موسمه ونادٍ تحقق معه.');
     }
     const tabs = UI.tabs('tl', [['tl', 'حسب الموسم'], ['by', 'حسب البطولة']], 'tl'), tab = UI.curTab('tl', 'tl');
-    return h + tabs + (tab === 'tl' ? '<div class="tl">' + timeline(p) + '</div>' : byComp(p)) +
+    return h + milestones() + tabs + (tab === 'tl' ? '<div class="tl">' + timeline(p) + '</div>' : byComp(p)) +
       '<p class="sm mut" style="margin:6px 2px 0">يُحتسب اللقب إذا شاركتَ فعلًا (دقائق لعب) مع ناديك في البطولة؛ ويُسجَّل «وصيف» عند خسارة النهائي بالشرط نفسه.</p>';
   };
 

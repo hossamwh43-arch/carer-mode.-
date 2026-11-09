@@ -69,6 +69,7 @@
     ];
     return A;
   }
+  UI.achievements = achievements;
 
   function currentTab(p) {
     const S = G.S, lg = G.Season.statOf(p, 'lg'), uc = G.Season.statOf(p, 'uc'), nt = G.Season.statOf(p, 'nt');

@@ -10,31 +10,50 @@
   const isUcl = (id) => (G.S.uclTeams || []).indexOf(id) >= 0;
   const foreignWarn = (id) => (G.S.clubs[id].liga ? '' : '<div class="notice" style="margin:8px 0 0">⚠️ نادٍ من خارج الدوريات الخمسة الكبرى: ستلعب دوري الأبطال فقط ولن يكون لك دوري محلي (لا يوجد دوري محاكى له في اللعبة).</div>');
 
+  // ألوان هوية النادي → متغيرات CSS (rgb ثلاثية لتدرجات شفافة؛ الألوان الداكنة جدًا تُفتَّح قليلًا كي تُرى على الخلفية)
+  const rgbOf = (hex) => {
+    let h = String(hex || '#3b82f6').replace('#', '');
+    if (h.length === 3) h = h.replace(/./g, (c) => c + c);
+    if (h.length !== 6) h = '3b82f6';
+    let r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    if ([r, g, b].some((v) => isNaN(v))) { r = 59; g = 130; b = 246; }
+    if (Math.max(r, g, b) < 110) { r = Math.round(r + (255 - r) * 0.34); g = Math.round(g + (255 - g) * 0.34); b = Math.round(b + (255 - b) * 0.34); }
+    return r + ' ' + g + ' ' + b;
+  };
+  const ck = (id) => { const c = G.S.clubs[id], a = (c && c.c) || ['#3b82f6', '#ffffff']; return '--k:' + rgbOf(a[0]) + ';--k2:' + rgbOf(a[1] || '#ffffff'); };
+  const tile = (lab, val, unit, cls) => '<div class="of-t' + (cls ? ' ' + cls : '') + '"><small>' + lab + '</small><b>' + val + '</b>' + (unit ? '<i>' + unit + '</i>' : '') + '</div>';
+
+  // شريط حالة السوق: مؤشر مباشر + عدّ تنازلي لإغلاق النافذة (معلومات من UI.windowInfo فقط)
   function windowCard() {
-    const S = G.S, w = S.window || {}, p = me();
-    let h = '<div class="card ' + (w.open ? 'hl' : '') + '"><div class="row sb"><b>' + (w.open ? '🟢 السوق مفتوح (' + (w.kind === 'winter' ? 'شتوي' : 'صيفي') + ')' : '🔴 السوق مغلق') + '</b>' + (S.transferRequest ? '<span class="pill y">قدّمتَ طلب انتقال</span>' : '') + '</div>';
-    if (!w.open) h += '<p class="sm mut" style="margin:6px 0 0">يُفتح السوق الشتوي في الأسبوع 19 (حتى 21) والصيفي بعد نهاية الموسم.</p>';
-    if (S.userExpired) h += '<div class="notice bad" style="margin-top:8px">⚠️ انتهى عقدك — اختر عرضًا أو جدّد قبل بدء الموسم.</div>';
-    if (p.parentPays) h += '<div class="notice" style="margin-top:8px">🔁 أنت معار إلى ' + esc(UI.cname(p.club)) + ' من ' + esc(UI.cname(p.parent)) + ' حتى نهاية الموسم.</div>';
-    return h + '</div>';
+    const S = G.S, w = S.window || {}, p = me(), i = UI.windowInfo();
+    let h = '<div class="mk-win ' + (w.open ? 'on' : 'off') + '"><div class="mk-r"><span class="mk-dot"></span><div class="mk-tt"><b>' + (w.open ? 'السوق مفتوح' + (w.kind === 'winter' ? ' · شتوي' : ' · صيفي') : 'السوق مغلق') + '</b><small>' + i.text + '</small></div>' + (S.transferRequest ? '<span class="pill y">طلب انتقال</span>' : '') + '</div>' +
+      '<div class="mk-bar">' + UI.bar(i.pct, i.open ? '' : 'gold') + '</div></div>';
+    if (S.userExpired) h += '<div class="notice bad">⚠️ انتهى عقدك — اختر عرضًا أو جدّد قبل بدء الموسم.</div>';
+    if (p.parentPays) h += '<div class="notice">🔁 أنت معار إلى ' + esc(UI.cname(p.club)) + ' من ' + esc(UI.cname(p.parent)) + ' حتى نهاية الموسم.</div>';
+    return h;
   }
 
-  // ---------- العروض ----------
-  function offerCard(o) {
+  // ---------- العروض: بطاقة عرض رسمي بهوية لون النادي ----------
+  function offerCard(o, top) {
     const p = me(), c = G.S.clubs[o.club];
     if (o.type === 'transfer') o.stance = T().stance(p, o.fee);
     const ev = G.Coach.evaluateAt(p, o.club);
-    const feeRow = o.type === 'transfer' ? '<div class="kv"><span>رسوم الانتقال</span><b>' + UI.money(o.fee) + '</b></div>' : o.type === 'loan' ? '<div class="sm" style="padding:6px 0">🔁 إعارة حتى نهاية الموسم، ثم تعود إلى ناديك الأصلي ويبقى راتبك منه.</div>' : '';
-    const terms = o.type === 'loan' ? '' : '<div class="kv"><span>الراتب</span><b>' + week(o.wage) + '</b></div><div class="kv"><span>مدة العقد</span><span>' + o.years + ' سنوات</span></div>';
-    return '<div class="card" style="border-color:' + (o.type === 'transfer' ? 'var(--gold)' : 'var(--blue)') + '"><div class="row sb"><span>' + UI.clubTag(o.club, 26) + '</span><span class="pill ' + (o.type === 'transfer' ? 'y' : o.type === 'loan' ? 'b' : 'g') + '">' + TYPE_AR[o.type] + '</span></div>' +
-      '<div class="sm mut" style="margin:6px 0">سمعة النادي ' + c.rep + (isUcl(o.club) ? ' · 🏆 يشارك في دوري الأبطال' : '') + (o.note ? ' · ' + esc(o.note) : '') + '</div>' +
-      feeRow + terms + '<div class="kv"><span>دورك المتوقع هناك</span><span>' + UI.rolePill(ev.role) + (ev.rival ? ' <span class="sm mut">أمام ' + esc(G.S.players[ev.rival].n) + ' (' + G.S.players[ev.rival].ovr + ')</span>' : '') + '</span></div>' +
+    const tiles = o.type === 'loan' ? tile('النوع', 'إعارة', '', 'wide') + tile('المدة', 'حتى نهاية الموسم', '', 'wide') + tile('الراتب', 'من ناديك', '', 'wide') :
+      tile('الراتب', UI.money(o.wage), '/ أسبوع') + tile('مدة العقد', o.years, 'سنوات') + (o.type === 'transfer' ? tile('رسوم الانتقال', UI.money(o.fee), '', 'fee') : tile('الرسوم', 'حر', '', 'fee'));
+    const ratio = o.type === 'transfer' && p.val ? Math.round(o.fee / p.val * 100) : 0;
+    const type = o.type === 'transfer' ? 'tr' : o.type === 'loan' ? 'ln' : 'fr';
+    return '<article class="offer o-' + type + (top ? ' top' : '') + '" style="' + ck(o.club) + '"><div class="of-hero"><div class="of-in">' +
+      '<div class="of-tags"><span class="of-type">' + TYPE_AR[o.type] + '</span>' + (top ? '<span class="of-best">★ أفضل عرض</span>' : '') + '</div>' +
+      '<h3>' + esc(UI.cname(o.club)) + '</h3><div class="of-sub">سمعة ' + c.rep + (isUcl(o.club) ? ' · يشارك في دوري الأبطال' : '') + (o.note ? ' · ' + esc(o.note) : '') + '</div></div><div class="of-crest">' + UI.badge(o.club, 84) + '</div></div>' +
+      '<div class="of-tiles">' + tiles + '</div>' +
+      (ratio ? '<div class="of-val"><div class="row sb sm"><span class="mut">قيمتك السوقية ' + UI.money(p.val) + '</span><b>الرسوم ' + ratio + '٪ منها</b></div>' + UI.bar(Math.min(100, ratio / 1.5), ratio >= 100 ? 'gold' : '') + '</div>' : '') +
+      '<div class="of-role"><span class="mut">دورك المتوقع</span><span>' + UI.rolePill(ev.role) + (ev.rival ? ' <span class="sm mut">أمام ' + esc(G.S.players[ev.rival].n) + ' (' + G.S.players[ev.rival].ovr + ')</span>' : '') + '</span></div>' +
       (o.type === 'transfer' && !o.stance.ok ? '<div class="notice bad" style="margin:8px 0 0">' + esc(o.stance.why) + (G.S.transferRequest ? '' : ' — يمكنك تقديم طلب انتقال لرفع فرصة الموافقة.') + '</div>' : '') +
-      foreignWarn(o.club) + (o.expires != null && o.type !== 'free' ? '<div class="sm mut" style="margin-top:6px">ينتهي العرض بنهاية الأسبوع ' + o.expires + '</div>' : '') +
-      '<div class="grid2" style="margin-top:8px"><button class="btn pri sm" style="width:100%" data-a="offerAccept" data-v="' + o.id + '"' + (o.type === 'transfer' && !o.stance.ok ? ' disabled' : '') + '>✅ ' + (o.type === 'loan' ? 'اقبل الإعارة' : 'اقبل') + '</button>' +
-      '<button class="btn red sm" style="width:100%" data-a="offerReject" data-v="' + o.id + '">✖ ارفض</button>' +
-      (o.type !== 'loan' ? '<button class="btn sm" style="width:100%" data-a="offerNeg" data-v="' + o.id + '">🤝 تفاوض على الراتب</button>' : '') +
-      (o.type === 'transfer' && !o.pressed ? '<button class="btn sm" style="width:100%" data-a="offerPress" data-v="' + o.id + '">📈 استغلّ المنافسة</button>' : '') + '</div></div>';
+      foreignWarn(o.club) + (o.expires != null && o.type !== 'free' ? '<div class="of-exp">⏳ ينتهي العرض بنهاية الأسبوع ' + o.expires + '</div>' : '') +
+      '<div class="of-act"><button class="btn pri of-go" data-a="offerAccept" data-v="' + o.id + '"' + (o.type === 'transfer' && !o.stance.ok ? ' disabled' : '') + '>✅ ' + (o.type === 'loan' ? 'اقبل الإعارة' : 'اقبل العرض') + '</button>' +
+      '<div class="of-sec">' + (o.type !== 'loan' ? '<button class="btn sm" data-a="offerNeg" data-v="' + o.id + '">🤝 تفاوض</button>' : '') +
+      (o.type === 'transfer' && !o.pressed ? '<button class="btn sm" data-a="offerPress" data-v="' + o.id + '">📈 استغلّ المنافسة</button>' : '') +
+      '<button class="btn red sm" data-a="offerReject" data-v="' + o.id + '">✖ ارفض</button></div></div></article>';
   }
 
   // حالة «لا عروض»: تشرح أين نحن من نوافذ الانتقال وتعدّ الأسابيع للنافذة التالية (زينة/معلومة فقط)
@@ -59,7 +78,10 @@
     const S = G.S, p = me(), list = S.offers || [];
     let h = '';
     if (!list.length) h += windowEmpty();
-    else h += list.map(offerCard).join('');
+    else {
+      const best = list.length > 1 ? list.filter((x) => x.type !== 'loan').slice().sort((x, y) => (y.wage * y.years) - (x.wage * x.years))[0] : null;
+      h += list.map((o) => offerCard(o, best && best.id === o.id)).join('');
+    }
     if (S.userExpired) h += '<div class="card"><h4>الخيار الأخير</h4><p class="sm mut">إن لم يعجبك أي عرض: سنة واحدة مع ناديك الحالي بأجر مخفّض.</p><button class="btn" data-a="emergency">عقد قصير بالحد الأدنى</button></div>';
     return h;
   }
@@ -74,9 +96,10 @@
     if (!list.length) return h + '<div class="card mut c">لا أندية مهتمة حاليًا. طوّر مستواك وقدّم أداءً أفضل.</div>';
     h += list.map((x) => {
       const c = S.clubs[x.club], ev = G.Coach.evaluateAt(p, x.club);
-      return '<div class="card"><div class="row sb"><span>' + UI.clubTag(x.club, 24) + '</span><span class="pill ' + LV[x.level][1] + '">' + LV[x.level][0] + '</span></div><div class="sm mut" style="margin:6px 0">سمعة ' + c.rep + (isUcl(x.club) ? ' · 🏆 الأبطال' : '') + (c.liga ? '' : ' · أجنبي') + '</div>' +
+      return '<div class="card int" style="' + ck(x.club) + '"><div class="int-r"><span class="int-c">' + UI.badge(x.club, 46) + '</span><div class="int-n"><b>' + esc(UI.cname(x.club)) + '</b><small class="mut">سمعة ' + c.rep + (isUcl(x.club) ? ' · الأبطال' : '') + (c.liga ? '' : ' · أجنبي') + '</small></div>' +
+        '<div class="int-l lv' + x.level + '" title="' + LV[x.level][0] + '"><i></i><i></i><i></i><small>' + LV[x.level][0] + '</small></div></div>' +
         '<div class="kv"><span>دورك المتوقع</span><span>' + UI.rolePill(ev.role) + '</span></div>' + foreignWarn(x.club) +
-        '<button class="btn sm" style="margin-top:8px" data-a="askClub" data-v="' + x.club + '"' + (w ? '' : ' disabled') + '>📨 اطلب عرضًا رسميًا</button></div>';
+        '<button class="btn sm" style="margin-top:8px;width:100%" data-a="askClub" data-v="' + x.club + '"' + (w ? '' : ' disabled') + '>📨 اطلب عرضًا رسميًا</button></div>';
     }).join('');
     return h;
   }
@@ -84,11 +107,10 @@
   // ---------- العقد ----------
   function contractTab() {
     const S = G.S, p = me(), club = S.clubs[p.club];
-    let h = '<div class="card"><h3>عقدي</h3><div class="kv"><span>النادي</span><b>' + esc(club.name) + '</b></div>' +
-      '<div class="kv"><span>المدة المتبقية</span><b class="' + (p.ct.y <= 1 ? 'neg' : '') + '">' + (p.parentPays ? 'إعارة' : p.ct.y + ' سنة') + '</b></div>' +
-      '<div class="kv"><span>الراتب</span><span>' + week(p.ct.w) + ' (≈ ' + UI.money(p.ct.w * 52) + ' سنويًا)</span></div>' +
-      '<div class="kv"><span>قيمتك السوقية</span><b class="gold">' + UI.money(p.val) + '</b></div>' +
-      '<div class="kv"><span>العمر / التقييم / الإمكانات</span><span>' + p.age + ' / ' + p.ovr + ' / ' + p.pot + '</span></div></div>';
+    const yl = p.parentPays ? 0 : p.ct.y, seg = [1, 2, 3, 4, 5].map((n) => '<i class="' + (n <= yl ? 'on' : '') + '"></i>').join('');
+    let h = '<section class="ctr" style="' + ck(p.club) + '"><div class="ctr-top"><div class="ctr-in"><small>عقدي الحالي</small><h2>' + esc(club.name) + '</h2><div class="ctr-chips"><span>' + p.age + ' سنة</span><span>تقييم ' + p.ovr + '</span><span>إمكانات ' + p.pot + '</span></div></div><div class="of-crest">' + UI.badge(p.club, 84) + '</div></div>' +
+      '<div class="of-tiles">' + tile('الراتب', UI.money(p.ct.w), '/ أسبوع') + tile('المتبقي', p.parentPays ? 'إعارة' : p.ct.y, p.parentPays ? '' : (p.ct.y === 1 ? 'سنة' : 'سنوات'), p.ct.y <= 1 && !p.parentPays ? 'warn' : '') + tile('قيمتك السوقية', UI.money(p.val), '', 'fee') + '</div>' +
+      '<div class="ctr-yrs"><div class="row sb sm"><span class="mut">مدة العقد المتبقية</span><span class="mut">≈ ' + UI.money(p.ct.w * 52) + ' سنويًا</span></div><div class="segs">' + seg + '</div></div></section>';
     h += '<div class="notice">القيمة السوقية تتأثر بتقييمك وعمرك وإمكاناتك ومدة عقدك وأدائك الأخير (' + (p.form.length ? 'متوسط آخر مباريات ' + G.Coach.formAvg(p).toFixed(1) : 'لم تلعب بعد') + ').</div>';
     const rn = G.S.renew && G.S.renew.season === S.season ? G.S.renew.terms : null;
     if (T().canRenew()) {
@@ -130,7 +152,7 @@
     if (!n || !s || s.status === 'withdrawn') return '<h3>' + (n && n.msg ? esc(n.msg) : 'لم يعد العرض متاحًا') + '</h3><button class="btn" data-a="closeSheet">إغلاق</button>';
     const club = n.mode === 'renew' ? me().club : s.club;
     const left = 3 - (s.tries || 0);
-    return '<h3>' + (n.mode === 'renew' ? 'تجديد العقد مع ' : 'تفاوض مع ') + esc(UI.cname(club)) + '</h3>' +
+    return '<div class="neg-h" style="' + ck(club) + '"><span class="of-crest sm">' + UI.badge(club, 52) + '</span><div><small class="mut">' + (n.mode === 'renew' ? 'تجديد العقد' : 'طاولة التفاوض') + '</small><h3>' + esc(UI.cname(club)) + '</h3></div><div class="tries" title="المحاولات المتبقية">' + [0, 1, 2].map((i) => '<i class="' + (i < Math.max(0, left) ? 'on' : '') + '"></i>').join('') + '</div></div>' +
       '<div class="kv"><span>العرض الحالي</span><span>' + week(s.wage) + ' · ' + s.years + ' سنوات</span></div><div class="kv"><span>محاولات متبقية</span><b>' + Math.max(0, left) + ' من 3</b></div>' +
       '<label class="f">الراتب الأسبوعي المطلوب</label><div class="row"><button class="btn sm" data-a="negAdj" data-v="-10">−10%</button><button class="btn sm" data-a="negAdj" data-v="-5">−5%</button><div class="grow c b gold" style="font-size:17px">' + UI.money(n.wage) + '</div><button class="btn sm" data-a="negAdj" data-v="5">+5%</button><button class="btn sm" data-a="negAdj" data-v="10">+10%</button></div>' +
       '<label class="f">مدة العقد</label><div class="chips">' + [1, 2, 3, 4, 5].filter((y) => y <= maxYears()).map((y) => '<button class="chip ' + (n.years === y ? 'on' : '') + '" data-a="negYears" data-v="' + y + '">' + y + '</button>').join('') + '</div>' +
