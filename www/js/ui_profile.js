@@ -36,19 +36,31 @@
     return h + '</div>';
   }
 
-  function contractCard(p) {
-    if (!p.ct) return '';
-    return '<div class="card"><div class="row sb"><div class="row">' + UI.badge(p.club, 30) + '<div><b>' + esc(UI.cname(p.club)) + '</b><div class="sm mut">' + p.ct.y + ' ' + (p.ct.y === 1 ? 'سنة متبقية' : 'سنوات متبقية') + ' · ' + UI.money(p.ct.w) + ' أسبوعيًا</div></div></div>' +
-      '<button class="btn sm" data-a="goSub" data-v="market" data-v2="mk:contract">العقد</button></div></div>';
+  // ثلاث بلاطات بدل ثلاث بطاقات متراصة: العقد · الألقاب · الكرة الذهبية (كل بلاطة تفتح قسمها الحقيقي)
+  function tilesRow(p) {
+    const T = G.Trophies, tl = [];
+    if (p.ct) {
+      const y = p.ct.y;
+      tl.push('<button class="pfd ' + (y <= 1 && !p.parentPays ? 'warn' : '') + '" data-a="goSub" data-v="market" data-v2="mk:contract"><span class="pfd-h">' + UI.badge(p.club, 22) + '<i>العقد</i></span><b>' + y + '</b><span class="pfd-u">' + (y === 1 ? 'سنة متبقية' : 'سنوات متبقية') + '</span><small>' + UI.money(p.ct.w) + ' أسبوعيًا</small></button>');
+    }
+    if (T && T.total) {
+      const total = T.total(p), last = T.sorted(p, 'w')[0];
+      tl.push('<button class="pfd" data-a="go" data-v="trophies"><span class="pfd-h">' + UI.ico('trophy') + '<i>الألقاب</i></span><b>' + total + '</b><span class="pfd-u">' + (total === 1 ? 'لقب' : 'ألقاب') + '</span><small>' + (last ? 'آخرها ' + esc(T.name(last)) : 'لم تفز بلقب بعد') + '</small></button>');
+    }
+    const bd = UI.bdBrief ? UI.bdBrief() : null;
+    if (bd) {
+      const m = bd.me;
+      tl.push('<button class="pfd ' + (m && m.rank <= 10 ? 'top' : '') + '" data-a="bdOpen"><span class="pfd-h">' + UI.ico('gem') + '<i>الكرة الذهبية</i></span><b>' + (m ? m.rank : '—') + '</b><span class="pfd-u">' + (m ? 'ترتيبك الآن' : 'خارج القائمة') + '</span><small>المتصدر: ' + esc(bd.lead) + '</small></button>');
+    }
+    return tl.length ? '<div class="pfd-row n' + tl.length + '">' + tl.join('') + '</div>' : '';
   }
 
   function ovTab(p) {
     let h = gaugeCard(p) + devCard(p);
     h += '<div class="card"><div class="row sb"><b>دورك في الفريق</b>' + UI.rolePill(p.role) + '</div>' + (p.roleInfo && p.roleInfo.text ? '<p class="sm mut" style="margin:8px 0 0">' + esc(p.roleInfo.text) + '</p>' : '') +
       '<div class="grid2" style="margin-top:12px"><button class="btn sm" data-a="cardOpen" style="width:100%">' + UI.ico('pcard') + ' بطاقتي</button><button class="btn sm" data-a="goSub" data-v="train" data-v2="tr:coach" style="width:100%">' + UI.ico('clipboard') + ' قرار المدرب</button></div></div>';
-    h += contractCard(p);
-    if (UI.trophyCard) h += UI.trophyCard();
-    if (UI.bdCard) h += UI.bdCard();
+    h += tilesRow(p);
+    if (!(UI.bdBrief && UI.bdBrief()) && UI.bdCard) h += UI.bdCard(); // خارج الموسم: بطاقة الحفل/الفائز الكاملة
     if (UI.mediaCard) h += UI.mediaCard();
     return h;
   }
@@ -137,11 +149,28 @@
     const shown = all ? list : list.slice(0, 10);
     h += '<div class="card sq-list">' + (shown.length ? shown.map((q) => {
       const xi = L.xi.some((x) => x.id === q.id);
-      return '<div class="sq-r' + (q.user ? ' me' : '') + '"><i class="sq-pos">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></div>';
+      return '<button class="sq-r' + (q.user ? ' me' : '') + '" data-a="sqPlayer" data-v="' + q.id + '"><i class="sq-pos">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></button>';
     }).join('') : '<div class="mut c">لا لاعبين في هذه الخانة.</div>') + '</div>';
     if (list.length > 10) h += '<button class="btn sm" style="width:100%" data-a="sqAll">' + (all ? 'عرض أقل' : 'عرض الكل (' + list.length + (f === 'all' ? '' : ' من ' + total) + ')') + '</button>';
     return h;
   };
+  // بطاقة زميل: تقييمه مقابل تقييمك (منافس المركز إن كان من الخانة نفسها)، إحصاءاته، عقده وقيمته وحالته
+  UI.on('sqPlayer', (id) => {
+    const q = G.S.players[id], u = me();
+    if (!q) return false;
+    const same = GRP[q.pos] === GRP[u.pos], st = G.Season.statOf(q, 'lg'), uc = G.Season.statOf(q, 'uc');
+    const cmp = q.id === u.id ? '' : '<div class="sqp-cmp"><div class="sm mut">' + (same ? 'منافسك على المركز' : 'مقارنة بك') + '</div>' +
+      '<div class="sqp-bar"><b>' + u.ovr + '</b><div class="sqp-tr"><i class="me" style="width:' + U.clamp(u.ovr, 30, 99) + '%"></i><i class="op" style="width:' + U.clamp(q.ovr, 30, 99) + '%"></i></div><b>' + q.ovr + '</b></div>' +
+      '<div class="sm ' + (q.ovr > u.ovr ? 'neg' : q.ovr < u.ovr ? 'pos' : 'mut') + '">' + (q.ovr === u.ovr ? 'نفس مستواك' : q.ovr > u.ovr ? 'يتفوّق عليك بـ ' + (q.ovr - u.ovr) : 'تتفوّق عليه بـ ' + (u.ovr - q.ovr)) + (same && q.ovr > u.ovr ? ' — يزاحمك على مكان أساسي' : '') + '</div></div>';
+    UI.sheet('<div class="sqp"><div class="sqp-h"><div class="ovr ' + UI.tierCls(q) + '">' + q.ovr + '</div><div class="grow"><h3>' + esc(q.n) + (q.user ? ' <em class="gold">أنت</em>' : '') + '</h3><div class="sm mut">' + G.POS_AR[q.pos] + ' · ' + q.age + ' سنة · ' + esc(UI.natName(q.nat)) + '</div></div></div>' + cmp +
+      '<div class="grid3" style="margin:12px 0"><div class="stat"><b>' + st.apps + '</b><small>مباراة دوري</small></div><div class="stat"><b>' + st.g + '</b><small>هدف</small></div><div class="stat"><b>' + st.a + '</b><small>صناعة</small></div></div>' +
+      '<div class="kv"><span>الحالة</span><b>' + (q.inj > 0 ? 'مصاب · ' + q.inj + ' أسبوع' : 'جاهز') + '</b></div>' +
+      (q.ct ? '<div class="kv"><span>العقد</span><b>' + q.ct.y + ' ' + (q.ct.y === 1 ? 'سنة' : 'سنوات') + ' · ' + UI.money(q.ct.w) + ' أسبوعيًا</b></div>' : '') +
+      (q.val ? '<div class="kv"><span>القيمة السوقية</span><b>' + UI.money(q.val) + '</b></div>' : '') +
+      (uc.apps ? '<div class="kv"><span>دوري الأبطال</span><b>' + uc.apps + ' مباراة · ' + uc.g + ' هدف</b></div>' : '') +
+      '<button class="btn pri" data-a="closeSheet">إغلاق</button></div>');
+    return false;
+  });
   UI.on('sqFilter', (v) => { UI.sub.sq = v; UI.sub.sqAll = false; });
   UI.on('sqAll', () => { UI.sub.sqAll = !UI.sub.sqAll; });
 })(window.G = window.G || {});

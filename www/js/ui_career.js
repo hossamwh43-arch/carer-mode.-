@@ -1,21 +1,10 @@
-/* ui_career.js — الرسائل، مسيرتي (جدول المواسم والأندية)، الإحصائيات والإنجازات والجوائز، والإعدادات (تصدير/استيراد/إعادة ضبط) */
+/* ui_career.js — مسيرتي (جدول المواسم والأندية)، الإحصائيات والإنجازات والجوائز، والإعدادات (تصدير/استيراد/إعادة ضبط) */
 (function (G) {
   'use strict';
   const UI = G.UI, U = G.U, esc = UI.esc;
   const me = () => G.S.players[G.S.user];
 
-  // ---------- الرسائل ----------
-  const GROUPS = { all: null, offers: ['offer', 'contract'], awards: ['award'], other: ['news', 'training', 'injury', 'coach', 'media'] };
-  const ICON = { news: '📰', offer: '📨', contract: '📝', training: '💪', injury: '🩹', coach: '🧑‍🏫', award: '🏆', media: '📣' };
-  UI.screens.inbox = () => {
-    const S = G.S, tab = UI.curTab('ib', 'all'), kinds = GROUPS[tab];
-    const list = (S.inbox || []).filter((m) => !kinds || kinds.indexOf(m.kind) >= 0);
-    const h = UI.tabs('ib', [['all', 'الكل'], ['offers', 'العروض والعقود'], ['awards', 'الجوائز'], ['other', 'أخرى']], 'all') +
-      (list.length ? '<div class="card">' + list.slice(0, 60).map((m) => '<div class="msg ' + (m.read ? '' : 'unread') + '"><div class="row sb"><b>' + (ICON[m.kind] || '•') + ' ' + esc(m.title) + '</b><span class="sm mut">م' + m.season + ' · أ' + m.week + '</span></div><div class="sm mut">' + esc(m.text) + '</div></div>').join('') + '</div>' : '<div class="card mut c">لا رسائل.</div>');
-    (S.inbox || []).forEach((m) => { m.read = true; });
-    UI.after = () => { const b = document.getElementById('inboxBadge'); if (b) b.classList.add('hidden'); G.Save.save(); };
-    return h;
-  };
+  // الرسائل («صندوقي») انتقلت إلى ui_news.js
 
   // ---------- مسيرتي ----------
   const trophyIcons = (t) => G.Season.TROPHY_DEFS.filter((d) => (t || {})[d[0]]).map((d) => d[1]).join('');

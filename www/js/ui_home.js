@@ -88,12 +88,6 @@
     return '<div class="card"><div class="row sb"><b>⭐ دوري الأبطال</b><button class="btn sm" data-a="go" data-v="ucl">التفاصيل</button></div><div class="sm" style="margin-top:6px">' + t + '</div></div>';
   }
 
-  function inboxPreview() {
-    const list = (S_().inbox || []).slice(0, 3);
-    if (!list.length) return '';
-    return '<div class="card"><div class="row sb"><b>✉️ الرسائل</b><button class="btn sm" data-a="go" data-v="inbox">الكل</button></div>' + list.map((m) => '<div class="msg ' + (m.read ? '' : 'unread') + '"><b>' + esc(m.title) + '</b><div class="sm mut">' + esc(m.text) + '</div></div>').join('') + '</div>';
-  }
-
   function summerPanel() {
     const S = S_(), u = me();
     let h = '<div class="card"><h3>☀️ الصيف — موسم ' + G.Season.label(S.season) + '</h3>';
@@ -155,11 +149,12 @@
     if (UI.noStorage) h += '<div class="notice bad">⚠️ التخزين المحلي غير متاح في هذا المتصفح (ربما وضع التصفح الخاص): لن يُحفظ تقدّمك بعد الإغلاق. استخدم «تصدير الحفظ» من الإعدادات.</div>';
     h += heroHome(u);
     // الأهم أولًا: المباراة القادمة/الصيف، ثم المؤتمر الصحفي، ثم اللمحات والبلاطات
-    if (S.phase === 'summer') h += summerPanel() + press + (UI.simCard ? UI.simCard() : '') + quick();
-    else if (S.phase === 'season') h += UI.nextMatchBlock({ compact: true }) + press + glance(u) + quick() + (UI.simCard ? UI.simCard() : '');
-    else if (S.phase === 'end') h += press + endPanel();
-    else h += press;
-    h += (UI.newsCard ? UI.newsCard() : '') + inboxPreview();
+    const dks = UI.decisionStrip ? UI.decisionStrip() : '';
+    if (S.phase === 'summer') h += summerPanel() + press + dks + (UI.simCard ? UI.simCard() : '') + quick();
+    else if (S.phase === 'season') h += UI.nextMatchBlock({ compact: true }) + press + dks + glance(u) + quick() + (UI.simCard ? UI.simCard() : '');
+    else if (S.phase === 'end') h += press + dks + endPanel();
+    else h += press + dks;
+    h += UI.newsDock ? UI.newsDock() : '';
     if (S.check && !S.check.ok) h += '<div class="notice bad">⚠️ تم رصد خلل في الجدول وإصلاحه تلقائيًا.</div>';
     return h;
   };

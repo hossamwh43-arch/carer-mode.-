@@ -12,7 +12,7 @@
     me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['trophies', 'البطولات'], ['market', 'الانتقالات'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
     matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['cup', 'الكأس'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
     club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب']] },
-    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الصحافة'], ['inbox', 'الرسائل'], ['settings', 'الإعدادات']] }
+    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['settings', 'الإعدادات']] }
   };
   UI.GROUP_ORDER = ['home', 'me', 'matches', 'club', 'more'];
   const R2G = { match: 'matches', simreport: 'home' };
@@ -31,7 +31,7 @@
   UI.titles.more = 'المزيد';
   UI.titles.bd = 'الكرة الذهبية';
   UI.titles.intl = 'المنتخبات';
-  UI.titles.press = 'الصحافة والأخبار';
+  UI.titles.press = 'غرفة الأخبار'; UI.titles.inbox = 'صندوقي';
   UI.titles.cup = 'الكأس والسوبر';
   UI.titles.trophies = 'سجل البطولات';
 
@@ -123,8 +123,8 @@
     let pr = null; try { pr = G.Media && G.Media.pending(); } catch (e) { /* لا شيء */ }
     const tiles = [];
     if (!retired) {
-      tiles.push(tile('inbox', 'mail', 'الرسائل', unread ? unread + ' غير مقروءة' : 'العروض والإشعارات', unread));
-      tiles.push(tile('press', 'mic', 'الصحافة والأخبار', pr ? 'مؤتمر صحفي ينتظرك' : 'أخبار وشعبية', pr ? '!' : ''));
+      tiles.push(tile('inbox', 'mail', 'صندوقي', unread ? unread + ' جديدة' : 'قراراتك وعروضك ورسائلك', unread));
+      tiles.push(tile('press', 'mic', 'غرفة الأخبار', pr ? 'مؤتمر صحفي ينتظرك' : 'الصفحة الأولى وشعبيتك', pr ? '!' : ''));
       tiles.push(tile('intl', 'globe', 'المنتخبات', S.intl ? esc(S.intl.name) : 'كأس العالم وآسيا'));
       tiles.push(tile('league', 'podium', 'المسابقات', 'الدوري ودوري الأبطال'));
       tiles.push(tile('cup', 'shield', 'الكأس والسوبر', 'القرعة والنتائج والأبطال'));

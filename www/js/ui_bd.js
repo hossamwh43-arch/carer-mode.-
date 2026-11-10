@@ -83,6 +83,16 @@
     return T + (UI.curTab('bd', 'now') === 'now' ? nowView() : histView());
   };
 
+  // ملخّص مضغوط لترتيبك في الكرة الذهبية أثناء الموسم (يستعمله ملف اللاعب)؛ null خارج الموسم أو بلا ترتيب
+  UI.bdBrief = () => {
+    const S = G.S;
+    if (!G.BD || S.phase !== 'season') return null;
+    G.BD.get();
+    const s = lastSnap();
+    if (!s || !s.list || !s.list.length) return null;
+    return { me: s.me || null, lead: s.list[0].n };
+  };
+
   // ---------- بطاقة الرئيسية ----------
   UI.bdCard = () => {
     const S = G.S;
