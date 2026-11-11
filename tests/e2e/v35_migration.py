@@ -32,7 +32,7 @@ with sync_playwright() as p:
     ev(page, "G.UI.cur='press'; G.UI.render()")
     check(page.query_selector('.nws-lead') is not None and len(page.query_selector_all('.nws-rail')) >= 2, 'الأخبار القديمة تُعرض بالصفحة الأولى الجديدة')
     ev(page, "G.UI.cur='inbox'; G.UI.render()")
-    check(len(page.query_selector_all('.tl-m')) >= 5, 'الرسائل القديمة تُعرض في الخط الزمني (%d)' % len(page.query_selector_all('.tl-m')))
+    check(len(page.query_selector_all('.ibx-m')) >= 5, 'الرسائل القديمة تُعرض في الخط الزمني (%d)' % len(page.query_selector_all('.ibx-m')))
     play_weeks(page, 6)
     check(ev(page, 'G.S.week') > st['w'], 'اللعب يكمل بعد الترقية (أسبوع %s)' % ev(page, 'G.S.week'))
     ev(page, 'G.Save.save(true)'); page.reload(); page.wait_for_selector('.cine, #app'); page.wait_for_timeout(300)

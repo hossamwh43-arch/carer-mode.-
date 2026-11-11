@@ -82,7 +82,7 @@
         '<label class="f">العمر عند البداية (16–21)</label><div class="chips">' + [16, 17, 18, 19, 20, 21].map((a) => '<button class="chip ' + (wz.age === a ? 'on' : '') + '" data-a="wzAge" data-v="' + a + '">' + a + '</button>').join('') + '</div>' +
         '<p class="sm mut" style="margin-top:10px">تقييمك الابتدائي يقارب <b>' + expectedOvr(wz.age) + '</b> (الأصغر سنًا يبدأ أضعف لكن بمجال تطور أوسع). لن تصبح نجمًا في موسم واحد.</p></div>';
     } else if (wz.step === 2) {
-      h += '<div class="card"><label class="f">المركز</label><div class="grid3">' + G.POS.map((p) => '<button class="chip ' + (wz.pos === p ? 'on' : '') + '" data-a="wzPos" data-v="' + p + '" style="border-radius:14px;text-align:center"><b>' + p + '</b><br><span class="sm">' + G.POS_AR[p] + '</span></button>').join('') + '</div>' +
+      h += '<div class="card"><label class="f">المركز</label><div class="grid3">' + G.POS.map((p) => '<button class="chip ' + (wz.pos === p ? 'on' : '') + '" data-a="wzPos" data-v="' + p + '" style="border-radius:var(--r-m);text-align:center"><b>' + p + '</b><br><span class="sm">' + G.POS_AR[p] + '</span></button>').join('') + '</div>' +
         '<label class="f">الطول: <b id="wzHv">' + wz.h + '</b> سم</label><input type="range" min="165" max="200" value="' + wz.h + '" data-in="wzH">' +
         '<label class="f">الوزن: <b id="wzWv">' + wz.w + '</b> كغ</label><input type="range" min="58" max="95" value="' + wz.w + '" data-in="wzW">' +
         '<label class="f">القدم المفضلة</label><div class="chips">' + [['R', 'اليمنى'], ['L', 'اليسرى']].map((f) => '<button class="chip ' + (wz.foot === f[0] ? 'on' : '') + '" data-a="wzFoot" data-v="' + f[0] + '">' + f[1] + '</button>').join('') + '</div>' +
@@ -170,7 +170,7 @@
   });
 
   UI.on('importSheet', () => {
-    UI.sheet('<h3>استيراد حفظ</h3><p class="mut sm">الصق نص الحفظ الذي صدّرتَه سابقًا من صفحة الإعدادات.</p><textarea id="impTxt" rows="7" style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:8px;direction:ltr"></textarea><button class="btn pri" data-a="importDo">استيراد</button><button class="btn" data-a="closeSheet">إلغاء</button>');
+    UI.sheet('<h3>استيراد حفظ</h3><p class="mut sm">الصق نص الحفظ الذي صدّرتَه سابقًا من صفحة الإعدادات.</p><textarea id="impTxt" rows="7" style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:var(--r-m);padding:8px;direction:ltr"></textarea><button class="btn pri" data-a="importDo">استيراد</button><button class="btn" data-a="closeSheet">إلغاء</button>');
     return false;
   });
   UI.on('importDo', () => {

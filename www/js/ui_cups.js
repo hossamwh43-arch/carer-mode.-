@@ -140,7 +140,7 @@
     }
     const cn = G.Cups.userCountry(), cup = cn ? G.Cups.cupOf(cn) : null;
     if (!cup) {
-      return '<div class="card"><div class="row"><span class="es-ic" style="font-size:26px">' + UI.ico('shield') + '</span><div><b>ناديك خارج الدوريات الكبرى</b><div class="sm mut">لا يشارك في كأس محلية، وهذه نظرة على كؤوس الدوريات الخمسة.</div></div></div></div>' + allTab();
+      return '<div class="card"><div class="row"><span class="es-ic" style="font-size:28px">' + UI.ico('shield') + '</span><div><b>ناديك خارج الدوريات الكبرى</b><div class="sm mut">لا يشارك في كأس محلية، وهذه نظرة على كؤوس الدوريات الخمسة.</div></div></div></div>' + allTab();
     }
     const tabs = UI.tabs('cup', [['br', 'القرعة'], ['sc', 'الهدافون'], ['sp', 'السوبر'], ['hs', 'الأبطال'], ['all', 'الدوريات']], 'br'), t = UI.curTab('cup', 'br');
     return hero(cup) + tabs + (t === 'br' ? bracketTab(cup) : t === 'sc' ? scorersTab(cup) : t === 'sp' ? superTab(cn) : t === 'hs' ? histTab(cn) : allTab());

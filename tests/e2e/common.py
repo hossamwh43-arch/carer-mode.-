@@ -1,7 +1,7 @@
 """أدوات مشتركة لاختبارات المتصفح (Playwright): إنشاء لعبة، تنفيذ JS، فحوص، لقطات، تمرير أفقي، رموز تعبيرية."""
 import sys, os, json
 from playwright.sync_api import sync_playwright
-ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+ROOT = os.environ.get('FC_ROOT') or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 WEB = ROOT if os.path.exists(os.path.join(ROOT, 'index.html')) else os.path.join(ROOT, 'www')  # في مستودع الحزمة تكون اللعبة داخل www/
 URL = 'file://' + os.path.join(WEB, 'index.html')
 fails, errors = [], []

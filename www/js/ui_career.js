@@ -34,7 +34,7 @@
     let h = '';
     if (S.phase === 'retired') {
       const tot = G.Season.careerTotals();
-      h += '<div class="card hl c"><div style="font-size:44px">🏁</div><h2>اعتزلتَ كرة القدم</h2><p class="mut">في الموسم ' + G.Season.label(S.retiredAt.season) + ' بعمر ' + S.retiredAt.age + ' سنة بعد ' + tot.seasons + ' مواسم، ' + tot.apps + ' مباراة و' + tot.g + ' هدفًا.</p><button class="btn pri" data-a="newCareer">✨ ابدأ مسيرة جديدة</button></div>';
+      h += '<div class="card hl c"><div style="font-size:46px">🏁</div><h2>اعتزلتَ كرة القدم</h2><p class="mut">في الموسم ' + G.Season.label(S.retiredAt.season) + ' بعمر ' + S.retiredAt.age + ' سنة بعد ' + tot.seasons + ' مواسم، ' + tot.apps + ' مباراة و' + tot.g + ' هدفًا.</p><button class="btn pri" data-a="newCareer">✨ ابدأ مسيرة جديدة</button></div>';
     }
     h += UI.fifaCard(p) + profileCard(p) + '<div class="card"><h4>🕸️ مخطط سماتك</h4>' + UI.radar(p) + '</div>' + (UI.mediaCard ? UI.mediaCard() : '') + UI.careerCharts(p) + '<h4 style="margin:6px 2px">مسيرتي موسمًا بموسم</h4>' + seasonsTable(p);
     return h;
@@ -140,7 +140,7 @@
     return false;
   });
   function showText(txt) {
-    UI.sheet('<h3>نص الحفظ</h3><p class="sm mut">انسخه كاملًا واحتفظ به.</p><textarea id="expTxt" rows="8" readonly style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:8px;direction:ltr">' + esc(txt) + '</textarea><button class="btn" data-a="closeSheet">إغلاق</button>');
+    UI.sheet('<h3>نص الحفظ</h3><p class="sm mut">انسخه كاملًا واحتفظ به.</p><textarea id="expTxt" rows="8" readonly style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:var(--r-m);padding:8px;direction:ltr">' + esc(txt) + '</textarea><button class="btn" data-a="closeSheet">إغلاق</button>');
     const t = document.getElementById('expTxt'); if (t) { t.focus(); t.select(); }
   }
   UI.on('validateNow', () => { const c = G.Season.validateAll(); G.Save.save(); UI.toast(c.ok ? 'كل شيء سليم ✔️' : 'وُجدت ' + c.errs.length + ' ملاحظات وأُصلحت'); });

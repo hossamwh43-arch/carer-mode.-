@@ -78,7 +78,7 @@
     let r = U.clamp(UI.sub.lgRound || curRound(L), 1, R);
     const fx = G.League.round(r, L);
     return '<div class="row sb" style="margin-bottom:8px"><button class="btn sm" data-a="lgRound" data-v="' + (r - 1) + '">→ السابقة</button><b>الجولة ' + r + ' / ' + R + '</b><button class="btn sm" data-a="lgRound" data-v="' + (r + 1) + '">التالية ←</button></div>' +
-      '<div class="card">' + fx.map((f) => '<div class="row sb" style="padding:8px 0;border-bottom:1px solid rgba(36,50,79,.5);' + (f.h === mine || f.a === mine ? 'background:rgba(34,197,94,.1);border-radius:8px;padding-inline:6px' : '') + '"><span class="grow" style="text-align:start">' + UI.clubTag(f.h, 20) + '</span><b class="sco" style="min-width:56px;text-align:center">' + (f.played ? f.hg + ' - ' + f.ag : '—') + '</b><span class="grow" style="text-align:end;display:flex;justify-content:flex-end">' + UI.clubTag(f.a, 20) + '</span></div>').join('') + '</div>' +
+      '<div class="card">' + fx.map((f) => '<div class="row sb" style="padding:8px 0;border-bottom:1px solid rgba(36,50,79,.5);' + (f.h === mine || f.a === mine ? 'background:rgba(34,197,94,.1);border-radius:var(--r-s);padding-inline:6px' : '') + '"><span class="grow" style="text-align:start">' + UI.clubTag(f.h, 20) + '</span><b class="sco" style="min-width:56px;text-align:center">' + (f.played ? f.hg + ' - ' + f.ag : '—') + '</b><span class="grow" style="text-align:end;display:flex;justify-content:flex-end">' + UI.clubTag(f.a, 20) + '</span></div>').join('') + '</div>' +
       '<div class="sm mut c" style="margin-bottom:8px">الجولة ' + r + ' تُلعب في الأسبوع ' + L.wk[r - 1] + '</div><button class="btn sm" data-a="lgRound" data-v="' + curRound(L) + '">الجولة الحالية</button>';
   }
 

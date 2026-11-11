@@ -68,10 +68,9 @@
     return { open: false, pct: 100, title: 'السوق مغلق الآن', text: 'يُفتح السوق الصيفي عند الانتقال للموسم التالي.' };
   };
   function windowEmpty() {
-    const i = UI.windowInfo();
+    // بطاقة النافذة في الأعلى تشرح الحالة والعدّ التنازلي؛ هنا نكتفي بالنصيحة حتى لا نكرّر نفس الرسالة
     return '<div class="card empty-st"><div class="es-ic">' + UI.ico('swap') + '</div><h3>لا عروض الآن</h3>' +
-      '<div style="margin:6px 0 8px">' + UI.bar(i.pct, i.open ? '' : 'gold') + '</div><p class="sm" style="margin:0"><b>' + i.title + '</b> — ' + i.text + '</p>' +
-      '<p class="sm mut" style="margin:8px 0 0">وللحصول على عروض أكثر: العب أساسيًا، ارفع تقييمك، وحافظ على ثقة المدرب.</p></div>';
+      '<p class="sm mut" style="margin:0">للحصول على عروض أكثر: العب أساسيًا، ارفع تقييمك، وحافظ على ثقة المدرب.</p></div>';
   }
 
   function offersTab() {
