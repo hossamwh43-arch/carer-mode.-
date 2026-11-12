@@ -32,7 +32,7 @@
     { id: 'njum', n: 'نجوم الكرة', ic: '🌟', tone: [0.52, 0.16, 0.32], aff: { rumor: 2.5, user: 2, bdm: 2, bdc: 2, hat: 1.5 } },
     { id: 'euro', n: 'البوابة الأوروبية', ic: '🏟', tone: [0.28, 0.26, 0.46], aff: { ucl: 5, lg: 1.5, bdm: 1.5 } },
     { id: 'alam', n: 'الكرة العالمية', ic: '🌍', tone: [0.30, 0.26, 0.44], aff: { tour: 6, bdc: 2, veteran: 1.5 } },
-    { id: 'mer', n: 'ميركاتو', ic: '🔁', tone: [0.20, 0.25, 0.55], aff: { rumor: 6, injury: 1.5 } },
+    { id: 'mer', n: 'ميركاتو', ic: '🔁', tone: [0.20, 0.25, 0.55], aff: { rumor: 6, injury: 1.5, uMove: 7, uReq: 5, uDeal: 6 } },
     { id: 'mizan', n: 'الميزان', ic: '🧠', tone: [0.14, 0.58, 0.28], aff: { stinker: 3, drought: 3, crisis: 3, bdm: 3, bdc: 3, veteran: 3, user: 2 } },
     { id: 'jil', n: 'جيل الغد', ic: '🌱', tone: [0.62, 0.12, 0.26], aff: { young: 8, user: 1.5 } }
   ];
@@ -229,6 +229,23 @@
       n: [['{c} يهبط… وماذا عن {p}؟', 'بعد هبوط {c}، تتجه الأنظار إلى مستقبل {p} بين البقاء والرحيل.']],
       p: [['{p} رغم الهبوط: الوحيد الذي يستحق الاحترام', 'يرى مدافعون عن {p} أنه قدّم كل ما لديه ولم يكن سبب الهبوط.']]
     },
+    uMove: {
+      p: [['{p} إلى {c}: صفقة تليق بنجم', 'أنهى {p} انتقاله من {x} إلى {c} ({k}) والصحافة ترى الخطوة تطوّرًا طبيعيًا في مسيرته.'],
+        ['{c} يخطف {p} من {x}', 'وقّع {c} مع {p} ({k}) في صفقة يعدّها كثيرون من أنجح صفقات السوق.']],
+      n: [['رسميًا: {p} لاعب {c}', 'أعلن {c} ضم {p} قادمًا من {x} ({k}).'],
+        ['{p} يغيّر وجهته: {c} بعد {x}', 'بدأ {p} فصلًا جديدًا في مسيرته مع {c} بعد انتقاله من {x} ({k}).']],
+      c: [['{p} يرحل عن {x}: خطوة محسوبة أم مغامرة؟', 'يتساءل متابعون هل كان رحيل {p} إلى {c} ({k}) القرار الأفضل لمسيرته.'],
+        ['جماهير {x} غاضبة من رحيل {p}', 'غادر {p} إلى {c} ({k}) تاركًا خلفه جماهير تشعر بأن اللاعب لم يردّ جميلها.']]
+    },
+    uReq: {
+      c: [['{p} يطلب الرحيل عن {c}: أزمة في غرفة الملابس؟', 'تقارير تتحدث عن طلب انتقال رسمي من {p} وتوتر مع إدارة {c} يهدد استقرار الفريق.']],
+      n: [['{p} يقدّم طلب انتقال رسميًا', 'تقدّم {p} بطلب رسمي لمغادرة {c} وينتظر ردّ الإدارة وسط ترقّب الأندية.']],
+      p: [['{p}: الطموح حق مشروع', 'يرى محللون أن طلب {p} الرحيل عن {c} قرار مفهوم لمن يبحث عن دقائق لعب وتحدٍّ أكبر.']]
+    },
+    uDeal: {
+      n: [['صفقة {p} إلى {x} تنهار في اللحظات الأخيرة', 'تعثّرت المفاوضات حول {p} وانهارت الصفقة مع {x} بعد خلاف على الشروط.']],
+      c: [['فشل صفقة {p}: من المسؤول؟', 'تبادل الأطراف الاتهامات بعد انهيار انتقال {p} إلى {x}، وتساؤلات عن أخطاء التفاوض.']]
+    },
     uSeason: {
       p: [['موسم استثنائي لـ{p}: {k}', 'أنهى {p} الموسم برصيد {k} بتقييم {r}، وسط إشادة واسعة من الصحافة.']],
       n: [['{p} ينهي الموسم: أرقام وحصيلة', 'أنهى {p} موسمه بـ{k} بمتوسط {r}.']],
@@ -265,7 +282,7 @@
     for (const t of ['p', 'c', 'n']) { r -= w[t]; if (r <= 0 && w[t] > 0) return t; }
     return al;
   }
-  const GRP = { upset: 'lg', fest: 'lg', leader: 'lg', uPraise: 'user', uCrit: 'user', uRed: 'user', uHat: 'user', uTitle: 'user', uRel: 'user', uSeason: 'user', uclwin: 'ucl', tourwin: 'tour', tourup: 'tour' };
+  const GRP = { upset: 'lg', fest: 'lg', leader: 'lg', uPraise: 'user', uCrit: 'user', uRed: 'user', uHat: 'user', uTitle: 'user', uRel: 'user', uSeason: 'user', uMove: 'user', uReq: 'user', uDeal: 'user', uclwin: 'ucl', tourwin: 'tour', tourup: 'tour' };
   function outletsFor(ev, n, key) {
     const w = Press.OUTLETS.map((o, i) => ({ i, w: (o.aff[ev.kind] || o.aff[GRP[ev.kind]] || 1) * (0.4 + H(key + '|o' + i)) }));
     w.sort((a, b) => b.w - a.w);
@@ -485,6 +502,23 @@
     const good = avg >= 7.2 || tot + ass >= 18, bad = avg < 6.3 && apps >= 15;
     n += write({ kind: 'uSeason', val: good ? 0.8 : bad ? -0.7 : 0, mag: 2, pid: u.id, user: 1, ctx }, 2, 'us').length;
     return n;
+  };
+
+  // ---------- انتقالات اللاعب المستخدم ----------
+  Press.onUserMove = (info) => {
+    const u = P(info.p);
+    if (!u) return 0;
+    const k = info.kind === 'loan' ? 'إعارة' : info.fee ? U.money(info.fee) : 'لاعب حر';
+    const ctx = ctxFor(u, { x: clubName(info.from), k });
+    return write({ kind: 'uMove', val: info.byRequest ? -0.6 : info.kind === 'loan' ? 0 : 0.6, mag: 3 + (info.fee >= 15000000 ? 1.5 : 0), pid: u.id, user: 1, big: info.fee >= 15000000, ctx }, 3, 'um').length;
+  };
+  Press.onUserRequest = (info) => {
+    const u = P(info.p);
+    return u ? write({ kind: 'uReq', val: info.status === 'refused' ? -0.5 : -0.2, mag: 2.5, pid: u.id, user: 1, ctx: ctxFor(u) }, 2, 'ur' + info.status).length : 0;
+  };
+  Press.onUserDeal = (info) => {
+    const u = P(info.p);
+    return u ? write({ kind: 'uDeal', val: -0.3, mag: 2, pid: u.id, user: 1, ctx: ctxFor(u, { x: clubName(info.club) }) }, 2, 'ud' + info.club).length : 0;
   };
 
   // ---------- الكرة الذهبية ----------

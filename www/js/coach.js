@@ -27,6 +27,7 @@
     mine += (trust - 50) * 0.08 + (form - 6.5) * 1.2;
     if (fit < 60) mine -= (60 - fit) * 0.06;
     if (p.age <= 21) mine += Math.min(3, Math.max(0, (p.pot - p.ovr) * 0.1)); // ثقة المدرب بالموهبة الصاعدة
+    if (p.promise && p.promise.left > 0 && p.promise.club === clubId) mine += p.promise.role === 'starter' ? 1.5 : p.promise.role === 'rotation' ? 0.7 : 0; // المدرب يفي بوعد الدور في بداية العقد
     const diff = mine - incScore;
     let role = diff >= 0.5 ? 'starter' : diff >= -2.5 ? 'rotation' : diff >= -10 ? 'bench' : 'out';
     if (pool.length < 17 && role === 'out') role = 'bench';

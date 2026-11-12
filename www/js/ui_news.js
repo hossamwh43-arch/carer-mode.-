@@ -187,8 +187,8 @@
   }
 
   // ---------- الخط الزمني للرسائل ----------
-  const GROUPS = { all: null, offers: ['offer', 'contract'], awards: ['award'], other: ['news', 'training', 'injury', 'coach', 'media'] };
-  const KIND = { news: ['news', 'b'], offer: ['swap', 'y'], contract: ['clipboard', 'y'], training: ['dumbbell', 'g'], injury: ['plus', 'r'], coach: ['whistle', 'b'], award: ['trophy', 'y'], media: ['megaphone', 'b'] };
+  const GROUPS = { all: null, offers: ['offer', 'contract', 'agent'], awards: ['award'], other: ['news', 'training', 'injury', 'coach', 'media'] };
+  const KIND = { news: ['news', 'b'], offer: ['swap', 'y'], contract: ['clipboard', 'y'], training: ['dumbbell', 'g'], injury: ['plus', 'r'], coach: ['whistle', 'b'], award: ['trophy', 'y'], media: ['megaphone', 'b'], agent: ['swap', 'y'] };
   const ACT = { offer: ['العروض', 'goSub', 'market', 'mk:offers'], contract: ['العقد', 'goSub', 'market', 'mk:contract'], award: ['غرفة الكؤوس', 'go', 'trophies'], training: ['التدريب', 'go', 'train'], injury: ['النادي', 'go', 'club'], coach: ['قرار المدرب', 'goSub', 'train', 'tr:coach'], media: ['مسيرتي', 'go', 'profile'] };
 
   function msgRow(m, fresh, open) {

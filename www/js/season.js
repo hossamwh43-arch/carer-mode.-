@@ -60,6 +60,7 @@
     const S = G.S;
     if (S.phase !== 'summer' || S.preLeft <= 0) return null;
     S.preLeft--;
+    if (G.Transfers.weekly) G.safe(() => { G.Transfers.weekly(); if (S.preLeft > 0) G.Transfers.generateOffers(0.8); }, 'tweekly'); // السوق الصيفي حيّ طوال فترة الإعداد
     const res = G.Training.week();
     const p = P(S.user);
     p.fit = Math.max(p.fit, 90);
@@ -172,6 +173,7 @@
     S.active = null;
     G.Players.refresh(u);
     if (G.Media) G.safe(() => G.Media.afterMatch(summary), 'media');
+    if (G.Agent) G.safe(() => G.Agent.payMatch(summary), 'agent');
     if (G.Press) G.safe(() => G.Press.afterMatch(summary), 'press');
     if (fix.comp === 'CUP' || fix.comp === 'SUP') G.Cups.afterUser(fix, summary);
     if (isNT) G.Intl.afterUserMatch(fix, m);
@@ -232,6 +234,7 @@
       else G.Transfers.generateOffers(1);
     }
     if (S.offers.length) S.offers = S.offers.filter((o) => o.expires == null || o.expires >= S.week || o.type === 'free');
+    if (G.Transfers.weekly) G.safe(() => G.Transfers.weekly(), 'tweekly');
     u.trust = U.clamp(u.trust + (50 - u.trust) * 0.04, 0, 100); // ميل بطيء نحو الحياد
     u.val = G.Players.value(u);
     if (G.Media) G.safe(() => G.Media.weekly(), 'media');
@@ -362,6 +365,7 @@
     G.Transfers.retireOld();
     const expired = G.Transfers.rollContracts();
     G.Transfers.seasonFinance();
+    if (G.Agent) G.safe(() => G.Agent.seasonEnd(), 'agent');
     // 3) تصفير الإحصاءات
     const orders = G.World.uclOrders(); // ترتيب الدوريات الكبرى لتحديد مقاعد الأبطال
     const moves = G.World.promoRel();   // الصعود والهبوط (بعد حفظ الترتيب)

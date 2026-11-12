@@ -955,3 +955,20 @@ p, .sm, .mut, .notice, .of-sub, .mom-res .sm, .dopt .sm { text-wrap: pretty; }
 /* جداول الإحصاء العريضة: تبقى داخل البطاقة بلا تمرير جانبي */
 table.t th .sm { font-size: 11px; font-weight: 500; }
 table.t th, table.t td { padding-inline: 2px; }
+
+/* ===== v3.8: سوق الانتقالات المتقدّم — حزمة العقد، أسباب الاهتمام، الوكيل، العلاقات ===== */
+.of-pk { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 0; }
+.pk { display: inline-flex; flex-direction: column; gap: 1px; min-width: 0; padding: 5px 10px 6px; border-radius: var(--cut-xs); background: rgb(255 255 255 / .05); border: var(--hair) solid var(--line); }
+.pk small { font-size: 11px; color: var(--mut); line-height: 1.2; }
+.pk b { font-family: var(--f-n); font-size: 15px; font-weight: 800; color: var(--gold); line-height: 1.15; }
+.of-why { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 2px; }
+.of-why .pill { white-space: normal; line-height: 1.35; }
+.rl { margin-top: 10px; } .rl:first-of-type { margin-top: 4px; } .rl .row.sb { margin-bottom: 5px; }
+.agx { margin: 0 0 12px; border-radius: var(--cut-l); border: var(--hair) solid rgb(var(--cc-rgb) / .45); background: linear-gradient(135deg, rgb(var(--cc-rgb) / .14), transparent 55%), linear-gradient(180deg, var(--card2), var(--card)); box-shadow: var(--sh-2); overflow: hidden; }
+.agx-top { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.agx-av { flex: none; width: 54px; height: 54px; display: grid; place-items: center; border-radius: var(--cut-m); background: linear-gradient(160deg, var(--gold), #d9961a); color: #1b1303; font-family: var(--f-d); font-size: 26px; font-weight: 800; box-shadow: var(--sh-1); }
+.agx-in small { display: block; font-size: 12px; color: var(--mut); } .agx-in h2 { margin: 2px 0 4px; font-size: 20px; }
+.agx-st { padding: 12px 14px 2px; }
+.agx-t.cur { border-color: rgb(53 230 160 / .55); }
+.agx-pk { margin: 0 0 10px; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; }
+.agx-pk li { padding-inline-start: 14px; position: relative; color: var(--txt2, inherit); } .agx-pk li::before { content: ''; position: absolute; inset-inline-start: 0; top: .55em; width: 6px; height: 6px; background: var(--gold); transform: skewX(-14deg); }
