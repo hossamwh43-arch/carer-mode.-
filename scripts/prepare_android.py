@@ -17,7 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANDROID = os.path.join(ROOT, "android")
 RES = os.path.join(ANDROID, "app", "src", "main", "res")
 ICON = os.path.join(ROOT, "www", "icons", "icon-512.png")
-LOGO = os.path.join(ROOT, "www", "icons", "logo.webp")  # الشعار المكدّس (قميص 10 + «مسيرة لاعب» + Player Career) بخلفية شفافة
+LOGO = os.path.join(ROOT, "www", "icons", "logo.webp")  # شعار اللعبة (يدعم المربع بزوايا مدوّرة أو المكدّس الطولي بخلفية شفافة)
 
 if not os.path.isdir(ANDROID):
     sys.exit("مجلد android غير موجود: شغّل `npx cap add android` أولًا")
@@ -110,7 +110,16 @@ def splash():
     for p in glob.glob(os.path.join(RES, "drawable*", "splash.png")):
         w, h = Image.open(p).size
         canvas = Image.new("RGBA", (w, h), bg)
-        if use_logo:
+        if use_logo and 0.9 <= src.width / src.height <= 1.1:
+            # شعار مربع (v3.8.1: لقطة احتفال بإطار): 62% من الضلع الأقصر، بزوايا مدوّرة كما في شاشة البداية داخل اللعبة
+            from PIL import ImageDraw
+            k = int(min(w, h) * 0.62)
+            logo = src.resize((k, k), Image.LANCZOS)
+            mask = Image.new("L", (k * 4, k * 4), 0)
+            ImageDraw.Draw(mask).rounded_rectangle((0, 0, k * 4 - 1, k * 4 - 1), radius=int(k * 4 * 0.1), fill=255)
+            logo.putalpha(mask.resize((k, k), Image.LANCZOS))
+            canvas.alpha_composite(logo, ((w - k) // 2, (h - k) // 2))
+        elif use_logo:
             # الشعار الكامل: لا يتجاوز ارتفاعه 62% من الارتفاع ولا عرضه 78% من الضلع الأقصر
             kh = min(int(h * 0.62), int(min(w, h) * 0.78 * src.height / src.width))
             kw = int(kh * src.width / src.height)
