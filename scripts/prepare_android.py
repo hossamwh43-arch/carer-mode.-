@@ -55,7 +55,7 @@ def icons():
         size = Image.open(p).size[0]
         if name == "ic_launcher_foreground.png":
             canvas = Image.new("RGBA", (size, size), bg)
-            k = int(size * 0.80)
+            k = int(size * 0.74)  # icon-512 يحوي الشعار بـ84% منها → الشعار ≈62% من اللوحة: داخل المنطقة الآمنة للأقنعة الدائرية والمربعة
             canvas.alpha_composite(src.resize((k, k), Image.LANCZOS), ((size - k) // 2, (size - k) // 2))
             canvas.save(p)
         elif name == "ic_launcher_round.png":
