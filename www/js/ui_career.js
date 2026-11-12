@@ -25,8 +25,16 @@
     const cur = { season: G.S.season, label: G.Season.label(G.S.season) + ' ⏳', club: p.club, age: p.age, ovrStart: G.S.seasonStartOvr || p.ovr, ovrEnd: p.ovr, lg: G.Season.statOf(p, 'lg'), uc: G.Season.statOf(p, 'uc'), cp: G.Season.statOf(p, 'cp'), pos: G.S.league ? G.League.position(p.club) : 0, trophies: {} };
     if (G.S.phase !== 'retired' && G.S.phase !== 'end') rows.push(cur);
     if (!rows.length) return '<div class="card mut c">ستظهر مواسمك هنا.</div>';
-    return '<div class="card" style="overflow-x:auto"><table class="t"><tr><th class="l">الموسم</th><th class="l">النادي</th><th>عمر</th><th>تقييم</th><th>الدوري<br><span class="sm">م/ه/ص</span></th><th>الأبطال<br><span class="sm">م/ه/ص</span></th><th>الكأس<br><span class="sm">م/ه/ص</span></th><th>المنتخب<br><span class="sm">م/ه/ص</span></th><th></th></tr>' +
-      rows.map((r) => '<tr><td class="l">' + r.label + '</td><td class="l sm">' + esc(UI.cname(r.club)) + (r.loan ? ' (إعارة)' : '') + '</td><td>' + r.age + '</td><td>' + r.ovrStart + '→' + r.ovrEnd + '</td><td>' + r.lg.apps + '/' + r.lg.g + '/' + r.lg.a + '</td><td>' + r.uc.apps + '/' + r.uc.g + '/' + r.uc.a + '</td><td>' + (r.cp ? r.cp.apps + '/' + r.cp.g + '/' + r.cp.a : '—') + '</td><td>' + ntCell(p, r) + '</td><td>' + trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '') + '</td></tr>').join('') + '</table></div>';
+    // بطاقة لكل موسم (v4): لا جدول عريض ولا تمرير أفقي على أي عرض
+    const cell = (lab, v) => '<div class="ssn-c"><span class="ssn-l">' + lab + '</span><b class="ssn-v">' + v + '</b></div>';
+    const trio = (x) => x ? '<i><small>م</small>' + (x.apps || 0) + '</i><i><small>ه</small>' + (x.g || 0) + '</i><i><small>ص</small>' + (x.a || 0) + '</i>' : '<span class="mut">—</span>';
+    const nt = (r) => { const y = G.Intl ? G.Intl.endYear(r.season) : 0, e = (p.ntCar || []).find((q) => q.y === y); return e && e.q ? trio({ apps: e.apps, g: e.g, a: e.a }) : '<span class="mut">—</span>'; };
+    return rows.slice().reverse().map((r) => {
+        const tr = trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '');
+        return '<div class="card ssn' + (r === cur ? ' now' : '') + '"><div class="ssn-h"><b class="ssn-s">' + r.label + '</b><span class="ssn-cl">' + esc(UI.cname(r.club)) + (r.loan ? ' · إعارة' : '') + '</span>' + (tr ? '<span class="ssn-tr">' + tr + '</span>' : '') + '</div>' +
+          '<div class="ssn-m"><span>عمر <b>' + r.age + '</b></span><span>التقييم <b>' + r.ovrStart + '→' + r.ovrEnd + '</b></span>' + (r.pos ? '<span>المركز <b>' + r.pos + '</b></span>' : '') + '</div>' +
+          '<div class="ssn-g">' + cell('الدوري', trio(r.lg)) + cell('الأبطال', trio(r.uc)) + cell('الكأس', r.cp ? trio(r.cp) : '<span class="mut">—</span>') + cell('المنتخب', nt(r)) + '</div></div>';
+      }).join('');
   }
 
   UI.screens.career = () => {
@@ -108,7 +116,7 @@
   // ---------- الإعدادات ----------
   UI.screens.settings = () => {
     const S = G.S;
-    let h = '<div class="card"><h3>💾 الحفظ</h3><p class="sm mut">اللعبة تحفظ تلقائيًا بعد كل مباراة وأسبوع وقرار، وعند إغلاق الصفحة. آخر حفظ: ' + (S.savedAt ? new Date(S.savedAt).toLocaleString('ar') : '—') + '</p>' +
+    let h = '<div class="card"><h3>💾 الحفظ</h3><p class="sm mut">اللعبة تحفظ تلقائيًا بعد كل مباراة وأسبوع وقرار، وعند إغلاق الصفحة. آخر حفظ: ' + (S.savedAt ? new Date(S.savedAt).toLocaleString('ar') : '—') + (G.Save.lastJson ? ' · الحجم ' + Math.round(G.Save.lastJson.length / 1024) + ' ك.ب' : '') + '</p>' + (G.lastSaveError ? '<p class="sm" style="color:var(--red)">⚠️ آخر محاولة حفظ فشلت (' + esc(G.lastSaveError) + '). صدّر المسيرة الآن.</p>' : '') +
       '<button class="btn pri" data-a="saveNow">💾 احفظ الآن</button><button class="btn" data-a="exportSave">📤 تصدير الحفظ (نسخ النص)</button><button class="btn" data-a="importSheet">📥 استيراد حفظ</button></div>';
     if (UI.diffCard) h += UI.diffCard();
     h += '<div class="card"><h3>📘 دليل اللعبة</h3><p class="sm mut">شرح مختصر لأهم أجزاء اللعبة.</p><button class="btn" data-a="tourOpen">افتح الدليل</button></div>';

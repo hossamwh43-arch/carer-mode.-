@@ -8,12 +8,10 @@
 
   function peek() {
     try {
-      const raw = localStorage.getItem(G.CONFIG.saveKey) || localStorage.getItem(G.CONFIG.backupKey);
-      if (!raw) return null;
-      const S = JSON.parse(raw);
-      if (!G.Save.valid(S)) return null;
-      const u = S.players[S.user];
-      return { name: u.n, ovr: u.ovr, age: u.age, club: S.clubs[u.club] ? S.clubs[u.club].name : '', season: G.Season.label(S.season), retired: S.phase === 'retired' };
+      const pk = G.Save.peek(); // يقرأ الرئيسي ثم الاحتياطي (v4)
+      if (!pk) return null;
+      const S = pk.S, u = S.players[S.user];
+      return { name: u.n, ovr: u.ovr, age: u.age, club: S.clubs[u.club] ? S.clubs[u.club].name : '', season: G.Season.label(S.season), retired: S.phase === 'retired', fromBackup: pk.fromBackup };
     } catch (e) { return null; }
   }
 
@@ -60,8 +58,9 @@
     const sv = peek();
     let h = '<div class="st-lights" aria-hidden="true"><i></i><i></i></div><div class="hero"><img class="st-logo" src="icons/logo.webp" width="250" height="250" alt="شعار مسيرة لاعب — Player Career Mode" decoding="async"><h1 class="st-h1">مسيرة لاعب</h1><p class="mut">ابدأ ناشئًا في أحد الدوريات الخمسة الكبرى أو درجاتها الثانية، وطارد دوري الأبطال وكأس العالم والكرة الذهبية</p></div>';
     if (sv) {
-      h += '<div class="card hl"><h3>مسيرة محفوظة</h3><div class="kv"><span>اللاعب</span><b>' + esc(sv.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(sv.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + sv.season + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + sv.ovr + ' / ' + sv.age + '</span></div><button class="btn pri" data-a="continueGame">▶ متابعة المسيرة</button></div>';
+      h += '<div class="card hl"><h3>مسيرة محفوظة' + (sv.fromBackup ? ' <span class="pill y">من النسخة الاحتياطية</span>' : '') + '</h3><div class="kv"><span>اللاعب</span><b>' + esc(sv.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(sv.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + sv.season + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + sv.ovr + ' / ' + sv.age + '</span></div><button class="btn pri" data-a="continueGame">▶ متابعة المسيرة</button></div>';
     }
+    if (!sv && G.loadFailed) h += '<div class="card warn"><h4>⚠️ تعذّر فتح الحفظ</h4><p class="sm mut">الملف تالف ولم نجد نسخة احتياطية سليمة. احتفظنا بنسخة منه للإنقاذ (' + Math.round(G.loadFailed.size / 1024) + ' ك.ب) ولن تُمسح حين تبدأ مسيرة جديدة.</p></div>';
     h += '<button class="btn ' + (sv ? '' : 'pri') + '" data-a="wzNew">✨ مسيرة جديدة</button>';
     h += '<button class="btn" data-a="importSheet">📥 استيراد حفظ من نص</button>';
     h += '<div class="notice" style="margin-top:14px">' + UI.more('ℹ️ عن بيانات اللعبة', 'أسماء الأندية واللاعبين حقيقية (تشكيلات 2026 تقريبًا) لكن التقييمات والمراكز والأعمار تقديرية وبعض اللاعبين قد يكونون انتقلوا أو غادروا، ويُكمَل النقص بأسماء مولَّدة. الأسماء غير مرخّصة رسميًا فهي للاستخدام الشخصي فقط. الأخبار والمقالات الصحفية في اللعبة كلها مُحاكاة. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.') + '</div>';

@@ -20,10 +20,20 @@
     UI.render();
     G.safe(() => UI.initBack(), 'initBack');
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      const had = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.register('sw.js').catch(() => { /* اختياري */ });
+      // وصل تحديث وتسلّمت نسخة جديدة التحكم: الملفات الجديدة تُحمَّل عند الفتح القادم (لا نعيد تحميل الصفحة وسط مباراة)
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && UI.toast) UI.toast('🔄 توفّر تحديث للعبة — يُطبَّق عند الفتح القادم', 5000); });
     }
   }
 
+  // فشل الحفظ (غالبًا امتلاء التخزين): تنبيه واضح مرة كل دقيقة بدل الفشل الصامت
+  let lastWarn = 0;
+  G.onSaveFail = (e, n) => {
+    if (Date.now() - lastWarn < 60000 || !UI.toast) return;
+    lastWarn = Date.now();
+    UI.toast('⚠️ تعذّر الحفظ: مساحة التخزين ممتلئة. صدّر المسيرة الآن من الإعدادات (' + n + ')', 6000);
+  };
   const save = () => { if (G.S) G.Save.save(true); }; // قسرًا: حتى لو كانت المحاكاة مجمِّدة للحفظ
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
   window.addEventListener('pagehide', save);

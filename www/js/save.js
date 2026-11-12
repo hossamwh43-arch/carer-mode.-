@@ -64,14 +64,39 @@
       Save._dirty = false;
       if (!st) return false;
       JSON.parse(json); // تحقق من سلامة النص قبل الكتابة
+      const put = (k, v) => { try { st.setItem(k, v); return true; } catch (e) { return e; } };
       const old = st.getItem(C().saveKey);
-      if (old) st.setItem(C().backupKey, old);
-      st.setItem(C().saveKey, json);
+      // ندوّر النسخة الاحتياطية فقط إن كان الحفظ الحالي كاملًا (يبدأ بـ { وينتهي بـ }) كي لا نكتب تالفًا فوق نسخة سليمة
+      if (old && old.charAt(0) === '{' && old.charAt(old.length - 1) === '}') {
+        if (put(C().backupKey, old) !== true) st.removeItem(C().backupKey); // لا مساحة للنسخة الاحتياطية
+      }
+      let r = put(C().saveKey, json);
+      if (r !== true) { st.removeItem(C().backupKey); r = put(C().saveKey, json); } // أخلِ مساحة النسخة الاحتياطية وأعد المحاولة
+      if (r !== true) { st.removeItem(C().saveKey + '_rescue'); r = put(C().saveKey, json); } // ثم نسخة الإنقاذ
+      if (r !== true) throw r;
+      G.lastSaveError = null; Save.failures = 0;
       return true;
     } catch (e) {
       G.lastSaveError = String(e && e.message || e);
+      Save.failures = (Save.failures || 0) + 1;
+      if (typeof G.onSaveFail === 'function') { try { G.onSaveFail(e, Save.failures); } catch (x) { /* لا شيء */ } }
       return false;
     }
+  };
+
+  // أول حفظ صالح بين الرئيسي والاحتياطي (تستعمله شاشة البداية كي لا تُخفي مسيرة سليمة لأن النسخة الرئيسية تالفة)
+  Save.peek = () => {
+    const st = store();
+    if (!st) return null;
+    for (const key of [C().saveKey, C().backupKey]) {
+      try {
+        const raw = st.getItem(key);
+        if (!raw) continue;
+        const S = JSON.parse(raw);
+        if (Save.valid(S)) return { S, key, fromBackup: key === C().backupKey };
+      } catch (e) { /* التالي */ }
+    }
+    return null;
   };
 
   Save.load = () => {
@@ -92,6 +117,14 @@
         return true;
       } catch (e) { /* ننتقل للنسخة الاحتياطية */ }
     }
+    // لم نجد حفظًا صالحًا: إن وُجد نص تالف نحتفظ بنسخة منه (نسخة إنقاذ واحدة) كي لا يضيع إن بدأ اللاعب مسيرة جديدة
+    try {
+      const raw = st.getItem(C().saveKey) || st.getItem(C().backupKey);
+      if (raw && raw.length > 1000) {
+        G.loadFailed = { size: raw.length, at: Date.now() };
+        if (st.getItem(C().saveKey + '_rescue') !== raw) st.setItem(C().saveKey + '_rescue', raw);
+      }
+    } catch (e) { /* لا شيء */ }
     return false;
   };
 
