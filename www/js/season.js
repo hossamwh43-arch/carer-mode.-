@@ -323,7 +323,7 @@
     if (trophies.liga) u.trophies.liga++;
     if (trophies.d2) u.trophies.d2 = (u.trophies.d2 || 0) + 1;
     if (trophies.ucl) u.trophies.ucl++;
-    S.hist.push({ season: S.season, label: row.label, lgId, champs: G.World.champions(), champion: aw.champion, uclWinner: ucl ? ucl.winner : null, scorer: aw.list.find((a) => a.type === 'scorer') || null, awards: aw.list });
+    S.hist.push({ season: S.season, label: row.label, lgId, champs: G.World.champions(), top3: (() => { const o = {}; G.World.order().forEach((lg) => { if (G.World.complete(lg)) o[lg] = G.World.sortedOf(lg).slice(0, 3); }); return o; })(), champion: aw.champion, uclWinner: ucl ? ucl.winner : null, scorer: aw.list.find((a) => a.type === 'scorer') || null, awards: aw.list });
     if (ucl) { S.uclHistory.push({ season: S.season, winner: ucl.winner, exit: ucl.exit }); }
     if (G.Media) G.safe(() => G.Media.seasonEnd(row), 'media');
     S.summary = { row, awards: aw.list, champion: aw.champion, table: table.map((id) => ({ id, ...S.league.table[id] })), uclWinner: ucl ? ucl.winner : null };
@@ -367,6 +367,7 @@
     G.Transfers.seasonFinance();
     if (G.Agent) G.safe(() => G.Agent.seasonEnd(), 'agent');
     // 3) تصفير الإحصاءات
+    G.safe(() => G.World.clubDynamics(), 'repDyn'); // v4: سمعة الأندية تتحرك بنتائج الموسم (قبل الصعود/الهبوط)
     const orders = G.World.uclOrders(); // ترتيب الدوريات الكبرى لتحديد مقاعد الأبطال
     const moves = G.World.promoRel();   // الصعود والهبوط (بعد حفظ الترتيب)
     S.lastMoves = moves;

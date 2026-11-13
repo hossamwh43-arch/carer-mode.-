@@ -106,9 +106,11 @@
   const AGE_DELTA = { 16: 4.8, 17: 4.5, 18: 4.2, 19: 3.7, 20: 3.1, 21: 2.6, 22: 2.0, 23: 1.5, 24: 1.0, 25: 0.5, 26: 0, 27: -0.3, 28: -0.6, 29: -1, 30: -1.5, 31: -2, 32: -2.5, 33: -3.0 };
   Training.ageDelta = (age) => (age <= 16 ? 4.8 : age >= 33 ? -3.2 : AGE_DELTA[age]);
 
+  Training.AI_BOOST_MAX = 1.1;
   Training.growAI = (p) => {
     let d = Training.ageDelta(p.age);
-    if (d > 0) d *= U.clamp((p.pot - p.ovr + 2) / 6, 0.15, 1.5);
+    // v4: سقف التسارع 1.5→1.1 — الموهوب جدًّا لا ينمو 9 نقاط سنويًا (كان يصنع «فقاعة نجوم»: 87 نجمًا ≥85 → ~200 خلال 6 مواسم)
+    if (d > 0) d *= U.clamp((p.pot - p.ovr + 2) / 6, 0.15, Training.AI_BOOST_MAX);
     d += U.gauss() * 1.0;
     let target = Math.round(p.ovr + d);
     if (p.ovr >= p.pot + 1 && target > p.ovr) target = p.ovr;

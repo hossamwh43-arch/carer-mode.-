@@ -172,6 +172,41 @@
     return moves;
   };
 
+  // ---------- ديناميكية الأندية (v4): السمعة تتحرك بالنتائج ببطء وتعود لإرثها ----------
+  // قبل v4 كانت سمعة كل نادٍ ثابتة للأبد: بطل 19 مرة من 20 لا يكبر ولا ينافسه أحد يصعد. الآن: نقارن ترتيب النادي النهائي بترتيب قوته المتوقَّع،
+  // ويُضاف أثر اللقب والأبطال والصعود/الهبوط، مع عودة تدريجية لـ«إرث» النادي (rep0) وتضاؤل المكسب فوق الإرث والخسارة تحته (لا انفجار ولا انهيار).
+  // السمعة تغذّي: جودة الصفقات (clubQ)، ميزانية النادي والرواتب، قوة الأندية «الخفيفة»، وجاذبية النادي للاعب.
+  World.REP_BOUND = 9;
+  World.clubDynamics = () => {
+    const S = G.S, moves = [];
+    World.order().forEach((lg) => {
+      const o = World.sortedOf(lg);
+      if (!o.length || !World.complete(lg)) return;
+      const n = o.length, cfg = G.LEAGUES[lg], tier = cfg.tier;
+      const exp = {}; o.map((id) => ({ id, e: World.eff(C(id)) })).sort((a, b) => b.e - a.e).forEach((x, i) => { exp[x.id] = i + 1; });
+      o.forEach((id, i) => {
+        const c = C(id); if (!c) return;
+        if (c.rep0 == null) c.rep0 = c.rep;
+        if (c.repF == null) c.repF = c.rep;
+        const act = i + 1;
+        let d = 1.5 * (exp[id] - act) / (n / 2);
+        if (act === 1) d += tier === 1 ? 0.7 : 0.5;
+        if (tier === 1 && cfg.down && act > n - cfg.down) d -= 1.2;
+        if (tier === 2 && cfg.up && act <= cfg.up) d += 0.8;
+        if (S.ucl && S.ucl.winner === id) d += 1.5;
+        const off = c.repF - c.rep0;
+        d *= d > 0 ? U.clamp(1 - off / 9, 0.15, 1.6) : U.clamp(1 + off / 9, 0.15, 1.6);
+        d += 0.12 * (c.rep0 - c.repF);
+        const from = c.rep;
+        c.repF = U.clamp(c.repF + d, Math.max(45, c.rep0 - World.REP_BOUND), Math.min(97, c.rep0 + World.REP_BOUND));
+        c.rep = Math.round(c.repF);
+        if (c.rep !== from) moves.push({ id, from, to: c.rep, lg });
+      });
+    });
+    S.lastRep = moves.slice().sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from)).slice(0, 12);
+    return moves;
+  };
+
   // ---------- تخفيف الأندية: يُبقي حجم الحفظ محدودًا ----------
   // نادٍ في الدرجة الثانية خارج دوري المستخدم يعود «خفيفًا»: أفضل لاعبيه يُباعون لأندية الدرجة الأولى والباقون يعتزلون/يختفون.
   World.lighten = (cid) => {
@@ -198,13 +233,17 @@
     Object.keys(G.S.clubs).forEach((id) => { const c = G.S.clubs[id]; if (c.lg && G.LEAGUES[c.lg].tier === 2 && c.lg !== keep && World.lighten(id)) n++; });
     return n;
   };
-  // اللاعبون الأحرار الذين لا يريدهم أحد يختفون (لا تتراكم بيانات بلا فائدة)
+  // اللاعبون الأحرار الذين لا يريدهم أحد يختفون (لا تتراكم بيانات بلا فائدة).
+  // v4: كان الحذف بالعمر/التقييم فقط فتراكم 400+ حرٍّ عالقين (يبقون حتى سن 34). الآن يُحصى كل صيف يقضيه الحر بلا نادٍ (fy) ويُحذف بعد صيفين
+  // (أو مبكرًا لمن تجاوز 33 أو ضعف تقييمه)؛ ويُصفَّر العدّاد عند توقيعه (T.release/execute).
   World.pruneFree = () => {
     const S = G.S;
     S.free = (S.free || []).filter((id) => {
       const p = P(id);
       if (!p) return false;
-      if (!p.user && (p.age >= 34 || p.ovr < 55)) { delete S.players[id]; return false; }
+      if (p.user) return true;
+      p.fy = (p.fy || 0) + 1;
+      if (p.age >= 34 || p.ovr < 55 || p.fy > 2 || (p.fy > 1 && p.age >= 31)) { delete S.players[id]; return false; }
       return true;
     });
   };

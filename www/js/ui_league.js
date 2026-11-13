@@ -112,6 +112,9 @@
     else if (G.LEAGUES[sel].tier === 2 && sel !== mine) h += '<div class="card mut sm">أندية هذه الدرجة تُحاكى بالأرقام فقط، فلا توجد إحصاءات للاعبين فيها حتى تصعد أو تلعب أمامها.</div>';
     const champs = S.hist.filter((x) => x.champs && x.champs[sel]);
     if (champs.length) h += '<div class="card"><h4>أبطال المواسم السابقة</h4>' + champs.slice().reverse().map((x) => '<div class="kv"><span>' + x.label + '</span><b>' + esc(UI.cname(x.champs[sel])) + '</b></div>').join('') + '</div>';
+    // v4: تغيّر مكانة الأندية بعد آخر موسم (السمعة تتحرك الآن بالنتائج)
+    const rp = (S.lastRep || []).filter((m) => m.lg === sel).slice(0, 6);
+    if (rp.length) h += '<div class="card"><h4>تغيّر مكانة الأندية بعد الموسم</h4>' + rp.map((m) => '<div class="kv"><span>' + esc(UI.cname(m.id)) + '</span><b class="' + (m.to > m.from ? 'pos' : 'neg') + '">' + (m.to > m.from ? '▲ ' : '▼ ') + m.from + ' ← ' + m.to + '</b></div>').join('') + '<p class="mut sm" style="margin:8px 0 0">المكانة تتأثر بالنتيجة مقابل المتوقَّع واللقب والصعود والهبوط، وتنعكس على الميزانية وجودة الصفقات.</p></div>';
     return h + movesCard();
   }
 

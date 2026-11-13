@@ -34,7 +34,7 @@
     if (from) { from.squad = from.squad.filter((x) => x !== p.id); if (!opts.loan) from.tb += fee; }
     if (!opts.loan) to.tb -= fee;
     S.free = (S.free || []).filter((x) => x !== p.id);
-    to.squad.push(p.id);
+    to.squad.push(p.id); p.fy = 0;
     const oldClub = p.club;
     p.club = toId;
     if (opts.loan) { p.parent = oldClub; p.parentPays = true; }
@@ -137,12 +137,27 @@
   };
 
   // ---------- تنظيم حجم التشكيلة ----------
+  // v4: الأكاديميات كانت تُخرج شبّانًا بتقييم يلحق (q-14) وإمكانات حتى 95 لكل نادٍ كبير ⇒ تضخّم نجوم العالم (87 نجمًا ≥85 صاروا ~370 بعد 20 موسمًا)
+  // والأكاديمية الكبرى تُنتج أقوى الشباب فتتعمق الهيمنة. الآن: تقييم الشاب يتبع عمره بأثر أكاديمية صغير، والإمكانات بتوزيع ذيله ثقيل
+  // (القليلون فقط ينضجون نجومًا) ومعايَرة بالقياس ليبقى عدد النجوم مستقرًا عبر المواسم (tests/engine/world_health.js).
+  T.REGEN = { mu: 70.5, sd: 8, acad: 0.12, soft: 86, softK: 0.5, rem: 1.0, maxPot: 94 };
+  const growLeft = (age) => { let s = 0; for (let a = age; a < 24; a++) s += Math.max(0, G.Training.ageDelta(a) || 0); return s; };
+  // نُولّد «ذروة اللاعب» أولًا من توزيع يشبه توزيع عالم اللعبة نفسه (متوسط ~70، النجوم ≥85 ≈ 3% و≥90 أقل من 1%) ثم تقييمه الحالي =
+  // الذروة − النمو المتبقي حتى 24 (فمن سينضج نجمًا يبدأ شابًّا واعدًا فعلًا). بهذا يبقى توزيع العالم مستقرًّا عبر العقود لا يتضخم ولا يتآكل.
+  T.youthSpec = (club) => {
+    const R = T.REGEN, age = U.int(17, 19), ac = (club.rep - 70) * R.acad;
+    let peak = R.mu + ac + U.gauss() * R.sd;
+    if (peak > R.soft) peak = R.soft + (peak - R.soft) * R.softK;
+    peak = U.clamp(Math.round(peak), 45, R.maxPot);
+    const ovr = U.clamp(Math.round(peak - R.rem * growLeft(age) + U.gauss() * 3), 38, 80);
+    return { age, ovr, pot: Math.max(ovr + 2, Math.min(R.maxPot, peak + U.int(-1, 3))) };
+  };
   T.addYouth = (club, pos) => {
     const S = G.S;
-    const q = T.clubQ(club);
+    const sp = T.youthSpec(club);
     const group = G.COUNTRY_GROUP[club.country] || 'iber';
-    const p = G.Players.gen({ pos, ovr: U.clamp(Math.round(q - 14 + U.gauss() * 3), 45, 70), age: U.int(17, 19), nat: (G.COUNTRY_NAT || {})[club.country] || club.country.slice(0, 2), group, club: club.id });
-    p.pot = Math.min(95, Math.max(p.pot, p.ovr + U.int(4, 14)));
+    const p = G.Players.gen({ pos, ovr: sp.ovr, age: sp.age, nat: (G.COUNTRY_NAT || {})[club.country] || club.country.slice(0, 2), group, club: club.id });
+    p.pot = sp.pot; G.Players.refresh(p);
     p.ct = { y: U.int(2, 4), w: G.Players.wageFor(p) };
     S.players[p.id] = p;
     club.squad.push(p.id);
@@ -152,7 +167,7 @@
   T.release = (club, p, retire) => {
     const S = G.S;
     club.squad = club.squad.filter((x) => x !== p.id);
-    p.club = null; p.parent = null;
+    p.club = null; p.parent = null; p.fy = 0;
     if (retire) { delete S.players[p.id]; return; }
     S.free = S.free || []; S.free.push(p.id);
   };

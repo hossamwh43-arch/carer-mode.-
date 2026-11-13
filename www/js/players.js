@@ -131,6 +131,8 @@
 
   // ---------- توليد لاعب ----------
   Players.newId = () => 'P' + (G.S.nextId++);
+  Players.POT_KNEE = [82, 0.45];
+  Players.ROOM = [0.9, 1.4]; // [أدنى نمو متبقٍّ للسنة، مدى عشوائي]
   Players.gen = (o) => {
     const group = o.group || 'iber';
     const p = {
@@ -142,8 +144,10 @@
     if (p.pos === 'GK') p.h = U.int(184, 200);
     p.a = Players.buildAttrs(p.pos, o.ovr);
     p.ovr = Players.calcOvr(p.a, p.pos);
-    const room = p.age < 24 ? Math.max(0, Math.round((24 - p.age) * (1.5 + U.rnd() * 1.8))) : U.int(0, 2);
+    // v4: كان (1.5..3.3) لكل سنة قبل 24 ⇒ 44 موهبة بإمكانات ≥90 بين الشباب في عالم واحد (الواقع ≈ 15). الآن (1.1..2.5)
+    const room = p.age < 24 ? Math.max(0, Math.round((24 - p.age) * (Players.ROOM[0] + U.rnd() * Players.ROOM[1]))) : U.int(0, 2);
     p.pot = Math.min(95, p.ovr + room);
+    if (p.age < 24 && p.pot > Players.POT_KNEE[0]) p.pot = Math.max(p.ovr, Math.round(Players.POT_KNEE[0] + (p.pot - Players.POT_KNEE[0]) * Players.POT_KNEE[1])); // ركبة: الإمكانات الخارقة نادرة
     p.val = Players.value({ ovr: p.ovr, pot: p.pot, age: p.age, ct: { y: 3 } });
     p.ct = { y: U.int(1, 5), w: 0 };
     p.val = Players.value(p);

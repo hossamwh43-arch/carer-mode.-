@@ -1,0 +1,19 @@
+name: engine-tests
+# اختبارات المحرك بلا متصفح (Node فقط): تعمل على كل push لفروع التطوير وعلى طلبات الدمج إلى الرئيسي،
+# فلا يُدمج تغيير يعيد تضخّم التقييمات أو هيمنة نادٍ واحد أو يكسر ثوابت العالم.
+on:
+  push:
+    branches: ['dev/**']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: اختبار انحدار العالم الحي (16 موسمًا × بذرتين)
+        run: node tests/engine/world_stationary.js 16 3,4
