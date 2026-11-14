@@ -17,3 +17,5 @@ jobs:
           node-version: 20
       - name: اختبار انحدار العالم الحي (16 موسمًا × بذرتين)
         run: node tests/engine/world_stationary.js 16 3,4
+      - name: نواة الملعب المرئي (حتمية، عزل عن عشوائية اللعبة، أطقم، تخطيط هجمات)
+        run: node tests/engine/stadium_core.js

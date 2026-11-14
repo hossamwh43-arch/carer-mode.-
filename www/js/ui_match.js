@@ -5,6 +5,7 @@
   const SPEED = { 1: 260, 2: 110, 3: 35 };
   const P = (id) => G.S.players[id];
   const activeM = () => (G.S && G.S.active ? G.S.active.m : null);
+  const SS = () => (UI.stadium && UI.stadium.update ? UI.stadium : null); // الملعب المرئي (زينة): قد يغيب فتعمل الشاشة بدونه
 
   // ---------- المؤثرات: صوت + اهتزاز + لافتة الأهداف (كلها زينة: لا تلمس العشوائية ولا حالة اللعبة) ----------
   const FX_WHISTLE = { kick: 'whistle', ht: 'whistle2', et: 'whistle2', pens: 'whistle2', ft: 'whistle3' };
@@ -15,8 +16,8 @@
   function fxEvents(m, quick) {
     const mv = UI.mv;
     if (!mv || !UI.fx || !m.ev) return;
-    const n = m.ev.length;
-    if (mv.seen == null || mv.seen > n) { mv.seen = n; return; }
+    const total = m.ev.length, n = Math.min(total, SS() ? SS().held() : Infinity); // أحداث مشهد لم ينتهِ بعد لا تُعلَن (صوت/لافتة) قبل لحظتها
+    if (mv.seen == null || mv.seen > total) { mv.seen = total; return; }
     if (n - mv.seen > 8) quick = true;
     const uid = G.S.user, me = m.side;
     for (let i = mv.seen; i < n; i++) {
@@ -62,6 +63,8 @@
     if (UI.cur !== 'match' || !UI.mv || UI.mv.phase !== 'live' || !activeM()) { stop(); return; }
     const m = activeM();
     if (UI.mv.paused || m.pending) return;
+    const ss = SS();
+    if (ss && (UI.mv.speed || 1) < 3 && ss.busy()) { if (ss.revNo() !== lastRev) { lastRev = ss.revNo(); paint(m); } return; } // مشهد مهمّ يُعرَض: المباراة تنتظر نهايته
     try { G.Live.step(m); UI.mv.fails = 0; }
     catch (e) {
       UI.mv.fails = (UI.mv.fails || 0) + 1;
@@ -81,7 +84,7 @@
   }
 
   function finish() {
-    stop(); crowdOff();
+    stop(); crowdOff(); if (SS()) SS().destroy();
     const m = activeM();
     if (!m) { UI.mv = { phase: 'post' }; UI.render(); return; }
     const wasDone = !!m.done;
@@ -119,10 +122,10 @@
     const uid = G.S.user, ps = m.ps[uid], fix = G.Season.findFix(m.id);
     const on = G.Live.userOn(m);
     const st = on ? UI.ico('dotg') + ' في الملعب · لياقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? UI.ico('swap') + ' تم استبدالك' : m.uState === 'bench' ? UI.ico('bench') + ' على مقاعد البدلاء' : UI.ico('ban') + ' خارج قائمة المباراة';
-    const lr = liveRating(m);
+    const lr = liveRating(m), sc = SS() ? SS().shown(m) : m.score;
     const pct = U.clamp(Math.round(m.i / (m.total || 1) * 100), 0, 100), htp = Math.round(m.t1 / (m.total || 1) * 100);
     return '<div class="card mv-hero"><div class="mvh-top"><span class="mvh-comp">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</span>' + (m.neutral ? '<span class="mvh-ven">' + UI.ico('stadium') + ' ملعب محايد</span>' : '') + '</div>' +
-      '<div class="score"><div class="tm">' + UI.badge(m.h, 58) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + m.score.h + ' - ' + m.score.a + '</div><div class="tm">' + UI.badge(m.a, 58) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
+      '<div class="score"><div class="tm">' + UI.badge(m.h, 58) + '<div>' + esc(UI.cname(m.h)) + '</div></div><div class="sc">' + sc.h + ' - ' + sc.a + '</div><div class="tm">' + UI.badge(m.a, 58) + '<div>' + esc(UI.cname(m.a)) + '</div></div></div>' +
       '<div class="minute">' + (!m.done && m.i > 0 ? '<span class="livebadge"><i></i>مباشر</span>' : '') + '<span class="mvh-min">' + minTxt(m) + '</span><small>' + phaseTxt(m) + '</small></div>' +
       '<div class="mvh-prog" aria-hidden="true"><i style="width:' + pct + '%"></i>' + (m.i > 0 ? '<b style="inset-inline-start:' + htp + '%"></b>' : '') + '</div>' +
       '<div class="mvh-st">' + statBar('تسديدات', m.st.h.sh, m.st.a.sh, m.side) + statBar('على المرمى', m.st.h.sot, m.st.a.sot, m.side) + '</div>' +
@@ -183,8 +186,9 @@
     return '<div class="ev ' + (k || '') + who + (extra || '') + '"><span class="m">' + esc(e.lab) + "'</span><span class=\"ei\">" + ic + '</span><span class="grow">' + esc(evTxt(e.txt)) + '</span></div>';
   }
   function feedHtml(m) {
-    if (m.ev.length <= 1) return '<div class="feed-empty">' + UI.ico('whistle') + '<div>المباراة على وشك البدء… ستظهر هنا الأهداف والفرص والبطاقات لحظة بلحظة.</div></div>';
-    return m.ev.slice(-45).reverse().map((e) => evRow(e, m.side)).join('');
+    const cap = SS() ? SS().held() : Infinity, evs = cap < m.ev.length ? m.ev.slice(0, cap) : m.ev;
+    if (evs.length <= 1) return '<div class="feed-empty">' + UI.ico('whistle') + '<div>المباراة على وشك البدء… ستظهر هنا الأهداف والفرص والبطاقات لحظة بلحظة.</div></div>';
+    return evs.slice(-45).reverse().map((e) => evRow(e, m.side)).join('');
   }
 
   // شريط تحكّم مضغوط: أربع بلاطات أيقونية + زرّان ثانويان (كل data-a كما كانت)
@@ -198,10 +202,11 @@
   }
 
   // تحديث الأجزاء المتغيّرة فقط حتى لا تضيع النقرات
-  let lastMomKey = null, lastCtlKey = null;
+  let lastMomKey = null, lastCtlKey = null, lastRev = 0;
   function paint(m) {
     const a = $('#mvHead'), b = $('#mvMoment'), c = $('#mvCtl'), d = $('#mvFeed');
     if (!a) return;
+    if (SS()) G.safe(() => SS().update(m), 'stageUpdate'); // أولًا: يحدّد ما هو محجوب عن الهيدر/السجل/الأصوات
     fxEvents(m);
     a.innerHTML = headHtml(m);
     d.innerHTML = feedHtml(m);
@@ -220,9 +225,12 @@
     UI.after = () => {
       const mv = UI.mv;
       if (mv && mv.seen == null) { mv.seen = m.ev.length; if (m.i === 0) UI.snd('whistle'); } // صافرة البداية للمباراة الجديدة فقط
+      const sh = $('#mvStage');
+      if (sh && SS()) G.safe(() => SS().mount(sh, m), 'stageMount');
+      lastRev = SS() ? SS().revNo() : 0;
       crowdOn(); paint(m); start();
     };
-    return '<div id="mvHead"></div><div id="mvMoment"></div><div id="mvCtl"></div><div class="card"><h4>مجريات المباراة</h4><div class="feed" id="mvFeed"></div></div>';
+    return '<div id="mvStage" class="stg" role="group" aria-label="بث المباراة"></div><div id="mvMoment"></div><div id="mvHead"></div><div id="mvCtl"></div><div class="card"><h4>مجريات المباراة</h4><div class="feed" id="mvFeed"></div></div>';
   }
 
   function postScreen() {
@@ -302,7 +310,7 @@
     return false;
   });
   UI.on('mvPause', () => { UI.mv.paused = !UI.mv.paused; const m = activeM(); if (m) paint(m); return false; });
-  UI.on('mvSpeed', () => { UI.mv.speed = ((UI.mv.speed || 1) % 3) + 1; start(); const m = activeM(); if (m) paint(m); return false; });
+  UI.on('mvSpeed', () => { UI.mv.speed = ((UI.mv.speed || 1) % 3) + 1; if (UI.mv.speed === 3 && SS()) SS().flush(); start(); const m = activeM(); if (m) paint(m); return false; });
   UI.on('reqSub', () => {
     const m = activeM();
     if (!m) return false;
@@ -317,7 +325,7 @@
     return false;
   });
   const homeTab = () => (G.S.phase === 'end' && G.S.intl ? 'intl' : 'home');
-  UI.on('mvLeave', () => { stop(); crowdOff(); if (UI.fxClear) UI.fxClear(); G.Save.save(); UI.mv = null; UI.cur = homeTab(); });
+  UI.on('mvLeave', () => { stop(); crowdOff(); if (SS()) SS().destroy(); if (UI.fxClear) UI.fxClear(); G.Save.save(); UI.mv = null; UI.cur = homeTab(); });
   UI.on('mvHome', () => { UI.mv = null; UI.cur = homeTab(); window.scrollTo(0, 0); });
   UI.on('lastMatchView', () => { UI.mv = { phase: 'post' }; UI.cur = 'match'; });
 
@@ -342,6 +350,6 @@
   UI.on('mvPitch', (v) => { UI.mv.pt = v; UI.sheetRender(UI._sheetFn); return false; });
   UI.on('mvResume', () => { UI.closeSheet(); UI.mv.paused = false; const m = activeM(); if (m) paint(m); return false; });
 
-  UI.matchStop = () => { stop(); crowdOff(); if (UI.fxClear) UI.fxClear(); };
+  UI.matchStop = () => { stop(); crowdOff(); if (SS()) SS().destroy(); if (UI.fxClear) UI.fxClear(); };
   UI.mvRepaint = () => { const m = activeM(); if (m && UI.cur === 'match' && UI.mv && UI.mv.phase === 'live') paint(m); };
 })(window.G = window.G || {});
