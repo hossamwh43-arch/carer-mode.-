@@ -1010,3 +1010,9 @@ table.t th, table.t td { padding-inline: 2px; }
 .stg-cam:active { transform: scale(.96); }
 .stg-tag[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .stg-cap.on { animation: none; opacity: 1; } }
+
+/* ===== v4 المرحلة 4: العلاقات وبطاقة الإرث ===== */
+.rl { margin: 10px 0 12px; }
+.rl .row { margin-bottom: 5px; }
+.rl .bar { margin-bottom: 4px; }
+.rl .sm.mut { line-height: 1.45; }

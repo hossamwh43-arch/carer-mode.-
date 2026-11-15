@@ -37,12 +37,21 @@
       }).join('');
   }
 
+  UI.legacyCard = () => {
+    const L = G.Season.legacy(), ra = G.S.retiredAt || {};
+    const k = (l, v) => '<div class="stat"><b>' + v + '</b><small>' + l + '</small></div>';
+    return '<div class="card"><h3>' + L.icon + ' إرثك: ' + L.tier + '</h3><div class="grid3">' + k('مباراة', L.apps) + k('هدف', L.goals) + k('صناعة', L.assists) + k('لقب', L.titles) + k('أعلى تقييم', L.peak) + k('نوادٍ', L.clubs) + '</div>' +
+      (L.bdWins || L.bdTop3 ? '<div class="kv" style="margin-top:8px"><span>🏅 الكرة الذهبية</span><b>' + (L.bdWins ? L.bdWins + ' فوز · ' : '') + 'بين الثلاثة الأوائل ' + L.bdTop3 + ' مرة</b></div>' : '') +
+      (ra.forced ? '<div class="sm mut" style="margin-top:8px">اعتزال إجباري ببلوغ الموسم الأخير المسموح.</div>' : '') +
+      '<p class="sm mut" style="margin:10px 0 0">درجة الإرث ' + L.score + ' = الألقاب (دوري×3، أبطال×5، كأس×1.5، منتخب…) + الكرة الذهبية×8 + أهدافك/50 + صناعاتك/80 + ما فوق 78 من أعلى تقييم×0.6 + المواسم/6. تُحسب من أرقامك الفعلية فقط.</p></div>';
+  };
+
   UI.screens.career = () => {
     const S = G.S, p = me();
     let h = '';
     if (S.phase === 'retired') {
       const tot = G.Season.careerTotals();
-      h += '<div class="card hl c"><div style="font-size:46px">🏁</div><h2>اعتزلتَ كرة القدم</h2><p class="mut">في الموسم ' + G.Season.label(S.retiredAt.season) + ' بعمر ' + S.retiredAt.age + ' سنة بعد ' + tot.seasons + ' مواسم، ' + tot.apps + ' مباراة و' + tot.g + ' هدفًا.</p><button class="btn pri" data-a="newCareer">✨ ابدأ مسيرة جديدة</button></div>';
+      h += '<div class="card hl c"><div style="font-size:46px">🏁</div><h2>اعتزلتَ كرة القدم</h2><p class="mut">في الموسم ' + G.Season.label(S.retiredAt.season) + ' بعمر ' + S.retiredAt.age + ' سنة بعد ' + (tot.seasons === 1 ? 'موسم واحد' : tot.seasons === 2 ? 'موسمين' : tot.seasons + (tot.seasons <= 10 ? ' مواسم' : ' موسمًا')) + '، ' + tot.apps + ' مباراة و' + tot.g + ' هدفًا.</p><button class="btn pri" data-a="newCareer">✨ ابدأ مسيرة جديدة</button></div>' + (UI.legacyCard ? UI.legacyCard() : '');
     }
     h += UI.fifaCard(p) + profileCard(p) + '<div class="card"><h4>🕸️ مخطط سماتك</h4>' + UI.radar(p) + '</div>' + (UI.mediaCard ? UI.mediaCard() : '') + UI.careerCharts(p) + '<h4 style="margin:6px 2px">مسيرتي موسمًا بموسم</h4>' + seasonsTable(p);
     return h;

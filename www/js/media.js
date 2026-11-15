@@ -254,6 +254,7 @@
     m.heat = r2(clamp((m.heat || 0) + (fx[3] || 0), 0, 4));
     const txt = back ? o.badT : o.okT;
     m.stat.ask++; if (back) m.stat.bad++; else m.stat.ok++;
+    if (back && o.tag === 'fiery' && G.Locker) G.Locker.pressBad(); // الزملاء لا يحبّون التصريحات النارية المرتدّة
     head(txt, back ? -1 : (fx[0] >= 1.5 ? 1 : 0), fx[0] >= 2.5 || fx[0] <= -2.4);
     m.last = { kind: pr.kind, opt: o.id, back, fx: fx.slice(0, 4), txt, s: S.season, w: S.week };
     m.press = null;

@@ -24,6 +24,20 @@
       g(UI.ring(tr / 100, tr, '', 76, tr < 30 ? 'red' : tr < 55 ? 'gold' : ''), 'ثقة المدرب', G.Coach.trustLabel(p.trust)) + '</div></div>';
   }
 
+  // العلاقات الأربع: المدرب (ثقة) · الزملاء (غرفة الملابس) · الجماهير (الشعبية) · الإدارة (علاقة النادي) — وأثر كل منها الفعلي
+  UI.relationsCard = () => {
+    const S = G.S, u = me(); if (!u || !S) return '';
+    const lk = G.Locker ? G.Locker.info() : null, M = G.Media, rl = (S.rel && S.rel.club != null) ? S.rel.club : 50;
+    const sg = (x) => (x > 0 ? '+' : '') + x;
+    const row = (ic, lab, v, txt, sub) => '<div class="rl"><div class="row sb"><b>' + ic + ' ' + lab + '</b><span class="sm">' + txt + '</span></div>' + UI.bar(v, tone(v / 100)) + (sub ? '<div class="sm mut">' + sub + '</div>' : '') + '</div>';
+    let h = '<div class="card"><h4>🤝 علاقاتي</h4>';
+    h += row('🧑‍🏫', 'المدرب', u.trust, Math.round(u.trust) + ' — ' + G.Coach.trustLabel(u.trust), 'تقرّر دورك في التشكيلة' + (lk && Math.abs(lk.trustWeek) >= 0.05 ? ' · سحب غرفة الملابس ' + sg(lk.trustWeek) + ' أسبوعيًا' : ''));
+    if (lk) h += row('👥', 'الزملاء', lk.v, lk.v + ' — ' + lk.label, 'أثرها: خبرة ' + sg(lk.xpPct) + '% · كيمياء ' + sg(lk.attr) + ' نقطة سمة' + (lk.log[0] && lk.log[0].t ? ' · آخر ما أثّر: ' + esc(lk.log[0].t) : ''));
+    if (M) { const pop = M.pop(); h += row('📣', 'الجماهير', pop, M.fmtFans(M.fans()) + ' متابع', 'الشعبية ترفع الرعاية والاهتمام بك'); }
+    h += row('🎩', 'الإدارة', rl, Math.round(rl) + ' — ' + (rl >= 75 ? 'ممتازة' : rl >= 55 ? 'جيدة' : rl >= 40 ? 'عادية' : 'متوترة'), 'تؤثر على سعر بيعك وعرض التجديد');
+    return h + '</div>';
+  };
+
   function devCard(p) {
     const T = G.Training, need = T.need(p.lvl), xpf = need ? p.xp / need : 0;
     const gi = G.Growth ? G.Growth.info(p) : null;
@@ -56,7 +70,7 @@
   }
 
   function ovTab(p) {
-    let h = gaugeCard(p) + devCard(p);
+    let h = gaugeCard(p) + UI.relationsCard() + devCard(p);
     h += '<div class="card"><div class="row sb"><b>دورك في الفريق</b>' + UI.rolePill(p.role) + '</div>' + (p.roleInfo && p.roleInfo.text ? '<p class="sm mut" style="margin:8px 0 0">' + esc(p.roleInfo.text) + '</p>' : '') +
       '<div class="grid2" style="margin-top:12px"><button class="btn sm" data-a="cardOpen" style="width:100%">' + UI.ico('pcard') + ' بطاقتي</button><button class="btn sm" data-a="goSub" data-v="train" data-v2="tr:coach" style="width:100%">' + UI.ico('clipboard') + ' قرار المدرب</button></div></div>';
     h += tilesRow(p);

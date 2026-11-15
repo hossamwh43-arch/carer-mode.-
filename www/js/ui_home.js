@@ -94,7 +94,7 @@
     if (S.userExpired) {
       h += '<div class="notice bad">⚠️ انتهى عقدك — لا يمكنك بدء الموسم قبل التجديد أو التوقيع مع نادٍ.</div><button class="btn gold" data-a="go" data-v="market">📝 اذهب إلى العقود</button>';
     } else {
-      h += '<p class="sm mut">أمامك فترة إعداد وسوق انتقالات مفتوح. عقدك: ' + u.ct.y + ' سنة · ' + UI.money(u.ct.w) + ' أسبوعيًا.</p>';
+      h += (UI.retireNote ? UI.retireNote() : '') + '<p class="sm mut">أمامك فترة إعداد وسوق انتقالات مفتوح. عقدك: ' + u.ct.y + ' سنة · ' + UI.money(u.ct.w) + ' أسبوعيًا.</p>';
       if (S.preLeft > 0) h += '<button class="btn" data-a="preseason">🏃 حصة إعداد (' + S.preLeft + ' متبقية)</button>';
       h += '<button class="btn pri" data-a="startSeason">▶ ابدأ الموسم</button>';
       if (G.Season.canRetire()) h += '<button class="btn red" data-a="retireAsk">🏁 اعتزال</button>';
@@ -129,7 +129,7 @@
     }
     h += '<div class="card"><h3>🎖️ جوائز الموسم</h3>' + (sm.awards || []).map((a) => '<div class="kv"><span>' + G.Season.AWARD_AR[a.type] + '</span><span' + (a.user ? ' class="gold b"' : '') + '>' + esc(a.name) + ' <span class="mut sm">(' + cl(a.club) + ' · ' + a.value + ')</span></span></div>').join('') + '</div>';
     if (S.intl && !S.intl.done) h += '<div class="notice">🌍 أكمل ' + esc(S.intl.name) + ' (العب مباريات منتخبك أو حاكِها) قبل الانتقال للموسم التالي.</div>';
-    else h += '<button class="btn pri" data-a="rollover">⏭️ الانتقال للموسم التالي</button>';
+    else h += (UI.retireNote ? UI.retireNote() : '') + '<button class="btn pri" data-a="rollover">' + (G.Season.retirePlan().lastSeason ? '🏁 إنهاء المسيرة' : '⏭️ الانتقال للموسم التالي') + '</button>';
     if (G.Season.canRetire()) h += '<button class="btn red" data-a="retireAsk">🏁 اعتزال</button>';
     return h;
   }
@@ -185,9 +185,23 @@
     UI.levelFx(t);
   });
 
+  // تنبيه مرحلة نهاية المسيرة (من أرقام حقيقية تطبّقها اللعبة فعلًا)
+  UI.retireNote = () => {
+    const pl = G.Season.retirePlan();
+    if (pl.stage === 0) return '';
+    const txt = pl.stage === 3 ? '🏁 <b>هذا موسمك الأخير:</b> من يُنهي موسمًا بعمر ' + pl.forcedAge + ' يعتزل. اجعله موسمًا يُذكر!'
+      : pl.stage === 2 ? '🕰️ بعمر ' + pl.age + ': جسدك يتراجع بسرعة، والأندية لا تمنح إلا عقد سنة. الاعتزال الإجباري بعد ' + pl.seasonsLeft + (pl.seasonsLeft === 1 ? ' موسم' : ' مواسم') + '.'
+      : '🕰️ تجاوزتَ الخامسة والثلاثين: يتراجع تقييمك أسرع كل موسم وتقل العروض. فكّر بخطتك الأخيرة.';
+    return '<div class="notice' + (pl.stage >= 2 ? ' bad' : '') + '">' + txt + '</div>';
+  };
   UI.on('rollover', () => {
     const r = G.Season.rollover();
     if (!r.ok) { UI.toast(r.msg); return; }
+    if (r.retired) {
+      UI.cur = 'career'; UI.sub = {}; UI.snd('done');
+      UI.sheet('<h3>🏁 نهاية المسيرة</h3><p class="sm">أنهيتَ موسمك الأخير بعمر ' + me().age + ' — بلغتَ سنّ الاعتزال الإجباري (' + G.Season.RETIRE.forced + ').</p><p class="sm mut">إرثك محفوظ في صفحة «مسيرتي».</p><button class="btn pri" data-a="closeSheet">عرض إرثي</button>');
+      return;
+    }
     const g = r.growth;
     UI.cur = 'home'; UI.sub = {}; UI.snd('done');
     UI.sheet('<h3>🌱 موسم جديد</h3><div class="kv"><span>تقييمك</span><b>' + g.from + ' ← ' + g.to + '</b></div>' + (g.note ? '<p class="sm mut">' + esc(g.note) + '</p>' : '') +

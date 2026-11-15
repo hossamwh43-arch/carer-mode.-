@@ -13,7 +13,7 @@
     ligaWeeks: 38,
     maxSquad: 27, minSquad: 22,
     allowForeignDestination: true, // انتقال اللاعب لنادٍ أجنبي (يلعب الأبطال فقط) مع تحذير
-    retireForcedAge: 40,
+    retireForcedAge: 41,    // v4: عمر الموسم الأخير الإجباري — من يُنهي موسمًا بعمر 41 يعتزل (كان الإعداد 40 مكتوبًا بلا استعمال فيصل اللاعب إلى 49)
     saveKey: 'fcc_save_v1', backupKey: 'fcc_save_v1_bak', saveVer: 3
   };
 

@@ -46,17 +46,19 @@
   };
   // مضاعف الخبرة الكلي (المباريات والتدريب الأسبوعي)
   Growth.xpMult = (u) => {
-    if (!Growth.on || !u) return 1;
+    const lk = G.Locker ? G.Locker.xpMult() : 1; // v4: غرفة الملابس ±8%
+    if (!Growth.on || !u) return lk;
     const g = Growth.st(u);
     let m = 1 + Growth.MENTOR_XP * Growth.mentor(u);
     if (g.hot) m *= Growth.HOT_XP;
-    return Math.min(m, Growth.XP_CAP);
+    return Math.min(m, Growth.XP_CAP) * lk;
   };
   // سياق مباراة: يُحسب مرة عند إنشائها ويُحفظ داخلها
   Growth.matchCtx = (u, clubId) => {
-    if (!Growth.on) return { syn: 0, glow: 0, bonus: 0 };
+    const lk = G.Locker ? G.Locker.attr() : 0; // v4: كيمياء الفريق (±0.6 نقطة سمة)
+    if (!Growth.on) return { syn: 0, glow: 0, bonus: lk };
     const s = Growth.synergy(u, clubId), glow = Growth.glowOf(u);
-    return { syn: s.syn, glow, bonus: glow + Growth.SYN_ATTR * s.syn };
+    return { syn: s.syn, glow, bonus: glow + Growth.SYN_ATTR * s.syn + lk };
   };
 
   // ---------- السمات والتقدم ----------

@@ -65,7 +65,7 @@ function checkInvariants(tag) {
   });
   Object.values(S.players).forEach((p) => {
     if (p.club && (!S.clubs[p.club] || (!S.clubs[p.club].light && S.clubs[p.club].squad.indexOf(p.id) < 0) )) bad.push(tag + ' لاعب بلا تشكيلة ' + p.id + ' @' + p.club);
-    if (p.ovr < 30 || p.ovr > 99 || p.age < 15 || (!p.user && p.age > 45) || !isFinite(p.ovr)) bad.push(tag + ' قيمة غير منطقية ' + p.id + ' ovr=' + p.ovr + ' age=' + p.age);
+    if (p.ovr < 30 || p.ovr > 99 || p.age < 15 || p.age > 45 || !isFinite(p.ovr)) bad.push(tag + ' قيمة غير منطقية ' + p.id + ' ovr=' + p.ovr + ' age=' + p.age);
   });
   return bad;
 }

@@ -106,6 +106,7 @@
   const AGE_DELTA = { 16: 4.8, 17: 4.5, 18: 4.2, 19: 3.7, 20: 3.1, 21: 2.6, 22: 2.0, 23: 1.5, 24: 1.0, 25: 0.5, 26: 0, 27: -0.3, 28: -0.6, 29: -1, 30: -1.5, 31: -2, 32: -2.5, 33: -3.0 };
   Training.ageDelta = (age) => (age <= 16 ? 4.8 : age >= 33 ? -3.2 : AGE_DELTA[age]);
 
+  Training.ageTail = (age) => Math.max(0, age - 34) * 0.4; // 35→0.4 · 38→1.6 · 41→2.8 (فوق التراجع الأساسي)
   Training.AI_BOOST_MAX = 1.1;
   Training.growAI = (p) => {
     let d = Training.ageDelta(p.age);
@@ -132,10 +133,13 @@
     const aw = G.Growth ? G.Growth.takePend(p) : 0;
     if (aw > 0) { d += aw; note = (note ? note + '، ' : '') + 'ثمرة جوائزك الفردية'; }
     if (d > 0) d *= U.clamp((p.pot - p.ovr + 2) / 6, 0.15, 1.25);
+    // v4: ذيل العمر — بعد 35 يتراجع الجسد أسرع (كان اللاعب يحتفظ بتقييم عالٍ حتى الـ49). يُطبَّق على المستخدم فقط؛ الذكاء الاصطناعي يعتزل أصلًا قبل ذلك
+    const tail = Training.ageTail(p.age);
+    d -= tail;
     d *= d > 0 ? G.diff().grow : G.diff().decl;
     d += U.gauss() * 0.5;
     const old = p.ovr;
-    const target = U.clamp(Math.round(old + d), old - 4, p.age < 24 ? Math.max(old, p.pot + 1) : old + 1);
+    const target = U.clamp(Math.round(old + d), old - (p.age >= 35 ? 9 : 4), p.age < 24 ? Math.max(old, p.pot + 1) : old + 1);
     if (target !== old) Training.setOvr(p, target);
     // الإمكانات تتحرك قليلًا مع الأداء
     if (apps >= 12 && avg >= 7.5 && p.age <= 22 && p.ovr >= p.pot - 2) p.pot = Math.min(97, p.pot + 1);

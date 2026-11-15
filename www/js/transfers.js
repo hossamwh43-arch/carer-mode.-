@@ -43,6 +43,7 @@
     if (p.user) {
       p.hist.push({ season: S.season, club: toId, from: oldClub, type: opts.loan ? 'loan' : fee > 0 ? 'transfer' : 'free', fee, wage });
       if (G.Media) G.safe(() => G.Media.onTransfer(oldClub, toId, fee, !!opts.loan), 'media');
+      if (G.Locker && oldClub !== toId) G.safe(() => G.Locker.moved(p, !!opts.loan), 'locker');
     }
     G.Players.refresh(p);
     if (p.user && G.World) G.World.syncUser(); // انتقال لدوري آخر أثناء الموسم
@@ -209,7 +210,7 @@
         if (loanClub) loanClub.squad = loanClub.squad.filter((x) => x !== p.id);
         if (home && home.squad.indexOf(p.id) < 0) home.squad.push(p.id);
         p.club = p.parent; p.parent = null; p.parentPays = false;
-        if (p.user) Inbox.add('contract', 'انتهت فترة الإعارة', 'عدتَ إلى ' + C(p.club).name + ' بعد انتهاء الإعارة.');
+        if (p.user) { Inbox.add('contract', 'انتهت فترة الإعارة', 'عدتَ إلى ' + C(p.club).name + ' بعد انتهاء الإعارة.'); if (G.Locker) G.safe(() => G.Locker.moved(p, false), 'locker'); }
         p.num = G.Players.freeNumber(p.club, p.pos, p.user ? p.num : 0);
       }
       if (!p.club) return;
@@ -296,6 +297,7 @@
     else if (p.age <= 24 && p.pot - p.ovr >= 5) sc += 4;
     else if (p.age >= 32) sc -= 10;
     else if (p.age >= 30) sc -= 4;
+    if (p.age >= 36) sc -= (p.age - 35) * 6; // v4: الأندية تتردد في ضم من تجاوز الـ35 (36→−6 · 38→−18 · 40→−30)
     const pf = T.perf(p);
     if (pf) { sc += clamp((pf.avg - 6.6) * 10, -8, 12); if (pf.avg >= 7.1) reasons.push('أداء مميز في المواسم الأخيرة'); }
     const ach = T.achv(p);
@@ -353,7 +355,7 @@
     const cur = C(p.club);
     const wage = clamp(U.roundTo(G.Players.wageFor(p) * (1.1 + U.rnd() * 0.4) * Math.pow(club.rep / Math.max(55, cur.rep), 0.8), 500), 800, 600000);
     if (!canAffordWage(club, wage)) return null;
-    const years = p.age >= 31 ? U.int(1, 2) : p.age <= 22 ? U.int(4, 5) : U.int(3, 4);
+    const years = p.age >= 37 ? 1 : p.age >= 31 ? U.int(1, 2) : p.age <= 22 ? U.int(4, 5) : U.int(3, 4);
     const pk = T.pack(club, p, wage, years);
     const o = {
       id: 'O' + (S.offerId = (S.offerId || 0) + 1), type: 'transfer', club: club.id, fee, wage, years, bonus: pk.bonus, ab: pk.ab, gb: pk.gb, role: pk.role, nat: pk.nat,
@@ -467,7 +469,7 @@
   T.negotiate = (o, wage, years, terms) => {
     const S = G.S, p = P(S.user), A = AG(), isOffer = !!o.club;
     o.tries = (o.tries || 0) + 1;
-    years = clamp(years, 1, p.age >= 31 ? 2 : 5);
+    years = clamp(years, 1, p.age >= 37 ? 1 : p.age >= 31 ? 2 : 5);
     const tm = Object.assign({ bonus: o.bonus || 0, ab: o.ab || 0, gb: o.gb || 0, role: o.role || 'none' }, terms || {});
     const ask = { wage, years, bonus: tm.bonus, ab: tm.ab, gb: tm.gb };
     const cur = A.wEq(o, p.pos), want = A.wEq(ask, p.pos), cap = o.maxWage * (1 + A.boost().wage);
@@ -650,7 +652,7 @@
     const rl = G.S.rel || { club: 50, loyal: 50 };
     const bonus = 1 + (p.trust - 50) / 300 + (p.role === 'starter' ? 0.15 : p.role === 'out' ? -0.1 : 0) + (G.Coach.formAvg(p) - 6.5) * 0.04 + (rl.club - 50) / 700 + (rl.loyal - 50) / 800;
     const wage = U.clamp(U.roundTo(G.Players.wageFor(p) * bonus, 500), 800, 600000);
-    return { wage, years: p.age >= 31 ? 2 : 4, maxWage: Math.round(wage * 1.2 / 500) * 500, tries: 0 };
+    return { wage, years: p.age >= 37 ? 1 : p.age >= 31 ? 2 : 4, maxWage: Math.round(wage * 1.2 / 500) * 500, tries: 0 };
   };
   T.canRenew = () => { const p = P(G.S.user); return !p.parentPays && p.ct.y <= 2; };
   T.renew = (terms, wage, years) => {

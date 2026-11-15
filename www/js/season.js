@@ -166,6 +166,7 @@
     } else if (u.susp > 0) u.susp--; // أنهى مباراة إيقاف
     if (ps.inj) { const iw = Math.max(1, Math.round(ps.inj * G.diff().injLen)); u.inj = Math.max(u.inj, iw); summary.inj = iw; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + iw + ' أسبوعًا تقريبًا.'); }
     if (G.Growth && mins > 0) { summary.gro = G.safe(() => G.Growth.afterMatch(u, summary, ps), 'growth') || null; }
+    if (G.Locker && !isNT && mins > 0) G.safe(() => G.Locker.after(u, summary, ps), 'locker'); // علاقة الزملاء
     if (!isNT) G.Coach.afterMatch(u, rating || 6.4, mins); // ثقة مدرب النادي لا تتأثر بمباريات المنتخب
     u.trainingMinutes = 0;
     S.matchLog.unshift(summary); if (S.matchLog.length > 60) S.matchLog.length = 60;
@@ -236,6 +237,7 @@
     if (S.offers.length) S.offers = S.offers.filter((o) => o.expires == null || o.expires >= S.week || o.type === 'free');
     if (G.Transfers.weekly) G.safe(() => G.Transfers.weekly(), 'tweekly');
     u.trust = U.clamp(u.trust + (50 - u.trust) * 0.04, 0, 100); // ميل بطيء نحو الحياد
+    if (G.Locker) G.safe(() => G.Locker.weekly(), 'locker');
     u.val = G.Players.value(u);
     if (G.Media) G.safe(() => G.Media.weekly(), 'media');
     if (G.BD) G.safe(() => G.BD.weekly(S.week - 1), 'bd');
@@ -344,6 +346,34 @@
   Season.TROPHY_DEFS = [['liga', '🥇', 'بطل الدوري'], ['d2', '🥈', 'بطل الدرجة الثانية'], ['cup', '🏆', 'الكأس المحلية'], ['sup', '🛡️', 'السوبر'], ['ucl', '🌟', 'دوري أبطال أوروبا'], ['wc', '🌍', 'كأس العالم'], ['ac', '🏅', 'كأس آسيا'], ['bd', '👑', 'الكرة الذهبية']];
   Season.trophyTotal = (t) => ['liga', 'd2', 'cup', 'sup', 'ucl', 'wc', 'ac'].reduce((s, k) => s + ((t || {})[k] || 0), 0);
   Season.canRetire = () => P(G.S.user).age >= 30;
+  // v4: نهاية المسيرة — الجسد يتراجع بعد 35، العروض تضعف بعد 36، ومن يُنهي موسمًا بعمر retireForcedAge يعتزل (لا لاعب بعمر 49)
+  Season.RETIRE = { hint: 35, soft: 38, forced: (G.CONFIG && G.CONFIG.retireForcedAge) || 41 };
+  Season.retirePlan = () => {
+    const a = P(G.S.user).age, R = Season.RETIRE;
+    return { age: a, stage: a >= R.forced ? 3 : a >= R.soft ? 2 : a >= R.hint ? 1 : 0, forcedAge: R.forced, lastSeason: a >= R.forced, seasonsLeft: Math.max(0, R.forced - a) };
+  };
+  // الإرث: أرقام المسيرة الحقيقية فقط؛ الدرجة صيغة معلنة (لا حظّ ولا تجميل)
+  Season.legacy = () => {
+    const u = P(G.S.user), tot = Season.careerTotals(), car = u.car || [], tr = u.trophies || {};
+    const bd = u.bdCar || [], bdWins = bd.filter((x) => x.r === 1).length, bdTop3 = bd.filter((x) => x.r <= 3).length;
+    const peak = Math.max(u.ovr, u.maxOvr || 0, ...car.map((r) => r.ovrEnd || 0));
+    const clubs = Object.keys((u.hist || []).reduce((o, h) => { if (h.club) o[h.club] = 1; if (h.from) o[h.from] = 1; return o; }, {})).length || 1;
+    const titles = (tr.liga || 0) * 3 + (tr.d2 || 0) * 1 + (tr.ucl || 0) * 5 + (tr.cup || 0) * 1.5 + (tr.sup || 0) * 0.5 + (tr.wc || 0) * 6 + (tr.ac || 0) * 3;
+    const score = Math.round((titles + bdWins * 8 + (bdTop3 - bdWins) * 2 + tot.g / 50 + tot.a / 80 + Math.max(0, peak - 78) * 0.6 + car.length / 6) * 10) / 10;
+    const tier = score >= 45 ? ['👑', 'أسطورة اللعبة'] : score >= 28 ? ['🌟', 'نجم عالمي'] : score >= 15 ? ['⭐', 'لاعب كبير'] : score >= 6 ? ['🎽', 'لاعب محترف جيد'] : ['🧢', 'لاعب عادي'];
+    return { score, icon: tier[0], tier: tier[1], peak, bdWins, bdTop3, clubs, titles: tot.titles, goals: tot.g, assists: tot.a, apps: tot.apps, seasons: car.length, nt: tot.nt };
+  };
+  Season.retire = (forced) => {
+    const S = G.S, u = P(S.user);
+    if (!forced) {
+      if (!Season.canRetire()) return { ok: false, msg: 'لا يمكنك الاعتزال قبل سن 30' };
+      if (S.phase === 'season') return { ok: false, msg: 'الاعتزال متاح في نهاية الموسم أو في الصيف فقط' };
+    }
+    S.phase = 'retired';
+    S.retiredAt = { season: S.season, age: u.age, forced: !!forced };
+    G.Save.save();
+    return { ok: true };
+  };
 
   // ---------- الانتقال للموسم التالي ----------
   Season.rollover = () => {
@@ -353,6 +383,11 @@
     if (G.BD) G.safe(() => G.BD.tryFinalize(), 'bd'); // أمان: الحفل لا يضيع إن لم يُجرَ بعد
     if (G.Intl) G.Intl.archive();
     const u = P(S.user);
+    if (u.age >= Season.RETIRE.forced) { // v4: الموسم الأخير الإجباري — تنتهي المسيرة بدل موسم جديد
+      G.Inbox.add('news', 'اعتزال ' + u.n, 'أنهى ' + u.n + ' موسمه الأخير بعمر ' + u.age + ' عامًا وأعلن اعتزاله بعد مسيرة ' + (u.car || []).length + ' مواسم.');
+      Season.retire(true);
+      return { ok: true, retired: true, forced: true };
+    }
     const lgAvg = Season.statOf(u, 'lg'), ucAvg = Season.statOf(u, 'uc'), cpAvg = Season.statOf(u, 'cp');
     const info = { apps: lgAvg.apps + ucAvg.apps + cpAvg.apps };
     const tot = info.apps;
@@ -410,15 +445,6 @@
     return { ok: true, growth: gr, expired };
   };
 
-  Season.retire = () => {
-    const S = G.S, u = P(S.user);
-    if (!Season.canRetire()) return { ok: false, msg: 'لا يمكنك الاعتزال قبل سن 30' };
-    if (S.phase === 'season') return { ok: false, msg: 'الاعتزال متاح في نهاية الموسم أو في الصيف فقط' };
-    S.phase = 'retired';
-    S.retiredAt = { season: S.season, age: u.age };
-    G.Save.save();
-    return { ok: true };
-  };
 
   // مجاميع المسيرة
   Season.careerTotals = () => {
