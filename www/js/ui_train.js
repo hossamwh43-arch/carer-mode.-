@@ -32,6 +32,15 @@
     return h;
   }
 
+  // اللياقة بطبقتيها: الأساس البدني (بطيء) والجاهزية (تنخفض بالمباريات وتتعافى بالراحة) — كلاهما أرقام اللاعب الفعلية
+  function fitCard(p) {
+    const f = G.Stamina.info(p), ceil = Math.round(G.Stamina.ceil(p, G.S.training && G.S.training.intensity));
+    return '<div class="card fitc"><h3>🔋 لياقتك البدنية</h3>' +
+      '<div class="kv"><span>اللياقة الأساسية</span><span>' + f.cond + ' — ' + f.condLabel + '</span></div>' + UI.bar(f.cond, f.cond < 55 ? 'red' : f.cond < 70 ? 'gold' : '') +
+      '<div class="kv" style="margin-top:8px"><span>الجاهزية الآن</span><span>' + f.fit + '% — ' + f.label + '</span></div>' + UI.bar(f.fit, f.fit < 50 ? 'red' : f.fit < 75 ? 'gold' : '') +
+      '<p class="sm mut" style="margin:8px 0 0">الأساس يتغيّر ببطء بحسب سمتك البدنية وعمرك وتدريبك ودقائقك، والجاهزية تهبط بعد المباراة وتتعافى بالراحة حتى سقف ≈' + ceil + '% بشدتك الحالية. الإرهاق داخل المباراة مؤقت ويبدأ من جاهزيتك ولا يتراكم.</p></div>';
+  }
+
   function trainTab(p) {
     const S = G.S, t = S.training, I = T().INTENSITY;
     const keys = T().relevant(p);
@@ -45,8 +54,9 @@
     const inj = t.intensity === 'heavy' ? 'مرتفع' : t.intensity === 'normal' ? 'متوسط' : 'منخفض';
     h += '</div><div class="card"><h3>💪 شدة التدريب</h3><div class="seg3">' +
       Object.keys(I).map((k) => '<button class="chip ' + (t.intensity === k ? 'on' : '') + '" data-a="setIntensity" data-v="' + k + '">' + I[k].ar + '</button>').join('') + '</div>' +
-      '<div class="lv-tiles four"><div class="trt"><small>الخبرة الأسبوعية</small><b>×' + I[t.intensity].xp + '</b></div><div class="trt"><small>استشفاء اللياقة</small><b>+' + I[t.intensity].rec + '%</b></div>' +
+      '<div class="lv-tiles four"><div class="trt"><small>الخبرة الأسبوعية</small><b>×' + I[t.intensity].xp + '</b></div><div class="trt"><small>تعافي الجاهزية أسبوعيًا</small><b>' + Math.round(G.Stamina.recRate(p, t.intensity, p.inj > 0) * 100) + '%</b></div>' +
       '<div class="trt ' + (t.intensity === 'heavy' ? 'warn' : '') + '"><small>خطر الإصابة</small><b class="sm-b">' + inj + '</b></div><div class="trt"><small>مرافق ' + esc(UI.cname(p.club)) + '</small><b>×' + T().facility(p.club).toFixed(2) + '</b></div></div></div>';
+    h += fitCard(p);
     h += '<div class="notice">⚠️ التطور تدريجي بالتصميم: حدّ أقصى ' + T().seasonCap(p.age) + ' نقاط لكل سمة في الموسم بعمر ' + p.age + '، ولا تتجاوز السمة حدّ إمكاناتك.</div>';
     return h;
   }
@@ -73,7 +83,7 @@
     let h = '<div class="card"><div class="row sb"><h3 style="margin:0">قرار المدرب</h3>' + UI.rolePill(p.role) + '</div><p class="mut">' + esc(info.text || '') + '</p>' +
       '<div class="kv"><span>ثقة المدرب</span><span>' + Math.round(p.trust) + ' — ' + G.Coach.trustLabel(p.trust) + '</span></div>' + UI.bar(p.trust, p.trust < 30 ? 'red' : '') +
       '<div class="kv" style="margin-top:6px"><span>تقييم المدرب لأدائك</span><span>' + G.Coach.evaluation(p) + '</span></div>' +
-      '<div class="kv"><span>اللياقة</span><span>' + Math.round(p.fit) + '%</span></div>' +
+      '<div class="kv"><span>الجاهزية</span><span>' + Math.round(p.fit) + '%</span></div><div class="kv"><span>اللياقة الأساسية</span><span>' + Math.round(G.Stamina.cond(p)) + '</span></div>' +
       (info.diff != null && info.diff > -90 ? '<div class="kv"><span>فارقك عن أضعف أساسي في مركزك</span><b class="' + (info.diff >= 0 ? 'pos' : 'neg') + ' ltr">' + (info.diff > 0 ? '+' : '') + info.diff + '</b></div>' : '') +
       '<div style="margin-top:8px"><div class="sm mut" style="margin-bottom:4px">آخر التقييمات</div>' + UI.formDots(p.form) + '</div></div>';
     h += '<div class="card"><h4>المنافسون على مركزك</h4>' + (comp.length ? '<table class="t"><tr><th class="l">اللاعب</th><th>المركز</th><th>العمر</th><th>التقييم</th><th>فارق</th></tr>' +

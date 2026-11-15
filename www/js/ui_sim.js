@@ -174,7 +174,7 @@
       prow('القيمة السوقية', fr.val, to.val, (v) => UI.money(v), (d) => UI.money(d)) +
       prow('ثقة المدرب', fr.trust, to.trust, (v) => v, true) +
       (fr.pop != null && to.pop != null ? prow('الشعبية 📣', fr.pop, to.pop, (v) => v, true) + prow('المتابعون 👥', fr.fans, to.fans, (v) => G.Media.fmtFans(v), (d) => G.Media.fmtFans(d)) : '') +
-      prow('اللياقة', fr.fit, to.fit, (v) => v + '%', true) +
+      prow('الجاهزية', fr.fit, to.fit, (v) => v + '%', true) +
       (fr.role !== to.role ? '<div class="kv"><span>دورك</span><span>' + esc(G.Coach.ROLE_AR[fr.role] || '—') + ' ← <b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></span></div>' : '<div class="kv"><span>دورك</span><b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></div>') +
       (to.pos ? prow('مركز ' + esc(UI.cname(rep.club)) + ' في الدوري', fr.pos || to.pos, to.pos, (v) => v, true, true) : '') +
       (to.ucl ? '<div class="kv"><span>دوري الأبطال</span><span class="sm" style="text-align:end">' + esc(to.ucl) + '</span></div>' : '') +

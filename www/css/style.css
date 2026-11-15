@@ -1016,3 +1016,8 @@ table.t th, table.t td { padding-inline: 2px; }
 .rl .row { margin-bottom: 5px; }
 .rl .bar { margin-bottom: 4px; }
 .rl .sm.mut { line-height: 1.45; }
+
+/* Build 24: لياقة بطبقتين + سطر المدرب في المباراة */
+.mvcoach{margin:8px 2px 0;line-height:1.7;display:flex;gap:6px;align-items:flex-start}
+.mvcoach .ic{flex:none;margin-top:3px}
+.fitc .kv span:last-child{font-variant-numeric:tabular-nums}

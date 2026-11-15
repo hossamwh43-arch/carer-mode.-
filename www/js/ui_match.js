@@ -121,7 +121,7 @@
   function headHtml(m) {
     const uid = G.S.user, ps = m.ps[uid], fix = G.Season.findFix(m.id);
     const on = G.Live.userOn(m);
-    const st = on ? UI.ico('dotg') + ' في الملعب · لياقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? UI.ico('swap') + ' تم استبدالك' : m.uState === 'bench' ? UI.ico('bench') + ' على مقاعد البدلاء' : UI.ico('ban') + ' خارج قائمة المباراة';
+    const st = on ? UI.ico('dotg') + ' في الملعب · طاقة ' + Math.round(m.fat[uid]) + '%' : ps.out != null ? UI.ico('swap') + ' تم استبدالك' : m.uState === 'bench' ? UI.ico('bench') + ' على مقاعد البدلاء' : UI.ico('ban') + ' خارج قائمة المباراة';
     const lr = liveRating(m), sc = SS() ? SS().shown(m) : m.score;
     const pct = U.clamp(Math.round(m.i / (m.total || 1) * 100), 0, 100), htp = Math.round(m.t1 / (m.total || 1) * 100);
     return '<div class="card mv-hero"><div class="mvh-top"><span class="mvh-comp">' + (fix ? esc(UI.fixLabel(fix)) : '') + '</span>' + (m.neutral ? '<span class="mvh-ven">' + UI.ico('stadium') + ' ملعب محايد</span>' : '') + '</div>' +
@@ -193,12 +193,13 @@
 
   // شريط تحكّم مضغوط: أربع بلاطات أيقونية + زرّان ثانويان (كل data-a كما كانت)
   function ctlHtml(m) {
-    const mv = UI.mv, on = G.Live.userOn(m), canSub = on && m.subs[m.side] > 0;
+    const mv = UI.mv, on = G.Live.userOn(m), canSub = on && m.subs[m.side] > 0, pf = m.prof || G.Coach.profile(m[m.side]);
     return '<div class="mvc"><button class="mvb' + (mv.paused ? ' on' : '') + '" data-a="mvPause">' + UI.ico(mv.paused ? 'play' : 'pause') + '<span>' + (mv.paused ? 'استئناف' : 'إيقاف') + '</span></button>' +
       '<button class="mvb" data-a="mvSpeed">' + UI.ico('ffwd') + '<span>سرعة ×<b class="ltr">' + (mv.speed || 1) + '</b></span></button>' +
       '<button class="mvb ' + (canSub ? '' : 'dis') + '" data-a="reqSub">' + UI.ico('swap') + '<span>استبدال</span></button>' +
       '<button class="mvb" data-a="mvLineup">' + UI.ico('users') + '<span>التشكيلة</span></button></div>' +
-      '<div class="mvc2"><button class="mvb2 red" data-a="mvFinish">' + UI.ico('skip') + ' إنهاء المباراة فورًا</button><button class="mvb2" data-a="mvLeave">' + UI.ico('door') + ' خروج وحفظ</button></div>';
+      '<div class="mvc2"><button class="mvb2 red" data-a="mvFinish">' + UI.ico('skip') + ' إنهاء المباراة فورًا</button><button class="mvb2" data-a="mvLeave">' + UI.ico('door') + ' خروج وحفظ</button></div>' +
+      (pf ? '<div class="mvcoach sm mut">' + UI.ico('whistle') + ' مدربك: <b>' + esc(pf.ar) + '</b> — ' + esc(pf.desc) + '. يراقب طاقتك ويبدّلك عند الإرهاق.</div>' : '');
   }
 
   // تحديث الأجزاء المتغيّرة فقط حتى لا تضيع النقرات

@@ -90,7 +90,9 @@
     xi.forEach((x) => {
       const p = P(x.id);
       let e = Lineup.eff(p, x.slot);
-      if (p.user && p.fit != null && p.fit < 70) e -= (70 - p.fit) * 0.1;
+      // الجاهزية تُحتسب مرة واحدة: داخل المباراة عبر طاقتها (extra.fat تبدأ منها) وخارجها (توقعات/محاكاة سريعة) عبر fit — لا ازدواج عقوبة
+      const hasFat = extra && extra.fat && extra.fat[p.id] != null;
+      if (p.user && !hasFat && p.fit != null && p.fit < 70) e -= (70 - p.fit) * 0.1;
       if (extra && extra.fat && extra.fat[p.id] != null && extra.fat[p.id] < 60) e -= (60 - extra.fat[p.id]) * 0.05;
       g[GRP[x.slot]].push(e);
       if (x.slot === 'CAM') g.att.push(e - 3);

@@ -63,7 +63,7 @@
     if (G.Transfers.weekly) G.safe(() => { G.Transfers.weekly(); if (S.preLeft > 0) G.Transfers.generateOffers(0.8); }, 'tweekly'); // السوق الصيفي حيّ طوال فترة الإعداد
     const res = G.Training.week();
     const p = P(S.user);
-    p.fit = Math.max(p.fit, 90);
+    G.Stamina.preseason(p);
     G.Save.save();
     return res;
   };
@@ -152,7 +152,7 @@
     const summary = { fixId: fix.id, comp: fix.comp, season: S.season, week: S.week, h: m.h, a: m.a, score: m.score, pens: m.pens, mins, rating: rating || null, g: ps.g, as: ps.a, sh: ps.sh, sot: ps.sot, pas: ps.pas, pasOk: ps.pasOk, dr: ps.dr, drOk: ps.drOk, tk: ps.tk, tkOk: ps.tkOk, yel: ps.yel, red: ps.red, big: ps.big || 0, saves: ps.saves || 0, motm: res.motm === u.id, state: m.uState, userSide: my, et: !!m.et,
       events: m.ev.filter((e) => ['goal', 'red', 'yellow', 'inj', 'et', 'pens', 'sub'].indexOf(e.k) >= 0).slice(0, 40).map((e) => ({ lab: e.lab, k: e.k, txt: e.txt, me: e.p === u.id || e.p2 === u.id ? 1 : 0, s: e.s === my ? 1 : e.s ? 2 : 0 })) }; // me/s: للتمييز في تقرير المباراة فقط (s: 1 فريقك، 2 الخصم)
     if (mins > 0) {
-      u.fit = U.clamp(u.fit - mins * 0.16, 15, 100);
+      G.Stamina.afterMatch(u, mins); // جاهزية تنخفض بحسب الدقائق والجهد والأساس البدني (لا خصم ثابت)
       u.form.push(rating); if (u.form.length > 10) u.form.shift();
       G.Training.addXP(u, G.Training.matchXP(rating, mins) * (G.Growth ? G.Growth.xpMult(u) : 1)); // الزخم والزملاء النجوم يزيدان الخبرة
       u.cards.y += ps.yel; u.cards.r += ps.red;
@@ -167,7 +167,7 @@
     if (ps.inj) { const iw = Math.max(1, Math.round(ps.inj * G.diff().injLen)); u.inj = Math.max(u.inj, iw); summary.inj = iw; G.Inbox.add('injury', 'إصابة!', 'أصبتَ في المباراة وستغيب ' + iw + ' أسبوعًا تقريبًا.'); }
     if (G.Growth && mins > 0) { summary.gro = G.safe(() => G.Growth.afterMatch(u, summary, ps), 'growth') || null; }
     if (G.Locker && !isNT && mins > 0) G.safe(() => G.Locker.after(u, summary, ps), 'locker'); // علاقة الزملاء
-    if (!isNT) G.Coach.afterMatch(u, rating || 6.4, mins); // ثقة مدرب النادي لا تتأثر بمباريات المنتخب
+    if (!isNT) G.Coach.afterMatch(u, rating || 6.4, mins, !!m.uTired); // ثقة مدرب النادي لا تتأثر بمباريات المنتخب
     u.trainingMinutes = 0;
     S.matchLog.unshift(summary); if (S.matchLog.length > 60) S.matchLog.length = 60;
     S.lastMatch = summary;
@@ -412,7 +412,7 @@
       p.yel = 0; p.susp = 0; p.inj = Math.max(0, (p.inj || 0) - 6);
       G.Players.refresh(p);
     });
-    u.fit = 95; u.form = []; u.gain = {}; u.prog = {};
+    G.Stamina.summerRest(u); u.form = []; u.gain = {}; u.prog = {}; // راحة الصيف: جاهزية ≥88 وتغيّر الأساس البدني بالعمر
     if (G.Growth) G.Growth.newSeason(u);
     // 4) التأهل لدوري الأبطال للموسم القادم
     S.uclTeams = G.Ucl.qualify(orders);

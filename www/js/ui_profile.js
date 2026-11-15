@@ -20,7 +20,7 @@
     const g = (ring, lab, sub) => '<div class="g1">' + ring + '<span>' + lab + '</span><small>' + sub + '</small></div>';
     return '<div class="card gauges"><div class="gauge3">' +
       g(UI.ring(f ? (f - 5) / 4 : 0, f ? f.toFixed(1) : '—', '', 76, f ? tone((f - 5) / 4) : 'dim'), 'الفورمة', f ? 'آخر ' + Math.min(5, (p.form || []).length) + ' مباريات' : 'لا مباريات بعد') +
-      g(UI.ring(ft / 100, ft + '%', '', 76, ft < 50 ? 'red' : ft < 75 ? 'gold' : ''), 'اللياقة', ft < 50 ? 'تحتاج راحة' : ft < 75 ? 'متوسطة' : 'ممتازة') +
+      g(UI.ring(ft / 100, ft + '%', '', 76, ft < 50 ? 'red' : ft < 75 ? 'gold' : ''), 'الجاهزية', G.Stamina.label(ft)) +
       g(UI.ring(tr / 100, tr, '', 76, tr < 30 ? 'red' : tr < 55 ? 'gold' : ''), 'ثقة المدرب', G.Coach.trustLabel(p.trust)) + '</div></div>';
   }
 

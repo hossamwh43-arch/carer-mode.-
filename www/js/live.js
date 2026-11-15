@@ -6,6 +6,9 @@
   const GRP = G.POS_GROUP;
   const SHOT_BASE = 0.0878;
 
+  const FRESH = 96; // طاقة بداية لاعبي الذكاء الاصطناعي ومن يدخل بديلًا
+  const hashId = (str) => { let h = 5; const t = String(str); for (let i = 0; i < t.length; i++) h = (h * 33 + t.charCodeAt(i)) >>> 0; return h; };
+  const fatOf = (m, id) => (m.fat && m.fat[id] != null ? m.fat[id] : FRESH); // الحفظ القديم (مباراة جارية) لا يحوي طاقة الجميع
   const nm = (id) => (P(id) ? P(id).n : '?');
   const cname = (cid) => G.C(cid).name;
   const mmOf = (lab) => parseInt(String(lab), 10);
@@ -41,10 +44,16 @@
     // حالة اللاعب المستخدم
     const inXI = m.xi[side].some((x) => x.id === u.id), inBench = m.bench[side].indexOf(u.id) >= 0;
     m.uState = inXI ? 'start' : inBench ? 'bench' : 'out';
-    m.fat[u.id] = u.fit;
+    // Build 24: طاقة المباراة تبدأ من «الجاهزية» (لا من اللياقة الخام) وتنفد دقيقة بدقيقة؛ لاعبو الخصم والزملاء يُنهَكون أيضًا فيُستبدل المنهَك لا عشوائي
+    m.fat[u.id] = G.Stamina.startEnergy(u);
+    m.xi.h.concat(m.xi.a).forEach((x) => { if (m.fat[x.id] == null) m.fat[x.id] = FRESH; });
+    m.prof = G.Coach.profile(m[side]);                       // شخصية المدرب وتكتيكه (ثابتة للنادي)
+    m.cn = (hashId(m.id) % 7) - 3;                           // تفاوت ثابت للمباراة (±3) كي لا يتطابق توقيت التبديل في كل مباراة
     touch(u.id, false); // سجل للاعب حتى لو كان خارج القائمة
     if (inXI) {
-      m.uPlan.outAt = u.fit < 65 ? U.int(55, 70) : U.chance(0.22) ? null : U.int(66, 88);
+      // تبديل «فني» مخطَّط بحسب شخصية المدرب (يُلغى أو يؤجَّل بحسب الأداء)، وفوقه قرار الإرهاق التفاعلي (coachCheck) الذي لا يعتمد على هذا الموعد
+      const pf = m.prof.plan;
+      m.uPlan.outAt = U.chance(pf[0]) ? U.int(pf[1], pf[2]) : null;
     } else if (inBench) {
       const unused = Math.max(0.05, 0.25 - u.trust / 400);
       m.uPlan.inAt = U.chance(unused) ? null : u.role === 'rotation' ? U.int(50, 75) : U.int(55, 82);
@@ -122,6 +131,7 @@
     m.bench[s] = m.bench[s].filter((x) => x !== inId);
     m.ps[outId].out = m.i; m.ps[inId].in = m.i;
     m.subs[s]--;
+    if (inId !== G.S.user) m.fat[inId] = FRESH; // البديل يدخل منتعشًا (اللاعب المستخدم يحتفظ بطاقته من بداية المباراة)
     push(m, 'sub', s, inId, outId, '🔄 ' + cname(m[s]) + ': يدخل ' + nm(inId) + ' بدلًا من ' + nm(outId) + (why ? ' (' + why + ')' : ''));
     Live.recalc(m);
     return true;
@@ -129,26 +139,70 @@
   const bestBench = (m, s, grp, notGK) => m.bench[s].map(P).filter((b) => b && !m.ps[b.id].out && m.ps[b.id].in == null && (!notGK || b.pos !== 'GK') && (!grp || GRP[b.pos] === grp))
     .sort((a, b) => b.ovr - a.ovr)[0];
 
+  // تقييم أداء اللاعب المستخدم الآن (حتمي: لا يستهلك عشوائية اللعبة؛ نسخة مبسّطة من Match.rating بلا ضجيج)
+  Live.perf = (m) => {
+    const ps = m.ps[G.S.user]; if (!ps) return null;
+    const my = m.score[m.side], op = m.score[m.side === 'h' ? 'a' : 'h'];
+    return 6.45 + (my > op ? 0.3 : my < op ? -0.3 : 0) + (ps.g || 0) * 0.95 + (ps.a || 0) * 0.6 + (ps.sot || 0) * 0.06 - (ps.big || 0) * 0.22 +
+      (ps.momOk || 0) * 0.16 - (ps.momBad || 0) * 0.14 - (ps.yel || 0) * 0.25 - (ps.red || 0) * 1.6;
+  };
+  const matchImp = (m) => (m.ko && m.ko.final ? 2 : m.ko || m.comp === 'uc' ? 1 : 0);
+
+  // اختيار بديل المدرب للاعب خارج: يفضّل مجموعة المركز نفسها (إن وُجدت) وإلا أفضل بديل متاح
+  const pickSub = (m, s, slot) => {
+    const same = bestBench(m, s, GRP[slot], slot !== 'GK');
+    return { inn: same || bestBench(m, s, null, slot !== 'GK'), same: !!same };
+  };
+
   Live.doSubs = (m, mm) => {
     const uid = G.S.user;
+    // ---- فرق الذكاء الاصطناعي: التبديلات في مواعيد مخطَّطة لكن المُستبدَل هو الأكثر إنهاكًا (وبحسب النتيجة)، ويُسرَّع الموعد عند إنهاك حرج ----
     ['h', 'a'].forEach((s) => {
+      const o = s === 'h' ? 'a' : 'h', lead = m.score[s] - m.score[o];
       m.plan[s].forEach((pl) => {
-        if (pl.done || mm < pl.at || m.subs[s] <= 0) return;
-        pl.done = true;
+        if (pl.done || m.subs[s] <= 0) return;
         const cands = m.xi[s].filter((x) => x.slot !== 'GK' && x.id !== uid);
         if (!cands.length) return;
-        const out = U.pick(cands);
-        const inn = bestBench(m, s, GRP[out.slot], true) || bestBench(m, s, null, true);
-        if (inn) Live.doSub(m, s, out.id, inn.id, out.slot);
+        const exhausted = mm >= 55 && cands.some((x) => fatOf(m, x.id) <= 32);
+        if (mm < pl.at && !exhausted) return;
+        pl.done = true;
+        // درجة الاستحقاق: الإنهاك أولًا، وبالنتيجة: متأخر ⇒ يُخرج مدافعًا ليُدخل مهاجمًا، متقدم بعد 75 ⇒ يُخرج مهاجمًا ليُدخل مدافعًا
+        let best = null, bs = -1e9, want = null;
+        cands.forEach((x) => {
+          const g = GRP[x.slot];
+          let sc = 100 - fatOf(m, x.id);
+          if (lead < 0 && mm >= 60) sc += g === 'def' ? 8 : g === 'mid' ? 3 : -4;
+          if (lead > 0 && mm >= 75) sc += g === 'att' ? 8 : g === 'mid' ? 2 : -3;
+          if (sc > bs) { bs = sc; best = x; }
+        });
+        if (lead < 0 && mm >= 60 && GRP[best.slot] !== 'att') want = 'att';
+        else if (lead > 0 && mm >= 75 && GRP[best.slot] !== 'def') want = GRP[best.slot] === 'att' ? 'def' : null;
+        const inn = (want && bestBench(m, s, want, true)) || bestBench(m, s, GRP[best.slot], true) || bestBench(m, s, null, true);
+        if (inn) Live.doSub(m, s, best.id, inn.id, best.slot, fatOf(m, best.id) <= 40 ? 'إرهاق' : '');
       });
     });
-    // خطة اللاعب المستخدم
+    // ---- مدرب فريق اللاعب: يراقب طاقتك كل دقيقة وينفّذ التبديل فعلًا (لا موعدًا عشوائيًا مسبقًا) ----
     const s = m.side, u = P(uid), pl = m.uPlan;
-    if (pl.outAt != null && mm >= pl.outAt && Live.userOn(m) && m.subs[s] > 0) {
-      const slot = Live.userSlot(m);
-      const inn = bestBench(m, s, GRP[slot], slot !== 'GK') || bestBench(m, s, null, slot !== 'GK');
-      pl.outAt = null;
-      if (inn) Live.doSub(m, s, uid, inn.id, slot, u.fit < 65 || m.fat[uid] < 45 ? 'إرهاق' : 'قرار فني');
+    if (Live.userOn(m) && m.subs[s] > 0 && !m.done) {
+      const slot = Live.userSlot(m), pk = pickSub(m, s, slot), E = fatOf(m, uid);
+      const my = m.score[s], op = m.score[s === 'h' ? 'a' : 'h'], perf = Live.perf(m);
+      let go = false, why = '';
+      if (pl.req || pl.outAt === 0) { go = true; why = 'بطلب منك'; }
+      else {
+        const v = G.Coach.subVerdict({ energy: E, mm, diff: my - op, imp: matchImp(m), perf, grp: GRP[slot], sameGrp: pk.same, gap: pk.inn ? u.ovr - pk.inn.ovr : null,
+          age: u.age, trust: u.trust, role: u.role, prof: m.prof || G.Coach.profile(m[s]), noise: m.cn || 0, subsLeft: m.subs[s], hasBench: !!pk.inn });
+        if (v.sub) { go = true; why = v.why; }
+        else if (pl.outAt != null && mm >= pl.outAt) {
+          // تبديل فني مخطَّط: يؤجَّله المدرب مرة واحدة (حتى 10 دقائق) إن كان أداؤك ممتازًا والفريق غير متقدم بفارق هدفين، وإلا يُنفَّذ
+          if (!pl.held && perf != null && perf >= 7.6 && my - op < 2 && E > 40 && mm < 86) { pl.held = true; pl.outAt = mm + 10; }
+          else { go = true; why = my - op >= 2 ? 'حماية لك مع تقدّم الفريق' : 'قرار فني'; }
+        }
+      }
+      if (go) {
+        if (pk.inn && Live.doSub(m, s, uid, pk.inn.id, slot, why)) { pl.outAt = null; pl.req = false; m.uSubWhy = why; }
+        else if (pl.req || pl.outAt === 0) { pl.req = false; pl.outAt = null; push(m, 'note', s, null, null, 'لا يوجد بديل مناسب على الدكة الآن'); }
+        // بلا بديل أو بلا تبديلات: يبقى القرار قائمًا ويُعاد تقييمه في الدقيقة التالية (لا يُمحى كما كان)
+      }
     }
     if (pl.inAt != null && mm >= pl.inAt && !Live.userOn(m) && m.ps[uid].in == null && m.subs[s] > 0) {
       pl.inAt = null;
@@ -168,7 +222,7 @@
   };
   Live.requestSub = (m) => {
     if (!Live.userOn(m) || m.subs[m.side] <= 0 || m.done) return false;
-    m.uPlan.outAt = 0; // يُنفَّذ في الخطوة التالية
+    m.uPlan.req = true; m.uPlan.outAt = 0; // يُنفَّذ في الخطوة التالية
     return true;
   };
 
@@ -220,11 +274,14 @@
     m.i++;
     const lab = m.labs[m.i - 1], mm = mmOf(lab);
     const uid = G.S.user;
-    // إرهاق اللاعب
-    if (Live.userOn(m)) {
-      const u = P(uid);
-      m.fat[uid] = Math.max(0, m.fat[uid] - (0.42 + (100 - u.a.phy) * 0.0035) * (m.et ? 1.3 : 1));
-    }
+    // إرهاق اللاعبين: يستنزف طاقة كل من في الملعب (السمة البدنية + المركز + الأساس البدني للاعبك) ويتعافى بالراحة بعد المباراة لا فيها
+    ['h', 'a'].forEach((sd) => m.xi[sd].forEach((x) => {
+      const p = P(x.id); if (!p) return;
+      const d = x.id === uid ? G.Stamina.drain(p, x.slot, m.et) * (1 + (m.prof ? m.prof.press : 0) * 0.01 * (GRP[x.slot] === 'mid' || GRP[x.slot] === 'att' ? 1 : 0)) : G.Stamina.drainAI(p, x.slot, m.et);
+      m.fat[x.id] = Math.max(0, fatOf(m, x.id) - d);
+    }));
+    if (Live.userOn(m) && m.fat[uid] <= 30) m.uLow = (m.uLow || 0) + 1; // دقائق قضاها منهَكًا (لتخفيف عقوبة الثقة)
+    m.uTired = (m.uLow || 0) >= 8;
     Live.doSubs(m, mm);
     // اللحظات التفاعلية
     if (m.mom.length && m.mom[0] <= m.i) {

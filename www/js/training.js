@@ -91,9 +91,8 @@
       if (res.attrUps.length) G.Players.refresh(p);
     }
     // اللياقة والإصابة
-    const rec = hurt ? 6 : I.rec;
-    p.fit = U.clamp(p.fit + rec, 0, 100);
-    res.fitGain = rec;
+    // Build 24: اللياقة الأساسية + الجاهزية بدل «+9 أسبوعيًا» التي كانت أقل من خصم المباراة فتنهار اللياقة (انظر stamina.js)
+    res.fitGain = Math.round(G.Stamina.weekly(p, t.intensity, hurt) * 10) / 10;
     p.training = { heavy: t.intensity === 'heavy' };
     if (!hurt) {
       const risk = I.inj * G.diff().inj * (p.fit < 55 ? 2.5 : 1);
