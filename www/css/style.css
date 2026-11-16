@@ -1005,11 +1005,20 @@ table.t th, table.t td { padding-inline: 2px; }
 .stg-cap { position: absolute; inset-inline: 0; bottom: 0; padding: 18px 12px 7px; font-size: 12.5px; line-height: 1.35; color: #fff; text-align: center; background: linear-gradient(180deg, rgb(5 9 19 / 0), rgb(5 9 19 / .82)); text-shadow: 0 1px 4px #000; pointer-events: none; opacity: 0; }
 .stg-cap.on { animation: stgCap 3.2s ease both; }
 @keyframes stgCap { 0% { opacity: 0; transform: translateY(6px); } 10%, 82% { opacity: 1; transform: none; } 100% { opacity: .0; } }
+/* شريط التبديل التلفزيوني (Build 24): دخول/خروج بسهمين وسبب التبديل */
+.stg-sub { position: absolute; inset-inline: 8px; bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; max-width: 320px; margin-inline: auto; border-radius: 10px; overflow: hidden; background: rgb(8 13 27 / .9); box-shadow: 0 4px 16px rgb(0 0 0 / .5); border: 1px solid rgb(255 255 255 / .16); pointer-events: none; animation: stgSub 3.4s ease both; font: 700 12px/1.25 system-ui, sans-serif; }
+.stg-sub[hidden] { display: none; }
+.stg-sub b { padding: 7px 10px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stg-sub .in { background: linear-gradient(90deg, rgb(22 163 74 / .55), rgb(22 163 74 / .2)); }
+.stg-sub .out { background: linear-gradient(90deg, rgb(225 29 72 / .5), rgb(225 29 72 / .18)); }
+.stg-sub small { grid-column: 1 / -1; padding: 4px 10px 6px; color: #c9d3ee; font-weight: 600; font-size: 11px; text-align: center; background: rgb(255 255 255 / .05); }
+.stg-sub.me { border-color: #ffcf5a; box-shadow: 0 0 0 1px rgb(255 207 90 / .5), 0 4px 16px rgb(0 0 0 / .5); }
+@keyframes stgSub { 0% { opacity: 0; transform: translateY(10px); } 9%, 84% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(4px); } }
 .stg-tag { position: absolute; top: 44px; inset-inline-end: 8px; padding: 4px 10px; border-radius: 999px; background: #e11d48; color: #fff; font: 800 11px/1 system-ui, sans-serif; letter-spacing: .02em; box-shadow: 0 2px 10px rgb(0 0 0 / .5); }
 .stg-cam { position: absolute; inset-inline-end: 8px; top: 8px; min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid rgb(255 255 255 / .25); background: rgb(8 13 27 / .72); color: #e9eefc; font: 600 11px/1 system-ui, sans-serif; backdrop-filter: blur(4px); }
 .stg-cam:active { transform: scale(.96); }
 .stg-tag[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) { .stg-cap.on { animation: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .stg-cap.on { animation: none; opacity: 1; } .stg-sub { animation: none; } }
 
 /* ===== v4 المرحلة 4: العلاقات وبطاقة الإرث ===== */
 .rl { margin: 10px 0 12px; }

@@ -41,6 +41,10 @@
     gk: () => ({ shotstop: 1, gkcross: 0.8, penaltysave: 0.2, gk1v1: 0.6, distribution: 0.7, sweeper: 0.4 })
   };
 
+  // بصمة نصية حتمية (لا تمس عشوائية اللعبة): تحدد إن كانت الكرة تأتي على القدم الضعيفة في هذه اللحظة
+  const hstr = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16; return (h >>> 0); };
+  const WEAKABLE = { edge: 1, oneonone: 1, through: 1, cross: 1, duel: 1, counter: 1 };   // مواقف التسديد من اللعب المفتوح (لا ركلات ثابتة ولا رأسيات)
+
   Moments.make = (m) => {
     const S = G.S, u = P(S.user), s = m.side, o = s === 'h' ? 'a' : 'h';
     const slot = G.Live.userSlot(m) || u.pos;
@@ -58,8 +62,10 @@
     const hgt = (u.h - 180) * 0.5;
 
     // بناء خيار: يحسب القيمة المتوقعة (للّعب الآلي) والتلميح بنسب مئوية وسمات اللاعب المؤثرة
+    let wkOn = false, wfm = 1;   // القدم الضعيفة: تُحدَّد بعد اختيار الموقف (انظر أدناه) وتضعف احتمال هدف التسديدات المفتوحة
     const mk = (id, k, label, extra) => {
       const o2 = Object.assign({ id, k, label }, extra);
+      if (wkOn && o2.k === 'shot' && !o2.tag && o2.pg != null) o2.pg = Math.max(0.02, o2.pg * wfm);
       const succ = o2.pp != null ? o2.pp : null;
       o2.ev = o2.k === 'shot' ? o2.pg : (o2.k === 'pass' || o2.k === 'drib' || o2.k === 'press') ? o2.pp * o2.pg : o2.k === 'safe' ? o2.pp * 0.03 : o2.pp * 0.4 + 0.05;
       let h = o2.k === 'shot' ? 'فرصة التسجيل: ' + pct(o2.pg)
@@ -84,6 +90,9 @@
     const wt = WT[grp](slot), keys = Object.keys(wt);
     const sc = U.wpick(keys, (k) => wt[k] * (k === m.lastSc ? 0.12 : 1)) || keys[0];
     m.lastSc = sc;
+    // قدمك المفضلة (من إنشاء اللاعب) صارت تؤثر: في ~28% من مواقف اللعب المفتوح تأتيك الكرة على القدم الأضعف
+    // فتقلّ فرصة هدف تسديدتها بنسبة تتناسب عكسيًا مع مهارة تسديدك (من −8% للماهر إلى −20% لضعيف التسديد)
+    if (WEAKABLE[sc] && hstr(String(m.id) + ':' + m.i + ':' + u.id) % 100 < 28) { wkOn = true; wfm = 0.80 + clamp(((a.sho != null ? a.sho : 60) - 55), 0, 40) * 0.003; }
     const fk = W({ sho: 0.55, pas: 0.3, iq: 0.15 });
     const hs = W({ phy: 0.5, sho: 0.25, iq: 0.25 }) + hgt;   // مهارة الرأسيات: القوة + الطول
     const aer = W({ phy: 0.5, def: 0.3, iq: 0.2 }) + hgt;
@@ -348,8 +357,9 @@
         ];
     }
     const defOpp = atk ? 'دفاع الخصم' : 'هجوم الخصم', lv = atk ? m.R[o].D : m.R[o].A;
-    const note = 'لياقتك ' + Math.round(fatPct) + '٪ • قوة ' + defOpp + ' ' + lvl3(lv, 80, 70) + (penPos > 0 ? ' • تلعب خارج مركزك' : '') + (gro.glow > 0 ? ' • زخم التألق +' + gro.glow : '') + (gro.syn >= 0.25 ? ' • زملاء من الطراز الرفيع +' + Math.round(gro.syn * G.Growth.SYN_ATTR) : '');
-    return { id: m.id + '#' + m.i, i: m.i, sc, title, text, note, options, userSlot: slot };
+    const note = 'طاقتك ' + Math.round(fatPct) + '٪ • قوة ' + defOpp + ' ' + lvl3(lv, 80, 70) + (penPos > 0 ? ' • تلعب خارج مركزك' : '') + (gro.glow > 0 ? ' • زخم التألق +' + gro.glow : '') + (gro.syn >= 0.25 ? ' • زملاء من الطراز الرفيع +' + Math.round(gro.syn * G.Growth.SYN_ATTR) : '');
+    const footTxt = u.foot === 'L' ? 'اليمنى' : 'اليسرى';
+    return { id: m.id + '#' + m.i, i: m.i, sc, title, text: wkOn ? text + ' ⚠️ الكرة تأتيك على قدمك الأضعف (' + footTxt + ') فتسديدتها أقل دقة.' : text, note: wkOn ? note + ' • قدمك الأضعف' : note, options, userSlot: slot, weak: wkOn };
   };
 
   Moments.auto = (ctx) => U.wpick(ctx.options, (o) => Math.pow(o.ev + 0.02, 1.5)) || ctx.options[0];

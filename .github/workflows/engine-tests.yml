@@ -21,3 +21,7 @@ jobs:
         run: node tests/engine/stadium_core.js
       - name: نهاية المسيرة وغرفة الملابس (اعتزال إجباري، تراجع عمري، الإرث، علاقة الزملاء)
         run: node tests/engine/career_end.js
+      - name: اللياقة بثلاث طبقات وتبديلات المدرب (Build 24)
+        run: node tests/engine/stamina.js 5,9
+      - name: القدم الأضعف في اللحظات التفاعلية (Build 24)
+        run: node tests/engine/moments_foot.js 5,9
