@@ -135,6 +135,16 @@
       tgl('sound', P.sound !== false, 'المؤثرات الصوتية', 'صافرات وجمهور وأهداف — تُولَّد داخل اللعبة بلا ملفات') +
       tgl('haptics', P.haptics !== false, 'الاهتزاز', 'عند الأهداف والبطاقات ولحظات القرار (الهواتف التي تدعمه)') +
       '<button class="btn sm" data-a="fxTest">🎧 جرّب المؤثرات</button></div>';
+    if (G.Diag) {
+      const r = G.Diag.collect(), pf = r.perf.length ? r.perf[r.perf.length - 1] : null, gr = pf ? G.Diag.grade(pf.fps, pf.avgMs, pf.qDrop) : null;
+      h += '<div class="card diagc"><h3>' + UI.ico('chart') + ' التشخيص (أداء جهازك الفعلي)</h3><p class="sm mut">أرقام حقيقية من هاتفك: تُسجَّل أثناء مبارياتك وتساعدني على إصلاح ما يظهر عندك فقط. لا تُرسَل لأي جهة — تنسخها وترسلها بنفسك.</p>' +
+        '<div class="kv"><span>آخر مباراة بالملعب المرئي</span><b>' + (pf ? pf.fps + ' إطار/ث · ' + (gr.k === 'great' ? 'ممتاز' : gr.k === 'ok' ? 'جيد' : 'ثقيل') : 'لم تُلعب بعد') + '</b></div>' +
+        '<div class="kv"><span>الشاشة والنافذة</span><b class="ltr">' + esc(r.device.screen) + ' · ' + esc(r.device.viewport) + '</b></div>' +
+        '<div class="kv"><span>الحفظ</span><b class="ltr">' + (r.save.gameKB == null ? '—' : r.save.gameKB + ' KB') + (r.save.failures ? ' · إخفاقات ' + r.save.failures : '') + '</b></div>' +
+        '<div class="kv"><span>أخطاء مسجّلة</span><b>' + r.errors.length + '</b></div>' +
+        '<div id="benchOut" class="sm mut" aria-live="polite"></div>' +
+        '<button class="btn" data-a="benchRun">' + UI.ico('bolt') + ' اختبار أداء الجهاز (3 ثوانٍ)</button><button class="btn" data-a="diagCopy">' + UI.ico('clipboard') + ' نسخ تقرير التشخيص</button></div>';
+    }
     h += '<div class="card"><h3>🧪 سلامة البيانات</h3><button class="btn" data-a="validateNow">فحص الجداول والنتائج</button>' + (S.check ? '<p class="sm ' + (S.check.ok ? 'pos' : 'neg') + '">آخر فحص: ' + (S.check.ok ? 'سليم ✔️' : S.check.errs.length + ' ملاحظات (أُصلحت تلقائيًا)') + '</p>' : '') + '</div>';
     h += '<div class="card"><h3>🔄 المسيرة</h3><button class="btn" data-a="newCareer">✨ بدء مسيرة جديدة (يبقى الحفظ الحالي كنسخة احتياطية)</button><button class="btn red" data-a="wipeAsk">🗑️ حذف كل البيانات</button></div>';
     h += '<div class="card"><h3>ℹ️ عن البيانات</h3><p class="sm mut">أسماء الأندية والمنتخبات حقيقية (موسم 2025/26 كمرجع) والتقييمات والقيم تقريبية وقابلة للتعديل من <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>. أسماء اللاعبين حقيقية (نحو 4,800 لاعب في 212 نادٍ من تشكيلات 2026) لكن مراكزهم وتقييماتهم وأعمارهم تقديرات مني وليست بيانات رسمية، ويُكمَل النقص بأسماء مولَّدة؛ وليست مرخّصة رسميًا فهي للاستخدام الشخصي فقط. المسابقات: الدوريات الخمسة الكبرى ودرجاتها الثانية، دوري أبطال أوروبا، كأس العالم وكأس آسيا، والكرة الذهبية.</p></div>';
@@ -160,6 +170,21 @@
     UI.sheet('<h3>نص الحفظ</h3><p class="sm mut">انسخه كاملًا واحتفظ به.</p><textarea id="expTxt" rows="8" readonly style="width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:var(--r-m);padding:8px;direction:ltr">' + esc(txt) + '</textarea><button class="btn" data-a="closeSheet">إغلاق</button>');
     const t = document.getElementById('expTxt'); if (t) { t.focus(); t.select(); }
   }
+  UI.on('benchRun', () => {
+    const out = document.getElementById('benchOut'); if (out) out.textContent = 'يجري القياس…';
+    G.Diag.bench((b) => {
+      UI.benchLast = b;
+      const o = document.getElementById('benchOut');
+      if (o) o.innerHTML = b.ok ? '<b>' + b.fps + ' إطار/ث</b> (أدنى ' + b.fpsLow + ') · رسم ' + b.avgMs + 'ms — ' + esc(b.grade.t) + '<br><span class="mut">اختبار تقريبي بمشهد شبيه بالملعب لا بالملعب نفسه.</span>' : 'تعذّر القياس: ' + esc(b.err);
+    });
+    return false;
+  });
+  UI.on('diagCopy', () => {
+    const txt = G.Diag.text({ bench: UI.benchLast });
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => UI.toast('نُسخ تقرير التشخيص'), () => showText(txt));
+    else showText(txt);
+    return false;
+  });
   UI.on('validateNow', () => { const c = G.Season.validateAll(); G.Save.save(); UI.toast(c.ok ? 'كل شيء سليم ✔️' : 'وُجدت ' + c.errs.length + ' ملاحظات وأُصلحت'); });
   UI.on('newCareer', () => {
     UI.confirm('بدء مسيرة جديدة؟', 'ستُفتح شاشة إنشاء لاعب جديد. حفظك الحالي لا يُحذف فورًا — يبقى كنسخة احتياطية حتى تبدأ المسيرة الجديدة.', () => {

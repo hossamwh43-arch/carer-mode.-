@@ -36,7 +36,7 @@
       poss: { side: 'h', next: 0.6 }, pBias: 0.5, side: m.side, uid: G.S.user, form: {}, keyXI: '', replayOK: true,
       excite: 0.12, shake: 0, dust: [], trail: [], bspin: 0, celebUntil: 0, celebId: null, celebKind: '', celebN: 0, flareCol: null, subT: 0,
       tod: [0, 0, 0, 1, 2][SC.hash('tod' + m.id) % 5], rain: SC.hash('rn' + m.id) % 6 === 0, drops: [],
-      reduce: prefersReduce(), q: 1, ft: [], frames: 0, skip: false, lastTxt: '', pend: false, label: '', labelT: 0, prog: performance.now(), errs: 0
+      reduce: prefersReduce(), q: 1, ft: [], fi: [], qDrop: false, frames: 0, skip: false, lastTxt: '', pend: false, label: '', labelT: 0, prog: performance.now(), errs: 0
     };
     if (!SC.CAMS.includes(st.cam.mode)) st.cam.mode = 'tv';
     const h = document.createElement('div');
@@ -60,8 +60,11 @@
     st.raf = requestAnimationFrame(loop);
   };
 
+  // يحفظ أداء الملعب الفعلي على هذا الجهاز (لشاشة التشخيص)؛ لا يؤثر في اللعب
+  const savePerf = () => { try { if (st && G.Diag && st.frames >= 90) G.Diag.recordPerf(G.Diag.summarize(st.ft, st.fi, { frames: st.frames, q: st.q, qDrop: !!st.qDrop, w: st.W, h: st.H, dpr: window.devicePixelRatio || 1 })); } catch (e) { /* لا شيء */ } };
   S.destroy = () => {
     if (!st) return;
+    savePerf();
     if (st.raf) cancelAnimationFrame(st.raf);
     if (st.ro) st.ro.disconnect();
     st = null;
@@ -380,8 +383,9 @@
     if (document.hidden) { st.last = now; return; }
     const minDt = st.q <= 0 ? 33 : 0;
     if (now - st.last < minDt) return;
-    let dt = (now - st.last) / 1000; st.last = now; dt = clamp(dt, 0, 0.05);
+    let dt = (now - st.last) / 1000; const gap = now - st.last; st.last = now; dt = clamp(dt, 0, 0.05);
     const paused = !!(UI.mv && UI.mv.paused);
+    if (!paused && gap < 400) { st.fi.push(gap); if (st.fi.length > 300) st.fi.shift(); }   // الفاصل الحقيقي بين الإطارات → fps
     const t0 = performance.now();
     if (paused) st.prog = t0;
     try { if (!paused) step(dt); draw(); st.errs = 0; }
@@ -391,7 +395,7 @@
     }
     const ms = performance.now() - t0;
     st.ft.push(ms); if (st.ft.length > 60) st.ft.shift(); st.frames++;
-    if (st.frames % 60 === 0 && st.q > 0 && st.ft.length >= 60) { const avg = st.ft.reduce((a, b) => a + b, 0) / 60; if (avg > 11) { st.q = 0; resize(); } }
+    if (st.frames % 60 === 0 && st.q > 0 && st.ft.length >= 60) { const avg = st.ft.reduce((a, b) => a + b, 0) / 60; if (avg > 11) { st.q = 0; st.qDrop = true; resize(); } }
   }
 
   function step(dt) {
