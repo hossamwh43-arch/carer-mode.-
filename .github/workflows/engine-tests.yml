@@ -27,5 +27,5 @@ jobs:
         run: node tests/engine/moments_foot.js 5,9
       - name: معايرة الدوريات مقابل أرقام حقيقية (Build 25)
         run: node tests/engine/calib_real.js 6 3
-      - name: تصنيفات العالم: أرشفة ومحرك (Build 26)
+      - name: تصنيفات العالم — أرشفة ومحرك (Build 26)
         run: node tests/engine/world_rank.js 5 3
