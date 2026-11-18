@@ -8,7 +8,7 @@ import common
 common.SHOTS = sys.argv[1] if len(sys.argv) > 1 else ''
 VW = int(sys.argv[2]) if len(sys.argv) > 2 else 360
 PRE = int(sys.argv[3]) if len(sys.argv) > 3 else 2
-ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd']
+ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd', 'worldrank']
 # حاويات تمرير أفقي مقصودة (شرائط تبويب/كاروسيل) لا تُعدّ خللًا
 ALLOW_SCROLL = ('.nws-tk-w',)  # شريط أخبار متحرك
 

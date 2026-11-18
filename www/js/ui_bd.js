@@ -35,7 +35,7 @@
   function listCard(s) {
     const uid = G.S.user;
     return '<div class="card"><h3>أفضل المرشحين</h3><table class="t"><tr><th>#</th><th class="l">اللاعب</th><th></th><th>الدرجة</th><th>فرص</th></tr>' +
-      s.list.slice(0, 15).map((x) => '<tr class="' + (x.id === uid ? 'me' : '') + '" data-a="bdPlayer" data-v="' + x.id + '" style="cursor:pointer"><td>' + x.rank + '</td><td class="l"><div>' + esc(x.n) + '</div><div class="sm mut">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + '</div></td><td>' + trend(x.d) + '</td><td><b>' + x.t.toFixed(1) + '</b></td><td class="sm">' + x.pr + '%</td></tr>').join('') + '</table>' +
+      s.list.slice(0, 20).map((x) => '<tr class="' + (x.id === uid ? 'me' : '') + '" data-a="bdPlayer" data-v="' + x.id + '" style="cursor:pointer"><td>' + x.rank + '</td><td class="l"><div>' + esc(x.n) + '</div><div class="sm mut">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + '</div></td><td>' + trend(x.d) + '</td><td><b>' + x.t.toFixed(1) + '</b></td><td class="sm">' + x.pr + '%</td></tr>').join('') + '</table>' +
       '<p class="sm mut" style="margin:8px 0 0">اضغط على اسم لاعب لرؤية تفاصيل عوامله. الترتيب يُحدَّث كل 4 أسابيع.</p></div>';
   }
 

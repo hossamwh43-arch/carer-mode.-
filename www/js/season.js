@@ -382,6 +382,7 @@
     if (S.intl && !S.intl.done) return { ok: false, msg: 'بطولة المنتخبات لم تنتهِ بعد — العبها أو حاكِها أولًا' };
     if (G.BD) G.safe(() => G.BD.tryFinalize(), 'bd'); // أمان: الحفل لا يضيع إن لم يُجرَ بعد
     if (G.Intl) G.Intl.archive();
+    if (G.WorldRank) G.safe(() => G.WorldRank.archive(S.year, S.season), 'worldrank'); // Build 26: أرشفة التصنيف العالمي (قراءة فقط)
     const u = P(S.user);
     if (u.age >= Season.RETIRE.forced) { // v4: الموسم الأخير الإجباري — تنتهي المسيرة بدل موسم جديد
       G.Inbox.add('news', 'اعتزال ' + u.n, 'أنهى ' + u.n + ' موسمه الأخير بعمر ' + u.age + ' عامًا وأعلن اعتزاله بعد مسيرة ' + (u.car || []).length + ' مواسم.');

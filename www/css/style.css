@@ -1036,3 +1036,36 @@ table.t th, table.t td { padding-inline: 2px; }
 .mvcoach{margin:8px 2px 0;line-height:1.7;display:flex;gap:6px;align-items:flex-start}
 .mvcoach .ic{flex:none;margin-top:4px}
 .fitc .kv span:last-child{font-variant-numeric:tabular-nums}
+
+/* ===== تصنيفات العالم (Build 26) — مبنية على رموز الهندسة الموحّدة: مسافات زوجية، خطوط ≥11، زوايا القصّ، حدود hair ===== */
+.wr-hero { position: relative; overflow: hidden; margin: 0 0 12px; padding: 16px; border: var(--hair) solid rgb(var(--cc-rgb) / .35); border-radius: var(--cut-l); background: radial-gradient(ellipse at 85% 0, rgb(var(--cc-rgb) / .14), transparent 55%), linear-gradient(150deg, var(--card2), var(--card)); box-shadow: var(--sh-2); }
+.wr-hero > small { display: block; font-size: var(--t-2xs); letter-spacing: .04em; color: var(--cc-hi); font-weight: 700; }
+.wr-hero h2 { margin: 4px 0; font-size: var(--t-xl); font-family: var(--f-d); }
+.wr-hero p { margin: 0; color: var(--mut); font-size: var(--t-xs); line-height: 1.7; }
+.wr-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 8px; margin-top: 16px; }
+.wr-pod { display: flex; min-width: 0; min-height: 112px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; border: var(--hair) solid var(--line2); border-radius: var(--cut-s); background: rgb(255 255 255 / .04); text-align: center; }
+.wr-pod.p1 { min-height: 136px; border-color: rgb(var(--cc-rgb) / .55); background: linear-gradient(180deg, rgb(var(--cc-rgb) / .16), rgb(255 255 255 / .03)); }
+.wr-pod small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--txt); font-size: var(--t-xs); }
+.wr-pod strong { color: var(--cc-hi); font: 800 var(--t-base) var(--f-n); }
+.wr-medal { color: var(--cc); line-height: 1; } .wr-medal .ic { width: 20px; height: 20px; }
+.wr-pe { display: grid; place-items: center; min-height: 38px; }
+.wr-board { padding: 0; overflow: hidden; }
+.wr-bh { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: var(--hair) solid var(--line); }
+.wr-bh h3 { margin: 0; font-size: var(--t-lg); }
+.wr-count { padding: 2px 8px; border: var(--hair) solid var(--line2); border-radius: 999px; color: var(--mut); font-size: var(--t-2xs); white-space: nowrap; }
+.wr-row { display: grid; grid-template-columns: 28px 36px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 56px; padding: 8px 16px; border-bottom: var(--hair) solid var(--line); }
+.wr-row:last-child { border-bottom: 0; }
+.wr-row.me { background: linear-gradient(90deg, rgb(var(--cc-rgb) / .14), transparent); box-shadow: inset 3px 0 0 var(--cc); }
+.wr-pos { display: grid; place-items: center; width: 28px; height: 24px; border-radius: var(--r-s); background: rgb(255 255 255 / .06); color: var(--mut); font: 800 var(--t-xs) var(--f-n); }
+.wr-row:nth-child(2) .wr-pos { background: rgb(var(--cc-rgb) / .2); color: var(--cc-hi); }
+.wr-emblem { display: grid; place-items: center; min-width: 36px; min-height: 36px; }
+.wr-name { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.wr-name b { overflow: hidden; font-size: var(--t-sm); text-overflow: ellipsis; white-space: nowrap; }
+.wr-name small { overflow: hidden; color: var(--mut); font-size: var(--t-2xs); text-overflow: ellipsis; white-space: nowrap; }
+.wr-score { display: flex; min-width: 48px; flex-direction: column; align-items: flex-end; gap: 2px; }
+.wr-score > b { font: 800 var(--t-base) var(--f-n); }
+.wr-mv { display: inline-flex; align-items: center; gap: 2px; font-size: var(--t-2xs); font-weight: 700; }
+.wr-mv .ic { width: 12px; height: 12px; }
+.wr-mv.up { color: var(--acc); } .wr-mv.down { color: var(--red); } .wr-mv.flat { color: var(--mut); }
+.wr-gap { padding: 4px 16px; color: var(--mut); text-align: center; letter-spacing: .3em; }
+.wr-note { margin: 0 4px 12px; color: var(--mut); font-size: var(--t-2xs); line-height: 1.8; }

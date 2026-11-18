@@ -12,7 +12,7 @@
     me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['trophies', 'البطولات'], ['market', 'الانتقالات'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
     matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['cup', 'الكأس'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
     club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب']] },
-    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['settings', 'الإعدادات']] }
+    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['worldrank', 'التصنيفات'], ['settings', 'الإعدادات']] }
   };
   UI.GROUP_ORDER = ['home', 'me', 'matches', 'club', 'more'];
   const R2G = { match: 'matches', simreport: 'home' };
@@ -130,6 +130,7 @@
       tiles.push(tile('cup', 'shield', 'الكأس والسوبر', 'القرعة والنتائج والأبطال'));
       tiles.push(tile('bd', 'crown', 'الكرة الذهبية', 'ترتيب المرشحين'));
     }
+    tiles.push(tile('worldrank', 'medal', 'تصنيفات العالم', 'الأندية والمنتخبات وأرشيف سنوي'));
     tiles.push(tile('trophies', 'trophy', 'سجل البطولات', 'ألقابك ووصافاتك موسمًا بموسم'));
     tiles.push(tile('stats', 'chart', 'الإحصائيات', 'الموسم والإنجازات والسجل'));
     tiles.push(tile('career', 'book', 'سجل المسيرة', 'موسمًا بموسم'));

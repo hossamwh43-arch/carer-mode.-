@@ -1,6 +1,6 @@
 """الهندسة البصرية (Build 25): يضمن بقاء نظام الأشكال موحّدًا في كل الشاشات — لا قيم فردية شاذة ولا أهداف لمس ناقصة.
 يقيس على Chromium المحاكي (وليس جهاز أندرويد حقيقي). الاستخدام: python3 tests/e2e/geometry.py [مجلد_اللقطات] [العرض]
-ما يُفحص لكل مسار من 19 مسارًا:
+ما يُفحص لكل مسار من 22 مسارًا (يشمل أقسام تصنيفات العالم الثلاثة):
   • كل نص بحجم خط صحيح (يُستثنى نص SVG لأنه يتبع مقياس viewBox، وعنوان الاستوديو السائل clamp)
   • كل أيقونة .ic بعرض وارتفاع زوجيين (مع دعم round()) ومربعة
   • كل زر/رابط تحت 44px يملك منطقة لمس فعلية ≥44 (اختبار elementFromPoint خارج حدود العنصر)
@@ -13,7 +13,7 @@ from common import *
 import common
 common.SHOTS = sys.argv[1] if len(sys.argv) > 1 else ''
 VW = int(sys.argv[2]) if len(sys.argv) > 2 else 390
-ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd']
+ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd', 'worldrank:clubs', 'worldrank:nations', 'worldrank:history']
 
 PROBE = r"""(()=>{
   const bad={font:[],icon:[],tap:[],pill:[],tgl:[],radius:[],mask:[]};
@@ -65,7 +65,8 @@ with sync_playwright() as p:
     new_game(page); play_weeks(page, 14)
     agg = {k: set() for k in ['font', 'icon', 'tap', 'pill', 'tgl', 'radius', 'mask']}
     for r in ROUTES:
-        ev(page, "G.UI.cur='%s'; G.UI.sub={}; G.UI.render()" % r); page.wait_for_timeout(200)
+        rt, _, sb = r.partition(':')
+        ev(page, "G.UI.cur='%s'; G.UI.sub=%s; G.UI.render()" % (rt, "{wr:'%s'}" % sb if sb else '{}')); page.wait_for_timeout(200)
         res = ev(page, PROBE)
         for k, v in res.items():
             for x in v: agg[k].add('%s: %s' % (r, x))
