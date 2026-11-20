@@ -10,7 +10,7 @@
   const trophyIcons = (t) => G.Season.TROPHY_DEFS.filter((d) => (t || {})[d[0]]).map((d) => d[1]).join('');
   function profileCard(p) {
     const tot = G.Season.careerTotals();
-    return '<div class="card hl"><div class="row">' + UI.avatar(p.look, p.club, 78) + '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div class="mut sm">' + UI.natName(p.nat) + ' · ' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة</div><div class="mut sm">' + p.h + ' سم · ' + p.w + ' كغ · القدم ' + (p.foot === 'R' ? 'اليمنى' : 'اليسرى') + '</div><div>' + UI.clubTag(p.club, 20) + ' <span class="mut sm">#' + p.num + '</span></div></div><div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div>' +
+    return '<div class="card hl"><div class="row">' + UI.avatar(p.look, p.club, 78, p.n) + '<div class="grow"><h3 style="margin:0">' + esc(p.n) + '</h3><div class="mut sm">' + UI.natName(p.nat) + ' · ' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة</div><div class="mut sm">' + p.h + ' سم · ' + p.w + ' كغ · القدم ' + (p.foot === 'R' ? 'اليمنى' : 'اليسرى') + '</div><div>' + UI.clubTag(p.club, 20) + ' <span class="mut sm">#' + p.num + '</span></div></div><div class="ovr ' + UI.tierCls(p) + '">' + p.ovr + '</div></div>' +
       '<div class="grid3" style="margin-top:12px"><div class="stat"><b>' + tot.apps + '</b><small>مباراة</small></div><div class="stat"><b>' + tot.g + '</b><small>هدف</small></div><div class="stat"><b>' + tot.a + '</b><small>صناعة</small></div>' +
       '<div class="stat"><b>' + (tot.avg ? tot.avg.toFixed(2) : '—') + '</b><small>متوسط التقييم</small></div><div class="stat"><b>' + tot.seasons + '</b><small>مواسم كاملة</small></div><div class="stat"><b>' + tot.titles + '</b><small>ألقاب</small></div></div></div>';
   }

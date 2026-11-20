@@ -49,8 +49,13 @@ PROBE = r"""(()=>{
       if(cs.borderTopLeftRadius===cs.borderTopRightRadius&&cs.borderTopRightRadius===cs.borderBottomRightRadius&&cs.borderBottomRightRadius===cs.borderBottomLeftRadius&&/^(26|10|6)px$/.test(cs.borderTopLeftRadius)) bad.radius.push(cn.slice(0,20)+' '+br);
     }
     if(/(^|\s)(tabs|sw)(\s|$)/.test(cn)){
+      // Build 27: الشريط اللاصق .sw يُظهر حوافه بسهمين بتدرّج (.sw-go) بدل القناع؛ و.tabs داخله يتبعه؛ والصف المضمّن .tabs.inline يبقى بالقناع
       const m=cs.maskImage||cs.webkitMaskImage;
-      if(!m||m==='none') bad.mask.push(cn);
+      if(/(^|\s)sw(\s|$)/.test(cn)){
+        const gs=[...e.querySelectorAll('.sw-go')].map(g=>getComputedStyle(g).backgroundImage.indexOf('gradient')>=0);
+        if(gs.length!==2||gs.some(x=>!x)) bad.mask.push(cn+' (أسهم التدرّج)');
+      } else if(e.parentElement&&/(^|\s)sw(\s|$)/.test(e.parentElement.className)) { /* حافة الشريط اللاصق تتولاها أسهمه */ }
+      else if(!m||m==='none') bad.mask.push(cn);
     }
   });
   const u=a=>[...new Set(a)].slice(0,6);

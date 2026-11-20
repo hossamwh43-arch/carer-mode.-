@@ -23,7 +23,7 @@
     const t = UI.tier(p), ax = UI.axes(p);
     const stats = ax.map((k) => '<div><b>' + (p.a[k] || 0) + '</b><span>' + UI.ATTR_SHORT[k] + '</span></div>').join('');
     return '<div class="fcw"><div class="fcard t-' + t.id + '"><div class="fc-top"><div class="fc-l"><div class="fc-ovr">' + p.ovr + '</div><div class="fc-pos">' + p.pos + '</div><div class="fc-bd">' + UI.badge(p.club, 26) + '</div></div>' +
-      '<div class="fc-av">' + UI.avatar(p.look, p.club, 118) + '</div></div><div class="fc-name">' + esc(p.n) + '</div><div class="fc-ln"></div><div class="fc-stats">' + stats + '</div>' +
+      '<div class="fc-av">' + UI.avatar(p.look, p.club, 118, p.n) + '</div></div><div class="fc-name">' + esc(p.n) + '</div><div class="fc-ln"></div><div class="fc-stats">' + stats + '</div>' +
       '<div class="fc-foot">' + t.ar + ' · ' + esc(UI.natName(p.nat)) + '</div></div></div>';
   };
   UI.on('cardOpen', () => {

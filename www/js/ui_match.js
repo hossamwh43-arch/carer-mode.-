@@ -49,8 +49,8 @@
       const fo = G.Cups ? G.Cups.finalOutcome(sm) : null; // نهائي كأس/سوبر
       if (fo && fo.won) { UI.fx('fanfare'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك', { art: fo.key === 'cup' ? 'cup' : 'sup', ms: 3400 }); return; }
       const sk = sm.gro && sm.gro.ev.find((e) => e.k === 'streak');
-      if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '🔥 ارتقى مستواك!', sm.gro.s + ' مباريات متتالية متألقة'); }
-      else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.banner('win', '⭐ نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
+      if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.notify('ach', 'ارتقى مستواك', sm.gro.s + ' مباريات متتالية متألقة'); }
+      else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.notify('ach', 'نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
       else if (w > 0) UI.fx('done');
     }, 'resultFx');
   }

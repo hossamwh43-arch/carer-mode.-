@@ -6,11 +6,12 @@
 
   // ---------- مستوى الصعوبة ----------
   const mult = (v) => '×' + (Math.round(v * 100) / 100).toString().replace(/^0\./, '0.');
+  // بطاقات مضغوطة (الاسم + أربعة مضاعِفات)، وشرح كل مستوى داخل «المزيد» القابل للطي
   UI.diffPicker = (cur, act) => G.DIFF_ORDER.map((id) => {
     const d = G.DIFF[id];
     return '<button class="dopt ' + (cur === id ? 'on' : '') + '" data-a="' + act + '" data-v="' + id + '" aria-pressed="' + (cur === id ? 'true' : 'false') + '"><span class="dh"><b>' + d.icon + ' ' + esc(d.ar) + '</b>' + (cur === id ? '<span class="pill g">المختار</span>' : '') + '</span>' +
-      '<span class="sm mut">' + esc(d.desc) + '</span><span class="dm"><span>الخبرة <b class="ltr">' + mult(d.xp) + '</b></span><span>ثقة المدرب عند الخطأ <b class="ltr">' + mult(d.trustDown) + '</b></span><span>الإصابات <b class="ltr">' + mult(d.inj) + '</b></span><span>العروض <b class="ltr">' + mult(d.offers) + '</b></span></span></button>';
-  }).join('');
+      '<span class="dm"><span>الخبرة <b class="ltr">' + mult(d.xp) + '</b></span><span>ثقة المدرب <b class="ltr">' + mult(d.trustDown) + '</b></span><span>الإصابات <b class="ltr">' + mult(d.inj) + '</b></span><span>العروض <b class="ltr">' + mult(d.offers) + '</b></span></span></button>';
+  }).join('') + '<div class="dopt-more">' + UI.more('', G.DIFF_ORDER.map((id) => '<div class="dopt-d"><b>' + G.DIFF[id].icon + ' ' + esc(G.DIFF[id].ar) + '</b><span class="sm mut">' + esc(G.DIFF[id].desc) + '</span></div>').join(''), 'شرح المستويات') + '</div>';
 
   UI.on('setDiff', (id) => {
     if (!G.DIFF[id]) return false;
@@ -24,7 +25,7 @@
 
   UI.diffCard = () => {
     const cur = G.S.diff || 'normal';
-    return '<div class="card"><h3>🎚️ مستوى الصعوبة</h3><p class="sm mut">يؤثر على سرعة تطورك وثقة المدرب والإصابات وعروض الانتقال فقط، ولا يغيّر قوة الفرق ولا نتائج المباريات.</p>' + UI.diffPicker(cur, 'setDiff') + '</div>';
+    return '<div class="card"><h3>🎚️ مستوى الصعوبة</h3><p class="sm mut">يؤثر على التطور وثقة المدرب والإصابات والعروض فقط، لا على قوة الفرق ولا النتائج.</p>' + UI.diffPicker(cur, 'setDiff') + '</div>';
   };
 
   // ---------- الدليل التعريفي ----------

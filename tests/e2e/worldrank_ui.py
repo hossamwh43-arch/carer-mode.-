@@ -25,8 +25,11 @@ with sync_playwright() as p:
     check(page.query_selector('.tile[data-v="worldrank"]') is not None, '%s: بلاطة «تصنيفات العالم» في المزيد' % VW)
     page.click('.tile[data-v="worldrank"]'); page.wait_for_timeout(250)
     check(S('G.UI.cur') == 'worldrank', 'البلاطة تفتح شاشة التصنيفات')
-    check(len(page.query_selector_all('.tabs .tab')) == 3, 'شريط التبديل معروض فعلًا (3 أقسام)')
-    check('التصنيفات' in S("document.querySelector('.sw button.on')?.textContent||''"), 'مجموعة «المزيد» تُظهر القسم نشطًا')
+    check(len(page.query_selector_all('.sw .tabs .tab')) == 3 and len(page.query_selector_all('.tabs:not(.inline)')) == 1, 'شريط التبويبات الموحّد معروض فعلًا (3 تبويبات في شريط واحد)')
+    # Build 27: أقسام المجموعة صارت في قائمة العنوان (الشريط الواحد لتبويبات الصفحة فقط)
+    page.click('#topTitle'); page.wait_for_timeout(300)
+    check('التصنيفات' in S("document.querySelector('.sec-row.on')?.textContent||''"), 'قائمة العنوان تُظهر «التصنيفات» نشطًا ضمن مجموعة «المزيد»')
+    S("G.UI.closeSheet()"); page.wait_for_timeout(250)
 
     # الأندية
     check(len(page.query_selector_all('.wr-pod')) == 3 and page.query_selector('.wr-pod.p1') is not None, 'منصة أول ثلاثة أندية')

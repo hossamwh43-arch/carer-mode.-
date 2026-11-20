@@ -138,7 +138,9 @@
   function heroHome(u) {
     const S = S_(), pos = S.league && S.phase !== 'summer' ? G.League.position(u.club) : 0;
     const ph = S.phase === 'season' ? UI.week() : S.phase === 'summer' ? 'الصيف' : S.phase === 'end' ? 'نهاية الموسم' : '';
-    return UI.cinePlayer(u, { extra: UI.mediaMini ? UI.mediaMini() : '', act: '<button class="hbtn" data-a="cardOpen">' + UI.ico('pcard') + ' بطاقتي</button>', chips: [G.Season.label(S.season) + (ph ? ' · ' + ph : ''), pos ? 'المركز ' + pos + ' · ' + esc(G.leagueName(S.league.lg)) : ''] });
+    const cell = (k, v) => v ? '<div class="cp-c"><small>' + k + '</small><b>' + v + '</b></div>' : '';
+    const panel = '<div class="cp-row">' + cell('الموسم', G.Season.label(S.season) + (ph ? ' · ' + ph : '')) + cell('الترتيب', pos ? 'المركز ' + pos + ' · ' + esc(G.leagueName(S.league.lg)) : '') + '</div>' + (UI.mediaMini ? UI.mediaMini() : '');
+    return UI.cinePlayer(u, { act: '<button class="hbtn" data-a="cardOpen">' + UI.ico('pcard') + ' بطاقتي</button>', panel: panel });
   }
 
   UI.screens.home = () => {
@@ -166,7 +168,7 @@
   UI.on('preseason', () => {
     const r = G.Season.preseason();
     if (!r) { UI.toast('لا حصص إعداد متبقية'); return; }
-    UI.toast('انتهت الحصة: +' + r.xp + ' XP' + (r.ups ? ' · مستوى جديد!' : '') + (r.attrUps.length ? ' · تحسّن: ' + r.attrUps.map((k) => G.Players.ATTR_AR[k]).join('، ') : ''));
+    UI.notify('week', 'انتهت الحصة', '+' + r.xp + ' XP' + (r.attrUps.length ? ' · تحسّن: ' + r.attrUps.map((k) => G.Players.ATTR_AR[k]).join('، ') : ''));
     UI.levelFx(r);
   });
 
@@ -181,7 +183,7 @@
     if (!r.ok) { UI.toast(r.msg); return; }
     if (G.S.phase === 'end') { UI.toast('انتهى الموسم!'); UI.seasonFx(); return; }
     const t = r.training;
-    UI.toast('انتهى الأسبوع ' + w + ' · +' + t.xp + ' XP' + (t.attrUps.length ? ' · تحسّن: ' + t.attrUps.map((k) => G.Players.ATTR_AR[k]).join('، ') : ''));
+    UI.notify('week', 'انتهى الأسبوع ' + w, '+' + t.xp + ' XP' + (t.attrUps.length ? ' · تحسّن: ' + t.attrUps.map((k) => G.Players.ATTR_AR[k]).join('، ') : ''));
     UI.levelFx(t);
   });
 

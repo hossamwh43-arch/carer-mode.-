@@ -88,7 +88,7 @@
         '<p class="sm mut" style="margin-top:10px">الطول الأكبر يزيد القوة البدنية ويخفض السرعة قليلًا، والعكس صحيح. ' + (wz.pos === 'GK' ? 'الحراس يبدؤون بسمات حراسة بدل التسديد.' : '') + '</p></div>';
     } else if (wz.step === 3) {
       const L = G.LOOK;
-      h += '<div class="card"><div class="c">' + UI.avatar(wz.look, null, 110) + '</div>' +
+      h += '<div class="card"><div class="c">' + UI.avatar(wz.look, null, 110, (wz.name || '').trim()) + '</div>' +
         '<label class="f">لون البشرة</label><div class="chips">' + L.skin.map((c, i) => '<button class="chip ' + (wz.look.skin === i ? 'on' : '') + '" data-a="wzLook" data-v="skin" data-v2="' + i + '" style="background:' + c + ';width:46px;height:46px;padding:0" aria-label="بشرة ' + (i + 1) + '"></button>').join('') + '</div>' +
         '<label class="f">لون الشعر</label><div class="chips">' + L.hair.map((c, i) => '<button class="chip ' + (wz.look.hair === i ? 'on' : '') + '" data-a="wzLook" data-v="hair" data-v2="' + i + '" style="background:' + c + ';width:46px;height:46px;padding:0" aria-label="شعر ' + (i + 1) + '"></button>').join('') + '</div>' +
         '<label class="f">قصّة الشعر</label><div class="chips">' + L.styles.map((c, i) => '<button class="chip ' + (wz.look.style === i ? 'on' : '') + '" data-a="wzLook" data-v="style" data-v2="' + i + '">' + c + '</button>').join('') + '</div>' +
@@ -109,7 +109,7 @@
     } else {
       const c = G.S && G.S.clubs[wz.clubId] ? G.S.clubs : ensureWorld(wz).clubs;
       const cl = c[wz.clubId];
-      h += '<div class="card hl"><div class="row"><div>' + UI.avatar(wz.look, null, 84) + '</div><div class="grow"><h3 style="margin:0">' + esc(wz.name.trim()) + '</h3><div class="mut">' + natName(wz.nat) + ' · ' + wz.age + ' سنة</div><div class="mut">' + G.POS_AR[wz.pos] + ' (' + wz.pos + ') · ' + wz.h + ' سم · ' + wz.w + ' كغ · ' + (wz.foot === 'R' ? 'يمنى' : 'يسرى') + '</div></div></div>' +
+      h += '<div class="card hl"><div class="row"><div>' + UI.avatar(wz.look, null, 84, (wz.name || '').trim()) + '</div><div class="grow"><h3 style="margin:0">' + esc(wz.name.trim()) + '</h3><div class="mut">' + natName(wz.nat) + ' · ' + wz.age + ' سنة</div><div class="mut">' + G.POS_AR[wz.pos] + ' (' + wz.pos + ') · ' + wz.h + ' سم · ' + wz.w + ' كغ · ' + (wz.foot === 'R' ? 'يمنى' : 'يسرى') + '</div></div></div>' +
         '<div class="kv"><span>النادي</span><b>' + esc(cl ? cl.name : '') + '</b></div><div class="kv"><span>الدوري</span><span>' + esc(G.leagueName(wz.lg)) + '</span></div><div class="kv"><span>التقييم الابتدائي</span><span>≈ ' + expectedOvr(wz.age) + '</span></div><div class="kv"><span>رقم القميص</span><span>' + wz.num + '</span></div></div>' +
         '<div class="card"><h4>🎚️ مستوى الصعوبة</h4>' + UI.diffPicker(wz.diff || 'normal', 'wzDiff') + '<p class="sm mut">يمكنك تغييره لاحقًا من الإعدادات.</p></div>' +
         '<div class="notice ok">سيتم حفظ مسيرتك تلقائيًا. يمكنك إغلاق المتصفح والعودة في أي وقت.</div>';

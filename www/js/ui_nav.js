@@ -37,17 +37,101 @@
 
   const allowed = (r) => !(G.S && G.S.phase === 'retired') || UI.RETIRED_OK.indexOf(r) >= 0;
 
-  // الشريط الفرعي (يظهر فقط للمجموعات ذات أكثر من قسم)
-  UI.switcher = () => {
-    const g = UI.GROUPS[UI.groupOf(UI.cur)];
-    if (!g || g.items.length < 2) return '';
-    const items = g.items.filter((it) => allowed(it[0]));
-    if (items.length < 2) return '';
-    const unread = G.Inbox ? G.Inbox.unread() : 0;
-    return '<nav class="sw" aria-label="أقسام ' + g.ar + '">' + items.map((it) =>
-      '<button class="' + (it[0] === UI.cur ? 'on' : '') + '" data-a="go" data-v="' + it[0] + '"' + (it[0] === UI.cur ? ' aria-current="page"' : '') + '>' + it[1] +
-      (it[0] === 'inbox' && unread ? '<i class="sw-n">' + unread + '</i>' : '') + '</button>').join('') + '</nav>';
+  // ---------- شريط واحد (Build 27) ----------
+  // كان للصفحة صفّان من التبويبات (أقسام المجموعة + تبويبات الصفحة). الآن: أقسام المجموعة في قائمة العنوان العلوي (اضغط العنوان)،
+  // والشريط اللاصق الوحيد يحمل تبويبات الصفحة نفسها (UI.tabs) ويُحذف تمامًا من الصفحات التي لا تبويبات فيها.
+  const SEC = {
+    profile: ['user', 'اللاعب وسماته وإحصاءاته'], career: ['book', 'سجل المسيرة موسمًا بموسم'], trophies: ['trophy', 'ألقابك ووصافاتك'],
+    market: ['swap', 'العروض والعقود والوكيل'], stats: ['chart', 'الموسم والإنجازات والسجل'], bd: ['crown', 'ترتيب المرشحين والحفلات'],
+    matches: ['pitch', 'مباراتك القادمة والجدول'], league: ['podium', 'الترتيب والهدافون'], cup: ['shield', 'القرعة والنتائج والأبطال'],
+    ucl: ['ucl', 'مرحلة الدوري والإقصائيات'], intl: ['globe', 'كأس العالم وآسيا'],
+    club: ['club', 'ناديك وأجواؤه'], squad: ['shirt', 'التشكيلة واللاعبون'], train: ['dumbbell', 'التدريب والسمات والمدرب'],
+    more: ['grid', 'كل الأقسام'], press: ['mic', 'الصفحة الأولى وشعبيتك'], inbox: ['mail', 'قراراتك وعروضك ورسائلك'],
+    worldrank: ['medal', 'الأندية والمنتخبات وأرشيف سنوي'], settings: ['gear', 'الصوت والحفظ والصعوبة']
   };
+  // أقسام المجموعة الحالية (يُرجع [] إن كانت الصفحة خارج المجموعات أو المجموعة قسمًا واحدًا)
+  UI.sectionItems = () => {
+    const g = UI.GROUPS[UI.groupOf(UI.cur)];
+    if (!g || g.items.length < 2 || !g.items.some((it) => it[0] === UI.cur)) return [];
+    const items = g.items.filter((it) => allowed(it[0]));
+    return items.length >= 2 ? items : [];
+  };
+  // العنوان العلوي: يصير زرّ قائمة الأقسام عندما تكون للمجموعة أقسام أخرى
+  UI.setTitle = (txt) => {
+    const el = document.getElementById('topTitle'); if (!el) return;
+    const sec = UI.sectionItems().length >= 2;
+    el.classList.toggle('menu', sec);
+    if (sec) {
+      el.setAttribute('data-a', 'secMenu'); el.setAttribute('role', 'button'); el.setAttribute('tabindex', '0'); el.setAttribute('aria-haspopup', 'dialog'); el.setAttribute('aria-label', txt + ' — أقسام ' + UI.GROUPS[UI.groupOf(UI.cur)].ar);
+      el.innerHTML = '<span class="tt-t">' + esc(txt) + '</span>' + UI.ico('chevd');
+    } else {
+      ['data-a', 'role', 'tabindex', 'aria-haspopup', 'aria-label'].forEach((a) => el.removeAttribute(a));
+      el.textContent = txt;
+    }
+  };
+  UI.on('secMenu', () => {
+    const g = UI.GROUPS[UI.groupOf(UI.cur)], items = UI.sectionItems(); if (!items.length) return false;
+    const unread = G.Inbox ? G.Inbox.unread() : 0;
+    UI.sheet('<h3>' + esc(g.ar) + '</h3><div class="sec-list" role="menu">' + items.map((it) => {
+      const m = SEC[it[0]] || ['grid', ''], on = it[0] === UI.cur;
+      return '<button class="sec-row' + (on ? ' on' : '') + '" role="menuitem" data-a="secGo" data-v="' + it[0] + '"' + (on ? ' aria-current="page"' : '') + '><span class="sec-ic">' + UI.ico(m[0]) + '</span><span class="sec-t"><b>' + it[1] + '</b><small>' + m[1] + '</small></span>' +
+        (it[0] === 'inbox' && unread ? '<i class="sw-n">' + unread + '</i>' : '') + (on ? '<span class="sec-ok">' + UI.ico('check') + '</span>' : '') + '</button>';
+    }).join('') + '</div><button class="btn" data-a="closeSheet">إغلاق</button>');
+    return false;
+  });
+  UI.on('secGo', (v) => { UI.closeSheet(); UI.cur = v; window.scrollTo(0, 0); });
+  // لوحة المفاتيح: العنوان زرّ مخصّص (div) فيحتاج Enter/Space صراحةً
+  document.addEventListener('keydown', (e) => { const el = e.target; if ((e.key === 'Enter' || e.key === ' ') && el && el.id === 'topTitle' && el.classList.contains('menu')) { e.preventDefault(); el.click(); } });
+
+  // الشريط اللاصق: تبويبات الصفحة فقط (إن وُجدت) + سهما تمرير يظهران عند وجود عناصر مخفية
+  UI.switcher = () => {
+    const b = UI._bar; if (!b) return '';
+    return '<nav class="sw" data-key="' + b.key + '" aria-label="تبويبات الصفحة"><div class="tabs" role="tablist">' + b.html + '</div>' +
+      '<button class="sw-go s" tabindex="-1" data-a="tabsGo" data-v="s" aria-label="السابق">' + UI.ico('chevr') + '</button><button class="sw-go e" tabindex="-1" data-a="tabsGo" data-v="e" aria-label="التالي">' + UI.ico('chevl') + '</button></nav>';
+  };
+  // أي أطراف الشريط فيها عناصر مخفية؟ (الواجهة RTL: البداية يمين). يُخزَّن في data-s كرموز s/e
+  const hint = (sw) => {
+    const t = sw.querySelector('.tabs'); if (!t || !t.firstElementChild) return;
+    const c = t.getBoundingClientRect(), f = t.firstElementChild.getBoundingClientRect(), l = t.lastElementChild.getBoundingClientRect(), rtl = getComputedStyle(t).direction === 'rtl';
+    const hs = rtl ? f.right > c.right + 2 : f.left < c.left - 2, he = rtl ? l.left < c.left - 2 : l.right > c.right + 2;
+    sw.setAttribute('data-s', (hs ? 's' : '') + (hs && he ? ' ' : '') + (he ? 'e' : ''));
+  };
+  // تلميح التمرير المضمون: عند أول عرض إن كان أول تبويب غير مكتمل الظهور مخفيًا كليًا (أو لم يُقصّ منه إلا القليل) نضبط حشوة التبويبات
+  // بضعة بكسلات (--tp-adj) فيظهر منه جزء واضح يدلّ على أن الشريط يتمرّر. لا نقصّ نصًا ولا نغيّر ترتيبًا أو أفعالًا.
+  const peekFit = (t) => {
+    const tabs = Array.prototype.slice.call(t.querySelectorAll('.tab'));
+    t.style.removeProperty('--tp-adj');
+    if (tabs.length < 2 || t.scrollWidth <= t.clientWidth + 1) return;
+    const c = t.getBoundingClientRect();
+    const ov = (r) => Math.max(0, Math.min(r.right, c.right) - Math.max(r.left, c.left));
+    let k = -1, w = 0, peek = 0;
+    for (let i = 0; i < tabs.length; i++) { const r = tabs[i].getBoundingClientRect(); if (ov(r) < r.width - 1) { k = i; w = r.width; peek = ov(r); break; } }
+    if (k < 1) return;
+    const lo = 30, hi = Math.max(lo, w - 26);
+    if (peek >= lo && peek <= hi) return;
+    const target = peek < lo ? Math.min(44, hi) : hi, adj = Math.max(-7, Math.min(6, -(target - peek) / (2 * k)));
+    t.style.setProperty('--tp-adj', adj.toFixed(2) + 'px');
+  };
+  UI.tabsMemo = () => { const t = document.querySelector('#app .sw .tabs'); return t ? { key: t.parentNode.getAttribute('data-key'), left: t.scrollLeft } : null; };
+  UI.tabsFx = (old, entering) => {
+    const sw = document.querySelector('#app .sw'); if (!sw) return;
+    const t = sw.querySelector('.tabs'), on = t.querySelector('.tab.on');
+    G.safe(() => peekFit(t), 'peekFit');
+    if (old && old.key === sw.getAttribute('data-key')) t.scrollLeft = old.left; // نفس الشريط: نُبقي موضع التمرير ثم نحرّك بنعومة
+    if (on) {
+      const c = t.getBoundingClientRect(), r = on.getBoundingClientRect(), d = (r.left + r.width / 2) - (c.left + c.width / 2);
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (Math.abs(d) > 1) { if (entering || reduced || !old) t.scrollLeft += d; else try { t.scrollTo({ left: t.scrollLeft + d, behavior: 'smooth' }); } catch (e) { t.scrollLeft += d; } }
+    }
+    hint(sw);
+    t.addEventListener('scroll', () => hint(sw), { passive: true });
+  };
+  UI.on('tabsGo', (v) => {
+    const t = document.querySelector('#app .sw .tabs'); if (!t) return false;
+    const rtl = getComputedStyle(t).direction === 'rtl', step = Math.max(120, t.clientWidth * 0.6) * (v === 'e' ? 1 : -1) * (rtl ? -1 : 1);
+    try { t.scrollBy({ left: step, behavior: 'smooth' }); } catch (e) { t.scrollLeft += step; }
+    return false;
+  });
 
   // مزامنة الشريط السفلي: التبويب النشط + نقاط التنبيه (مباراة تنتظر، رسائل غير مقروءة، مؤتمر صحفي)
   UI.navSync = () => {
@@ -93,16 +177,17 @@
   };
 
   // غلاف سينمائي للاعب: خلفية ملعب ليلي بلون النادي + بورتريه كبير + التقييم والاسم والنادي
-  // opt.chips: وسوم زجاجية أسفل الغلاف · opt.act: زر صغير أعلى الغلاف · opt.extra: html بعد سطر النادي · opt.big: بورتريه أكبر
+  // opt.panel: لوحة معلومات مجمّعة (خليتان + سطر) أسفل الغلاف بدل الوسوم المتفرقة · opt.chips: وسوم زجاجية أسفل الغلاف · opt.act: زر صغير أعلى الغلاف · opt.extra: html بعد سطر النادي · opt.big: بورتريه أكبر
   UI.cinePlayer = (p, opt) => {
     opt = opt || {};
     const club = G.S.clubs[p.club], tc = UI.tierCls(p);
     const chips = (opt.chips || []).filter(Boolean).map((c) => '<span class="hchip">' + c + '</span>').join('');
     return '<section class="cine ' + tc + (opt.big ? ' big' : '') + '"><div class="cine-top"><div class="cine-ovr"><b class="ovr ' + tc + '">' + p.ovr + '</b><small>' + p.pos + '</small></div>' +
       '<div class="cine-kick">' + (UI.natBadge(p.nat, 18) || '') + '<span>منتخب ' + esc(UI.natName(p.nat)) + '</span></div>' + (opt.act ? '<div class="cine-act">' + opt.act + '</div>' : '') + '</div>' +
-      '<div class="cine-body"><div class="cine-art">' + UI.avatar(p.look, p.club, opt.big ? 210 : 176) + '</div><div class="cine-in">' +
+      '<div class="cine-body"><div class="cine-art">' + UI.avatar(p.look, p.club, opt.big ? 210 : 176, p.n) + '</div><div class="cine-in">' +
       '<h1 class="cine-name">' + esc(p.n) + '</h1><div class="cine-sub">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + '</div>' +
       '<div class="cine-club">' + UI.badge(p.club, 22) + '<span>' + esc(club ? club.name : '') + '</span></div>' + (opt.extra || '') + '</div></div>' +
+      (opt.panel ? '<div class="cine-panel">' + opt.panel + '</div>' : '') +
       (chips ? '<div class="cine-chips">' + chips + '</div>' : '') + '</section>';
   };
 

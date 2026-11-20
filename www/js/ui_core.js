@@ -80,33 +80,7 @@
   };
   UI.clubTag = (id, size) => '<span class="club">' + UI.badge(id, size || 22) + '<span>' + UI.esc(UI.cname(id)) + '</span></span>';
 
-  UI.avatar = (look, clubId, size) => {
-    look = look || {}; size = size || 72;
-    const skin = G.LOOK.skin[look.skin || 0], hair = G.LOOK.hair[look.hair || 0], st = look.style || 0;
-    const c = clubId && G.S && G.S.clubs[clubId] ? G.S.clubs[clubId].c : ['#22c55e', '#0f5132'];
-    const hairSvg = [
-      '<path d="M30 40 Q32 20 50 20 Q68 20 70 40 Q62 30 50 30 Q38 30 30 40Z" fill="' + hair + '"/>',
-      '<g fill="' + hair + '"><circle cx="34" cy="30" r="8"/><circle cx="44" cy="23" r="9"/><circle cx="56" cy="23" r="9"/><circle cx="66" cy="30" r="8"/></g>',
-      '<path d="M28 44 Q28 18 50 18 Q72 18 72 44 L72 62 L66 50 Q62 30 50 30 Q38 30 34 50 L28 62Z" fill="' + hair + '"/>',
-      '',
-      '<path d="M30 40 Q32 20 50 20 Q68 20 70 40 Q62 30 50 30 Q38 30 30 40Z" fill="' + hair + '"/><circle cx="74" cy="34" r="6" fill="' + hair + '"/>',
-      '<path d="M44 20 Q50 12 56 20 L56 32 L44 32Z" fill="' + hair + '"/>',
-      '<path d="M26 42 Q21 13 50 11 Q79 13 74 42 Q68 28 50 28 Q32 28 26 42Z" fill="' + hair + '"/>',                                         // أفرو
-      '<path d="M29 42 Q29 19 52 19 Q71 20 71 42 Q65 33 53 30 Q41 28 36 37 Q33 40 29 42Z" fill="' + hair + '"/>',                           // جانبي
-      '<path d="M30 40 Q32 20 50 20 Q68 20 70 40 Q62 30 50 30 Q38 30 30 40Z" fill="' + hair + '"/><circle cx="50" cy="13" r="8.5" fill="' + hair + '"/>' // عقدة
-    ][st] || '';
-    // اللحية (0 بدون، 1 خفيفة، 2 كثّة، 3 سكسوكة، 4 شارب) وشريط الرأس (0 بدون، 1 بلون النادي، 2 أبيض): اختياريان ومتوافقان مع الحفظ القديم
-    const bd = look.beard | 0, bn = look.band | 0;
-    const beardSvg = [
-      '',
-      '<path d="M30 46 Q32 66 50 66 Q68 66 70 46 Q64 58 50 58 Q36 58 30 46Z" fill="' + hair + '" opacity=".4"/>',
-      '<path d="M29 44 Q27 71 50 71 Q73 71 71 44 Q66 53 61 55 Q50 51 39 55 Q34 53 29 44Z" fill="' + hair + '"/><ellipse cx="50" cy="55.5" rx="7" ry="3.2" fill="' + skin + '"/>',
-      '<ellipse cx="50" cy="62" rx="6.5" ry="6" fill="' + hair + '"/><path d="M42 51 Q50 47 58 51 Q54 53.6 50 52 Q46 53.6 42 51Z" fill="' + hair + '"/>',
-      '<path d="M40 51.5 Q50 46.5 60 51.5 Q54.5 55 50 52.5 Q45.5 55 40 51.5Z" fill="' + hair + '"/>'
-    ][bd] || '';
-    const bandSvg = bn ? '<path d="M29 34 Q50 25 71 34 L71 39.5 Q50 31 29 39.5Z" fill="' + (bn === 2 ? '#f4f6fa' : c[0]) + '" stroke="rgba(0,0,0,.25)" stroke-width=".8"/>' : '';
-    return '<svg class="avatar" width="' + size + '" height="' + size + '" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 100 Q14 70 50 66 Q86 70 88 100Z" fill="' + c[0] + '"/><path d="M40 68 L50 80 L60 68" fill="none" stroke="' + c[1] + '" stroke-width="5" stroke-linejoin="round"/><rect x="43" y="52" width="14" height="16" rx="5" fill="' + skin + '"/><ellipse cx="50" cy="40" rx="21" ry="24" fill="' + skin + '"/>' + beardSvg + hairSvg + bandSvg + '<circle cx="42" cy="42" r="2.3" fill="#1a1a1a"/><circle cx="58" cy="42" r="2.3" fill="#1a1a1a"/><path d="M43 53 Q50 58 57 53" fill="none" stroke="#7a3b2e" stroke-width="2" stroke-linecap="round"/></svg>';
-  };
+  // UI.avatar (صورة اللاعب) في ui_avatar.js
 
   UI.stars = (pot) => { const n = U.clamp(Math.round((pot - 62) / 6), 1, 5); return '<span class="stars">' + '★'.repeat(n) + '<span class="mut">' + '☆'.repeat(5 - n) + '</span></span>'; };
   UI.ratingCls = (r) => (r >= 7 ? '' : r >= 6.2 ? 'mid' : 'low');
@@ -119,12 +93,8 @@
   UI.week = () => 'الأسبوع ' + G.S.week + ' / 39';
 
   // ---------- النوافذ والرسائل ----------
-  UI.toast = (msg, ms) => {
-    const t = $('#toast');
-    t.textContent = msg; t.classList.remove('hidden');
-    clearTimeout(UI._tt);
-    UI._tt = setTimeout(() => t.classList.add('hidden'), ms || 2600);
-  };
+  // الإشعارات الفعلية في ui_fx.js (UI.notify)؛ هذه نسخة احتياطية قبل تحميله
+  UI.toast = (msg) => { if (UI.notify) UI.notify('info', msg, ''); };
   UI.sheet = (html) => { $('#sheet').innerHTML = html; $('#sheetWrap').classList.remove('hidden'); };
   UI.closeSheet = () => { $('#sheetWrap').classList.add('hidden'); $('#sheet').innerHTML = ''; UI._sheetFn = null; };
   UI.sheetRender = (fn) => { UI._sheetFn = fn; UI.sheet(fn()); };
@@ -235,9 +205,13 @@
       });
     } catch (e) { /* التاريخ غير متاح */ }
   };
-  UI.tabs = (key, items, def) => {
+  // التبويبات (Build 27): شريط واحد لاصق تحت الشريط العلوي. أول استدعاء أثناء رسم الشاشة يُسجَّل في UI._bar ويُرسم في الشريط اللاصق
+  // (UI.switcher في ui_nav.js)، وأي استدعاء إضافي أو خارج الرسم (أو opt.inline) يُرجع صفًا عاديًا داخل المحتوى بالتصميم نفسه.
+  UI.tabs = (key, items, def, opt) => {
     const cur = UI.sub[key] || def || items[0][0];
-    return '<div class="tabs">' + items.map((it) => '<button class="tab ' + (cur === it[0] ? 'on' : '') + '" data-a="tab" data-v="' + key + '" data-v2="' + it[0] + '">' + it[1] + '</button>').join('') + '</div>';
+    const list = items.map((it) => '<button class="tab ' + (cur === it[0] ? 'on' : '') + '" role="tab" aria-selected="' + (cur === it[0]) + '" data-a="tab" data-v="' + key + '" data-v2="' + it[0] + '">' + it[1] + '</button>').join('');
+    if (UI._barOpen && !UI._bar && !(opt && opt.inline)) { UI._bar = { key: key, html: list }; return ''; }
+    return '<div class="tabs inline" role="tablist">' + list + '</div>';
   };
   UI.curTab = (key, def) => UI.sub[key] || def;
 
@@ -255,17 +229,22 @@
     if (UI.groupOf && UI.cur !== 'match') UI.lastIn[UI.groupOf(UI.cur)] = UI.cur;
     app.className = 'app' + (UI.cur === 'match' ? ' nobot' : '') + (entering ? ' scr-in' : '');
     $('#bottomnav').classList.toggle('hidden', UI.cur === 'match');
-    { const tt = UI.titles[UI.cur]; $('#topTitle').textContent = (typeof tt === 'function' ? tt() : tt) || ''; }
+    { const tt = UI.titles[UI.cur], txt = (typeof tt === 'function' ? tt() : tt) || ''; if (UI.setTitle) UI.setTitle(txt); else $('#topTitle').textContent = txt; }
     const bb = $('#backBtn');
     if (bb) bb.classList.toggle('hidden', !(UI.MAIN.indexOf(UI.cur) < 0 && UI.cur !== 'match' && (UI.stack.length > 0 || S.phase !== 'retired')));
     if (UI.navSync) UI.navSync(); else document.querySelectorAll('#bottomnav button').forEach((b) => b.classList.toggle('on', b.dataset.v === UI.cur));
     const ub = G.Inbox.unread(), bd = $('#inboxBadge');
     bd.textContent = ub; bd.classList.toggle('hidden', !ub);
     const scr = UI.screens[UI.cur] || UI.screens.home;
+    UI._bar = null; UI._barOpen = true;
     let html = G.safe(scr, 'render:' + UI.cur);
+    UI._barOpen = false;
     if (html == null) html = '<div class="card notice bad">حدث خطأ أثناء عرض هذه الصفحة. بياناتك محفوظة. ' + UI.esc(G.lastError ? G.lastError.msg : '') + '</div><button class="btn" data-a="go" data-v="home">العودة للرئيسية</button>';
+    const oldTabs = UI.tabsMemo ? UI.tabsMemo() : null;
     app.innerHTML = (UI.switcher ? G.safe(UI.switcher, 'switcher') || '' : '') + html;
+    if (UI.tabsFx) G.safe(() => UI.tabsFx(oldTabs, entering), 'tabsFx');
     if (UI._sheetFn && !$('#sheetWrap').classList.contains('hidden')) $('#sheet').innerHTML = UI._sheetFn();
+    if (UI.inboxNotify) G.safe(UI.inboxNotify, 'inboxNotify');
     if (UI.after) { const f = UI.after; UI.after = null; f(); }
   };
   UI.chrome = (on) => { $('#topbar').classList.toggle('hidden', !on); if (!on) $('#bottomnav').classList.add('hidden'); };

@@ -20,6 +20,24 @@
     get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* لا شيء */ } }
   };
+  // خطوط الهوية داخل الـCanvas (نفس @font-face في CSS) + احتياط آمن
+  const NAME_FONT = '"Disp","Noto Kufi Arabic",system-ui,sans-serif', NUM_FONT = '"Num","Barlow Condensed",system-ui,sans-serif';
+  // نصّ السطر السفلي: كل مقطع لاتيني (فريق/لاعب) داخل <bdi dir=ltr> فلا تتسرّب علامات الترقيم (: × ') إلى الاتجاه الخطأ.
+  // حدث البداية «العنوان: الفريقان» يُعرض سطرين: العنوان العربي بنقطتيه ملتصقتين به، وتحته الفريقان بخط الهوية.
+  const LAT = /[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F0-9 .'\u2019\-\u00D7]*[A-Za-z\u00C0-\u024F0-9.]|[A-Za-z\u00C0-\u024F]/g;
+  const esc1 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function latIso(raw) {
+    raw = String(raw); let out = '', at = 0, m;
+    LAT.lastIndex = 0;
+    while ((m = LAT.exec(raw))) { out += esc1(raw.slice(at, m.index)) + '<bdi class="lat" dir="ltr">' + esc1(m[0]) + '</bdi>'; at = m.index + m[0].length; }
+    return out + esc1(raw.slice(at));
+  }
+  function capHtml(txt, kind) {
+    const raw = String(txt).replace(/^[^\p{L}\p{N}]+/u, '');
+    const k = kind === 'kick' ? /^([^:\uFF1A]+)[:\uFF1A]\s*(.+)$/.exec(raw) : null;
+    if (k) return '<bdi class="cap-k" dir="rtl">' + esc1(k[1].trim()) + ':</bdi> <span class="cap-v">' + latIso(k[2]) + '</span>';
+    return latIso(raw);
+  }
   const code = (id) => { const c = G.S.clubs[id]; return c ? (c.code || UI.abbr(c.name).slice(0, 3)) : '—'; };
   const surname = (n) => String(n || '').split(/\s+/).slice(-1)[0];
 
@@ -191,7 +209,7 @@
     });
     // السطر السفلي (آخر حدث ظاهر فقط: لا كشف لهدف قبل لحظته) واللوحة
     const cap = S.held(), vis = Math.min(cap, n), last = vis > 0 ? m.ev[vis - 1] : null;
-    if (last && last.txt !== st.lastTxt) { st.lastTxt = last.txt; if (st.cap) { st.cap.textContent = String(last.txt).replace(/^[^\p{L}\p{N}]+/u, ''); st.cap.classList.remove('on'); void st.cap.offsetWidth; if (last.k !== 'sub') st.cap.classList.add('on'); /* التبديل له شريطه الخاص */ } if (st.canvas) st.canvas.setAttribute('aria-label', 'ملعب المباراة: ' + st.cap.textContent); }
+    if (last && last.txt !== st.lastTxt) { st.lastTxt = last.txt; if (st.cap) { st.cap.innerHTML = capHtml(last.txt, last.k); st.cap.classList.remove('on'); void st.cap.offsetWidth; if (last.k !== 'sub') st.cap.classList.add('on'); /* التبديل له شريطه الخاص */ } if (st.canvas) st.canvas.setAttribute('aria-label', 'ملعب المباراة: ' + st.cap.textContent); }
     const sc = S.shown(m);
     st.sb.h.textContent = code(m.h); st.sb.a.textContent = code(m.a); st.sb.sc.textContent = sc.h + ' - ' + sc.a;
     st.sb.mn.textContent = m.done ? 'نهاية' : m.i === 0 ? '' : m.labs[m.i - 1] + "'";
@@ -734,7 +752,7 @@
     if (big) { ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(face > 0 ? -H * 0.19 : H * 0.07, ty - H * 0.33, H * 0.12, H * 0.34); }
     if (!e.gk && kit.trim && !isRef) { ctx.fillStyle = kit.trim; ctx.globalAlpha = 0.75; ctx.fillRect(-H * 0.19, ty - H * 0.2, H * 0.38, H * 0.06); ctx.globalAlpha = 1; }
     if (big && !isRef) { ctx.fillStyle = kit.trim || 'rgba(255,255,255,.7)'; ctx.globalAlpha = 0.8; ctx.fillRect(-H * 0.06, ty - H * 0.375, H * 0.12, H * 0.04); ctx.globalAlpha = 1; }
-    if (H >= 24 && st.q > 0 && !isRef && e.num) { ctx.font = '800 ' + (H * 0.2).toFixed(1) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = ink(shirtC); ctx.fillText(String(e.num), 0, ty - H * 0.1); }
+    if (H >= 24 && st.q > 0 && !isRef && e.num) { ctx.font = '800 ' + (H * 0.2).toFixed(1) + 'px ' + NUM_FONT; ctx.textAlign = 'center'; ctx.fillStyle = ink(shirtC); ctx.fillText(String(e.num), 0, ty - H * 0.1); }
     // الذراعان
     ctx.strokeStyle = shirtC; ctx.lineWidth = H * 0.1;
     const w10 = Math.sin(pt * 11) * H * 0.04;
@@ -763,7 +781,7 @@
       ctx.save(); ctx.strokeStyle = 'rgba(255,207,90,.9)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y, H * 0.38, H * 0.16, 0, 0, 6.3); ctx.stroke(); ctx.restore();
     }
     if (!isRef && ((e.user) || st.ball.carrier === e.id && st.cam.eff === 'follow')) {
-      ctx.save(); ctx.font = '700 ' + clamp(H * 0.36, 8, 12) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 2.4;
+      ctx.save(); ctx.font = '700 ' + clamp(H * 0.36, 8, 12) + 'px ' + NAME_FONT; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 2.4;
       const txt = e.name || ''; ctx.strokeText(txt, x, y + H * 0.34); ctx.fillText(txt, x, y + H * 0.34); ctx.restore();
     }
   }

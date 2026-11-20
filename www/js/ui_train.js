@@ -10,7 +10,7 @@
     return '<div class="card lv-hero"><div class="lv-ring" style="--p:' + pct + '"><b>' + p.lvl + '</b><small>المستوى</small></div>' +
       '<div class="lv-side"><div class="lv-xp"><span class="sm mut">الخبرة</span><span class="lv-xpn"><b>' + Math.round(p.xp) + '</b> / ' + need + '</span></div>' + UI.bar(p.xp / need * 100, 'blue') +
       '<div class="lv-dp ' + (p.dp ? 'on' : '') + '">' + UI.ico('bolt') + '<b>' + p.dp + '</b> نقاط تطوير متاحة</div></div>' +
-      '<p class="sm mut lv-note">تأتي الخبرة من التدريب الأسبوعي ومن المباريات (الأداء الجيد والدقائق الأكثر = خبرة أكثر).</p></div>';
+      '<div class="lv-note">' + UI.more('', 'تأتي الخبرة من التدريب الأسبوعي ومن المباريات (الأداء الجيد والدقائق الأكثر = خبرة أكثر).', 'كيف تُكتسب الخبرة؟') + '</div></div>';
   }
 
   // بطاقة الزخم والتألق: سلسلة المباريات، الزخم المؤقت، وبيئة النجوم
@@ -26,7 +26,7 @@
     h += '<div class="lv-tiles"><div class="trt"><small>زخم التألق</small><b class="' + (gi.glow ? 'gold' : '') + '">' + (gi.glow ? '+' + gi.glow : '—') + '</b><em>' + (gi.glow ? gi.left + ' مباريات' : 'غير نشط') + '</em></div>' +
       '<div class="trt"><small>بيئة الفريق</small><b>' + (gi.T ? Math.round(gi.T) : '—') + '</b><em>أفضل 8 زملاء</em></div>' +
       '<div class="trt ' + (gi.xpPct ? 'hi' : '') + '"><small>مضاعف الخبرة</small><b class="' + (gi.xpPct ? 'pos' : '') + '">×' + (1 + gi.xpPct / 100).toFixed(2) + '</b><em>إجمالي</em></div></div>';
-    if (gi.syn > 0.02) h += '<div class="kv"><span>أثر زملاء الطراز الرفيع</span><span class="pos">خبرة +' + gi.mentorPct + '٪</span></div><div class="kv"><span>أثره على أدائك</span><span class="pos">تقييم +' + gi.perfRating.toFixed(2) + ' · سمات اللحظات +' + gi.perfAttr + '</span></div>' + (gi.stars.length ? '<div class="sm mut">أبرزهم: ' + gi.stars.map(esc).join('، ') + '</div>' : '');
+    if (gi.syn > 0.02) h += '<div class="sm" style="margin-top:4px">' + UI.more('<span class="pos">أثر زملاء الطراز الرفيع · خبرة +' + gi.mentorPct + '٪</span>', '<div class="kv"><span>أثر زملاء الطراز الرفيع</span><span class="pos">خبرة +' + gi.mentorPct + '٪</span></div><div class="kv"><span>أثره على أدائك</span><span class="pos">تقييم +' + gi.perfRating.toFixed(2) + ' · سمات اللحظات +' + gi.perfAttr + '</span></div>' + (gi.stars.length ? '<div class="sm mut">أبرزهم: ' + gi.stars.map(esc).join('، ') + '</div>' : ''), 'التفاصيل') + '</div>';
     else h += '<div class="sm mut">' + UI.more('', 'الانتقال إلى فريق يضم نجومًا كبارًا (متوسط أفضل 8 زملاء 72 فأكثر) يرفع أداءك ويزيد خبرتك لأنك تحتكّ بهم يوميًا.', 'كيف يؤثر زملاء النجوم؟') + '</div>';
     h += '</div>';
     return h;
@@ -38,7 +38,7 @@
     return '<div class="card fitc"><h3>🔋 لياقتك البدنية</h3>' +
       '<div class="kv"><span>اللياقة الأساسية</span><span>' + f.cond + ' — ' + f.condLabel + '</span></div>' + UI.bar(f.cond, f.cond < 55 ? 'red' : f.cond < 70 ? 'gold' : '') +
       '<div class="kv" style="margin-top:8px"><span>الجاهزية الآن</span><span>' + f.fit + '% — ' + f.label + '</span></div>' + UI.bar(f.fit, f.fit < 50 ? 'red' : f.fit < 75 ? 'gold' : '') +
-      '<p class="sm mut" style="margin:8px 0 0">الأساس يتغيّر ببطء بحسب سمتك البدنية وعمرك وتدريبك ودقائقك، والجاهزية تهبط بعد المباراة وتتعافى بالراحة حتى سقف ≈' + ceil + '% بشدتك الحالية. الإرهاق داخل المباراة مؤقت ويبدأ من جاهزيتك ولا يتراكم.</p></div>';
+      '<div class="sm" style="margin-top:8px">' + UI.more('', 'الأساس يتغيّر ببطء بحسب سمتك البدنية وعمرك وتدريبك ودقائقك، والجاهزية تهبط بعد المباراة وتتعافى بالراحة حتى سقف ≈' + ceil + '% بشدتك الحالية. الإرهاق داخل المباراة مؤقت ويبدأ من جاهزيتك ولا يتراكم.', 'كيف تُحسب؟') + '</div></div>';
   }
 
   function trainTab(p) {
@@ -49,15 +49,15 @@
       focusList.map((f) => '<button class="chip ' + (t.focus === f.id ? 'on' : '') + '" data-a="setFocus" data-v="' + f.id + '">' + f.ar + '</button>').join('') + '</div>';
     if (t.focus !== 'balanced') {
       const pr = p.prog && p.prog[t.focus] ? p.prog[t.focus] : 0;
-      h += '<div class="row sb sm" style="margin-top:10px"><span>تقدّم ' + G.Players.ATTR_AR[t.focus] + '</span><span>' + Math.round(pr) + '%</span></div>' + UI.bar(pr, 'gold') + '<p class="sm mut" style="margin:6px 0 0">عند 100% ترتفع السمة تلقائيًا نقطة واحدة (ضمن سقف الموسم وإمكاناتك).</p>';
-    } else h += '<p class="sm mut" style="margin:8px 0 0">التدريب المتوازن يوزّع التقدّم على أهم 3 سمات لمركزك.</p>';
+      h += '<div class="row sb sm" style="margin-top:10px"><span>تقدّم ' + G.Players.ATTR_AR[t.focus] + '</span><span>' + Math.round(pr) + '%</span></div>' + UI.bar(pr, 'gold') + '<div class="sm" style="margin-top:6px">' + UI.more('', 'عند 100% ترتفع السمة تلقائيًا نقطة واحدة (ضمن سقف الموسم وإمكاناتك).', 'كيف يعمل؟') + '</div>';
+    } else h += '<div class="sm" style="margin-top:8px">' + UI.more('يوزّع التقدّم على أهم 3 سمات لمركزك', 'عند وصول تقدّم أي سمة إلى 100% ترتفع نقطة واحدة تلقائيًا (ضمن سقف الموسم وإمكاناتك).', 'المزيد') + '</div>';
     const inj = t.intensity === 'heavy' ? 'مرتفع' : t.intensity === 'normal' ? 'متوسط' : 'منخفض';
     h += '</div><div class="card"><h3>💪 شدة التدريب</h3><div class="seg3">' +
       Object.keys(I).map((k) => '<button class="chip ' + (t.intensity === k ? 'on' : '') + '" data-a="setIntensity" data-v="' + k + '">' + I[k].ar + '</button>').join('') + '</div>' +
-      '<div class="lv-tiles four"><div class="trt"><small>الخبرة الأسبوعية</small><b>×' + I[t.intensity].xp + '</b></div><div class="trt"><small>تعافي الجاهزية أسبوعيًا</small><b>' + Math.round(G.Stamina.recRate(p, t.intensity, p.inj > 0) * 100) + '%</b></div>' +
+      '<div class="lv-tiles four"><div class="trt"><small>الخبرة الأسبوعية</small><b>×' + I[t.intensity].xp + '</b></div><div class="trt"><small>تعافي أسبوعي</small><b>' + Math.round(G.Stamina.recRate(p, t.intensity, p.inj > 0) * 100) + '%</b></div>' +
       '<div class="trt ' + (t.intensity === 'heavy' ? 'warn' : '') + '"><small>خطر الإصابة</small><b class="sm-b">' + inj + '</b></div><div class="trt"><small>مرافق ' + esc(UI.cname(p.club)) + '</small><b>×' + T().facility(p.club).toFixed(2) + '</b></div></div></div>';
     h += fitCard(p);
-    h += '<div class="notice">⚠️ التطور تدريجي بالتصميم: حدّ أقصى ' + T().seasonCap(p.age) + ' نقاط لكل سمة في الموسم بعمر ' + p.age + '، ولا تتجاوز السمة حدّ إمكاناتك.</div>';
+    h += '<div class="notice">' + UI.more('⚠️ التطور تدريجي بالتصميم', 'حدّ أقصى ' + T().seasonCap(p.age) + ' نقاط لكل سمة في الموسم بعمر ' + p.age + '، ولا تتجاوز السمة حدّ إمكاناتك.', 'التفاصيل') + '</div>';
     return h;
   }
 
