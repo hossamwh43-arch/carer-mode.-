@@ -8,8 +8,10 @@
   const W_ASSIST = { CAM: 7, LW: 6, RW: 6, CM: 4, LB: 3, RB: 3, ST: 2.5, CDM: 2, CB: 0.7, GK: 0.05 };
   const GRP = G.POS_GROUP;
 
-  Match.scorerWeight = (p, slot, bonus) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho + (p.user && bonus ? bonus : 0)) / 65, 1.5);
-  Match.assistWeight = (p, slot, bonus) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas + (p.user && bonus ? bonus : 0)) / 65, 1.5);
+  // Build 28: القدرات المميزة (G.Traits) ترفع حصة النجم من أهداف فريقه وصناعته دون تغيير مجموع أهداف الفريق (λ كما هي)
+  const TM = (p, k) => (G.Traits && p.tr ? G.Traits.mult(p, k) : 1);
+  Match.scorerWeight = (p, slot, bonus) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'g');
+  Match.assistWeight = (p, slot, bonus) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'a');
   Match.pickScorer = (list, bonus) => U.wpick(list, (x) => Match.scorerWeight(P(x.id), x.slot, bonus));
   Match.pickAssist = (list, exceptId, bonus) => U.wpick(list.filter((x) => x.id !== exceptId), (x) => Match.assistWeight(P(x.id), x.slot, bonus));
 

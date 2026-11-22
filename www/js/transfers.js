@@ -74,15 +74,17 @@
   const feeFor = (p) => Math.round(p.val * (p.ct && p.ct.y <= 1 ? 0.85 : 1) / 25000) * 25000;
 
   // هل يقبل النادي البائع؟
-  T.sellerAccepts = (seller, buyer, p, fee) => {
+  // surplus (Build 28): مدير البائع يعرض فائض دكته بخصم لأنه لن يلعب عنده
+  T.sellerAccepts = (seller, buyer, p, fee, surplus) => {
     if (!seller) return true;
     const left = seller.squad.map(P).filter((x) => x && !x.user && x.pos === p.pos && x.id !== p.id).length;
     if (left < G.SQUAD_TEMPLATE[p.pos] - 1) return false;
     if (isKey(seller, p)) return fee >= p.val * 1.35 && seller.rep <= buyer.rep + 10;
-    return fee >= p.val * 0.98;
+    return fee >= p.val * (surplus ? 0.7 : 0.98);
   };
 
   const canAffordWage = (club, wage, replacing) => T.wageRoom(club) + (replacing || 0) >= wage;
+  T.feeFor = feeFor; T.canAffordWage = canAffordWage; // يستخدمهما المدير الفني (director.js)
 
   // ---------- نافذة انتقالات الذكاء الاصطناعي ----------
   T.aiWindow = (kind) => {
@@ -102,20 +104,27 @@
       U.shuffle(ids.slice()).forEach((cid) => {
         const club = C(cid), cap = club.rep >= 80 ? 3 : 2;
         if ((done[cid] || 0) >= cap) return;
-        const needs = T.needs(club);
-        if (!needs.length) return;
-        const nd = needs[0], q = T.clubQ(club);
-        const list = (by[nd.pos] || []).filter((p) => {
-          if (p.club === cid) return false;
-          if (p.age > (p.club ? 34 : 36)) return false;
-          if (p.ovr < q - (nd.urg >= 3 ? 8 : 1.5)) return false;
-          if (p.ovr > q + 7) return false;
-          const fee = p.club ? feeFor(p) : 0;
-          return fee <= club.tb && canAffordWage(club, G.Players.wageFor(p) * 1.0);
-        });
-        const scored = list.map((p) => ({ p, sc: p.ovr + (p.age <= 23 ? (p.pot - p.ovr) * 0.3 : 0) - (p.age >= 31 ? (p.age - 30) * 1.5 : 0) - (p.club ? feeFor(p) / Math.max(club.tb, 1e6) * 2 : 0) + U.rnd() * 2 }))
-          .sort((a, b) => b.sc - a.sc).slice(0, 3);
-        for (const { p } of scored) {
+        // Build 28: المدير الفني يقرّر بالقيمة الحدّية للتشكيلة (لا تكديس)؛ المنطق القديم احتياطي (D.on=false أو تعذّر التقدير)
+        const dir = G.Director && G.Director.on ? G.Director.candidates(club, by, r) : null;
+        let scored;
+        if (dir) scored = dir;
+        else {
+          const needs = T.needs(club);
+          if (!needs.length) return;
+          const nd = needs[0], q = T.clubQ(club);
+          const list = (by[nd.pos] || []).filter((p) => {
+            if (p.club === cid) return false;
+            if (p.age > (p.club ? 34 : 36)) return false;
+            if (p.ovr < q - (nd.urg >= 3 ? 8 : 1.5)) return false;
+            if (p.ovr > q + 7) return false;
+            const fee = p.club ? feeFor(p) : 0;
+            return fee <= club.tb && canAffordWage(club, G.Players.wageFor(p) * 1.0);
+          });
+          scored = list.map((p) => ({ p, sc: p.ovr + (p.age <= 23 ? (p.pot - p.ovr) * 0.3 : 0) - (p.age >= 31 ? (p.age - 30) * 1.5 : 0) - (p.club ? feeFor(p) / Math.max(club.tb, 1e6) * 2 : 0) + U.rnd() * 2 }))
+            .sort((a, b) => b.sc - a.sc).slice(0, 3);
+        }
+        for (const cand of scored) {
+          const p = cand.p;
           const seller = p.club ? C(p.club) : null;
           if (seller && !G.Transfers.market().includes(seller.id)) continue;
           const fee = p.club ? Math.round(feeFor(p) * (1 + U.rnd() * 0.2) / 25000) * 25000 : 0;
@@ -127,11 +136,18 @@
           if (!playerWants) continue;
           T.execute(p, cid, fee, wage, U.int(2, 5));
           done[cid] = (done[cid] || 0) + 1; moves++;
+          if (dir && cand.kind) {
+            G.Director.note(club, G.Director.explain(club, cand, fee));
+            moves += G.Director.offload(club, { ids, done }); // يبيع فائض الدكة لناديٍ يحتاجه بدل تكديسه
+          }
           // نحدّث القوائم الداخلية لتجنّب شراء نفس اللاعب مرتين
           Object.keys(by).forEach((k) => { by[k] = by[k].filter((x) => x.id !== p.id); });
           break;
         }
       });
+    }
+    if (G.Director && G.Director.on) { // كل مدير يعرض فائض دكته مرة في النافذة لمن سيبدأ فيه فعلًا
+      U.shuffle(ids.slice()).forEach((cid) => { moves += G.Director.offload(C(cid), { ids, done }); });
     }
     ids.forEach((cid) => T.fixSquad(C(cid)));
     return moves;
@@ -218,7 +234,8 @@
       if (p.ct.y > 0) return;
       if (p.user) { userExpired = true; return; }
       const club = C(p.club);
-      const keep = p.age <= 34 && U.rnd() < 0.7;
+      let keep = p.age <= 34 && U.rnd() < 0.7;
+      if (keep && G.Director && G.Director.on && club && !club.light && G.Director.isSurplus(club, p)) keep = false; // Build 28: لا يجدَّد عقد فائض الدكة
       if (keep) {
         const wage = U.clamp(U.roundTo(G.Players.wageFor(p) * (0.95 + U.rnd() * 0.2), 500), 800, 600000);
         if (canAffordWage(club, wage, p.ct.w)) { p.ct = { y: U.int(2, 4), w: wage }; G.Players.refresh(p); return; }

@@ -11,8 +11,8 @@
     home: { ar: 'الرئيسية', ico: 'home', def: 'home', items: [['home', 'الرئيسية']] },
     me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['trophies', 'البطولات'], ['market', 'الانتقالات'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
     matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['cup', 'الكأس'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
-    club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب']] },
-    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['worldrank', 'التصنيفات'], ['settings', 'الإعدادات']] }
+    club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب'], ['mgrs', 'المدربون']] },
+    more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['worldrank', 'التصنيفات'], ['stars', 'النجوم'], ['settings', 'الإعدادات']] }
   };
   UI.GROUP_ORDER = ['home', 'me', 'matches', 'club', 'more'];
   const R2G = { match: 'matches', simreport: 'home' };
@@ -47,7 +47,7 @@
     ucl: ['ucl', 'مرحلة الدوري والإقصائيات'], intl: ['globe', 'كأس العالم وآسيا'],
     club: ['club', 'ناديك وأجواؤه'], squad: ['shirt', 'التشكيلة واللاعبون'], train: ['dumbbell', 'التدريب والسمات والمدرب'],
     more: ['grid', 'كل الأقسام'], press: ['mic', 'الصفحة الأولى وشعبيتك'], inbox: ['mail', 'قراراتك وعروضك ورسائلك'],
-    worldrank: ['medal', 'الأندية والمنتخبات وأرشيف سنوي'], settings: ['gear', 'الصوت والحفظ والصعوبة']
+    worldrank: ['medal', 'الأندية والمنتخبات وأرشيف سنوي'], stars: ['star', 'نجوم العالم وقدراتهم المميزة'], mgrs: ['clipboard', 'مدربو الأندية وأسلوب تعاقداتهم'], settings: ['gear', 'الصوت والحفظ والصعوبة']
   };
   // أقسام المجموعة الحالية (يُرجع [] إن كانت الصفحة خارج المجموعات أو المجموعة قسمًا واحدًا)
   UI.sectionItems = () => {
@@ -216,6 +216,8 @@
       tiles.push(tile('bd', 'crown', 'الكرة الذهبية', 'ترتيب المرشحين'));
     }
     tiles.push(tile('worldrank', 'medal', 'تصنيفات العالم', 'الأندية والمنتخبات وأرشيف سنوي'));
+    if (!retired) tiles.push(tile('stars', 'star', 'نجوم العالم', 'قدراتهم المميزة ومنافسوك'));
+    if (!retired) tiles.push(tile('mgrs', 'clipboard', 'مدربو الأندية', 'أساليبهم وقرارات تعاقدهم'));
     tiles.push(tile('trophies', 'trophy', 'سجل البطولات', 'ألقابك ووصافاتك موسمًا بموسم'));
     tiles.push(tile('stats', 'chart', 'الإحصائيات', 'الموسم والإنجازات والسجل'));
     tiles.push(tile('career', 'book', 'سجل المسيرة', 'موسمًا بموسم'));

@@ -90,7 +90,7 @@
       '<div class="sm mut c" style="margin-bottom:6px">القوة (تشكيلة متوقعة): ' + UI.clubTag(fix[mine], 16) + ' ضد ' + UI.clubTag(fix[opp], 16) + '</div>' +
       bar('الهجوم', R[mine].A, R[opp].A) + bar('الوسط', R[mine].M, R[opp].M) + bar('الدفاع', R[mine].D, R[opp].D) + bar('الحارس', R[mine].gk, R[opp].gk) +
       '<div class="chips" style="margin-top:10px"><button class="chip ' + (tab === 'm' ? 'on' : '') + '" data-a="ppTab" data-v="m">فريقك</button><button class="chip ' + (tab === 'o' ? 'on' : '') + '" data-a="ppTab" data-v="o">الخصم</button></div>' +
-      '<div class="sm mut c" style="margin-top:6px">' + esc(UI.cname(cid)) + ' · خطة <span class="ltr">' + esc(G.S.clubs[cid].form) + '</span>' + (tab === 'm' ? ' · أنت: ' + UI.rolePill(u.role) : '') + '</div>' +
+      '<div class="sm mut c" style="margin-top:6px">' + esc(UI.cname(cid)) + ' · خطة <span class="ltr">' + esc(G.S.clubs[cid].form) + '</span>' + (tab === 'm' ? ' · أنت: ' + UI.rolePill(u.role) : '') + '</div>' + (UI.mgrLine ? '<div class="sm mut c">' + UI.mgrLine(cid) + '</div>' : '') +
       UI.pitch(pr.L[side].xi, cid, { hi: u.id }) + '<div class="sm mut">الاحتياط: ' + (benchNames || '—') + '</div>' +
       '<p class="sm mut">التشكيلة تقدير لأرجح التشكيلات؛ قد يغيّر المدرب بعض الأسماء، وتُحسب المحاكاة بعشوائية المباراة الفعلية.</p><button class="btn" data-a="closeSheet">إغلاق</button>';
   }

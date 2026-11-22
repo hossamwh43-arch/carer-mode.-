@@ -1173,3 +1173,62 @@ details.more > summary > em { display: inline-flex; align-items: center; min-hei
 #topTitle { transition: opacity .18s ease .2s; }
 body.has-nt #topTitle { opacity: 0; transition: opacity .08s linear; }
 @media (prefers-reduced-motion: reduce) { #topTitle, body.has-nt #topTitle { transition-duration: .01s; transition-delay: 0s; } }
+
+/* ===== Build 28: الكرة الذهبية الشهرية + تصنيف الأندية بالنوافذ + القدرات المميزة + المدير الفني ===== */
+:root { --vio: #c28bff; }
+.bd-months, .wr-win { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.bd-months::-webkit-scrollbar, .wr-win::-webkit-scrollbar { display: none; }
+.wr-win .chip, .bd-months .chip { flex: 0 0 auto; white-space: nowrap; }
+.bd-race { max-width: 420px; }
+.bd-ln { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.bd-dot { stroke: var(--bg); stroke-width: 1.4; }
+.bd-sel { stroke: var(--line2); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.bd-ln.l0, .bd-sw.l0 { stroke: var(--gold); background: var(--gold); } .bd-dot.l0 { fill: var(--gold); }
+.bd-ln.l1, .bd-sw.l1 { stroke: var(--acc); background: var(--acc); } .bd-dot.l1 { fill: var(--acc); }
+.bd-ln.l2, .bd-sw.l2 { stroke: var(--blue); background: var(--blue); } .bd-dot.l2 { fill: var(--blue); }
+.bd-ln.l3, .bd-sw.l3 { stroke: var(--red); background: var(--red); } .bd-dot.l3 { fill: var(--red); }
+.bd-ln.l4, .bd-sw.l4 { stroke: var(--vio); background: var(--vio); } .bd-dot.l4 { fill: var(--vio); }
+.bd-sw { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
+.bd-leg { display: grid; gap: 2px; margin-top: 8px; }
+.bd-lg { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 6px; text-align: start; width: 100%; border-radius: var(--cut-s); }
+.bd-lg span { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.bd-lg b { margin-inline-end: auto; font-family: var(--f-n); font-size: 15px; font-weight: 800; }
+.bd-lg.me span { color: var(--gold); }
+.wr-avg { display: block; font-size: 11px; color: var(--mut); font-weight: 600; margin-top: 2px; }
+.wr-ranks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
+.wr-ranks > div { padding: 8px 2px; border-radius: var(--cut-s); background: rgb(255 255 255 / .04); border: var(--hair) solid var(--line); min-height: 44px; }
+.wr-ranks > div.on { border-color: rgb(var(--cc-rgb) / .7); background: rgb(var(--cc-rgb) / .14); }
+.wr-ranks b { display: block; font-family: var(--f-n); font-size: 18px; font-weight: 800; }
+.wr-ranks small { display: block; font-size: 11px; color: var(--mut); }
+
+/* --- القدرات المميزة (F3) --- */
+:root { --k-att: #ff8a3d; --k-mid: var(--blue); --k-def: var(--acc); }
+.trs { display: inline-flex; align-items: center; gap: 2px; margin-inline-start: 6px; vertical-align: middle; }
+.tri { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: var(--cut-xs); background: rgb(255 255 255 / .08); }
+.tri .ic { width: 12px; height: 12px; }
+.tri.k-att, .trc.k-att .ic, .tr-it.k-att .tr-ic { color: var(--k-att); }
+.tri.k-mid, .trc.k-mid .ic, .tr-it.k-mid .tr-ic { color: var(--k-mid); }
+.tri.k-def, .trc.k-def .ic, .tr-it.k-def .tr-ic { color: var(--k-def); }
+.tri .ic, .trc .ic, .tr-ic .ic { color: inherit; }
+.trc-w { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.trc { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; min-height: 24px; border-radius: var(--cut-xs); background: rgb(255 255 255 / .07); border: var(--hair) solid var(--line); font-size: 12px; }
+.trc .ic { width: 14px; height: 14px; } .trc b { font-weight: 700; }
+.tr-list { display: grid; gap: 8px; }
+.tr-it { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: var(--cut-m); background: rgb(255 255 255 / .04); border: var(--hair) solid var(--line); }
+.tr-ic { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--cut-s); background: rgb(255 255 255 / .08); }
+.tr-ic .ic { width: 20px; height: 20px; }
+.tr-fx { color: var(--gold); margin-top: 2px; }
+.st-flt { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 2px; margin: 8px 0; }
+.st-flt::-webkit-scrollbar { display: none; }
+.st-flt .chip { flex: 0 0 auto; white-space: nowrap; }
+.st-r { display: grid; grid-template-columns: 44px 1fr auto; grid-template-areas: "o n s" "o c s" "o t t"; align-items: center; column-gap: 10px; row-gap: 0; width: 100%; min-height: 56px; padding: 8px 4px; text-align: start; font: inherit; color: inherit; background: none; border: 0; border-bottom: var(--hair) solid var(--line); }
+.st-r:last-child { border-bottom: 0; }
+.st-r .sq-o { grid-area: o; } .st-n { grid-area: n; min-width: 0; font-size: 14px; font-weight: 700; } .st-c { grid-area: c; font-size: 12px; color: var(--mut); min-width: 0; }
+.st-s { grid-area: s; font-size: 12px; color: var(--mut); text-align: end; } .st-s b { font-family: var(--f-n); color: var(--fg, inherit); font-size: 15px; }
+.st-r2 { grid-template-columns: 28px 1fr auto; grid-template-areas: "k n s" "k c s"; } .st-rk { grid-area: k; text-align: center; font-family: var(--f-n); font-weight: 800; color: var(--gold); }
+.st-rv .st-rn { min-width: 0; }
+.st-t { grid-area: t; font-size: 12px; color: var(--gold); min-width: 0; padding-top: 2px; }
+
+/* --- المدير الفني (F4) --- */
+.st-r .mg-b { grid-area: o; display: inline-flex; align-items: center; justify-content: center; width: 44px; }
+.mg-log { margin-top: 10px; display: grid; gap: 6px; padding-top: 8px; border-top: var(--hair) solid var(--line); }

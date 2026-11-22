@@ -20,7 +20,7 @@
   function listTable(list, comp, kind) {
     const uid = G.S.user;
     return '<div class="card"><table class="t"><tr><th>#</th><th class="l">اللاعب</th><th>' + (kind === 'g' ? 'أهداف' : 'صناعة') + '</th><th>' + (kind === 'g' ? 'صناعة' : 'أهداف') + '</th><th>لعب</th><th>تقييم</th></tr>' +
-      list.map((p, i) => { const s = p.st[comp]; return '<tr class="' + (p.id === uid ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="l"><div>' + esc(p.n) + '</div><div class="sm mut">' + esc(UI.cname(p.club)) + '</div></td><td><b>' + (kind === 'g' ? s[1] : s[2]) + '</b></td><td>' + (kind === 'g' ? s[2] : s[1]) + '</td><td>' + s[0] + '</td><td>' + (s[0] ? (s[3] / s[0]).toFixed(1) : '—') + '</td></tr>'; }).join('') + '</table></div>';
+      list.map((p, i) => { const s = p.st[comp]; return '<tr class="' + (p.id === uid ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="l"><div>' + esc(p.n) + (UI.traitIcons ? UI.traitIcons(p) : '') + '</div><div class="sm mut">' + esc(UI.cname(p.club)) + '</div></td><td><b>' + (kind === 'g' ? s[1] : s[2]) + '</b></td><td>' + (kind === 'g' ? s[2] : s[1]) + '</td><td>' + s[0] + '</td><td>' + (s[0] ? (s[3] / s[0]).toFixed(1) : '—') + '</td></tr>'; }).join('') + '</table></div>';
   }
   function topTable(comp, kind) {
     const S = G.S, inL = {};

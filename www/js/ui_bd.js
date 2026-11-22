@@ -8,7 +8,10 @@
 
   UI.titles.bd = () => 'الكرة الذهبية ' + (G.BD ? G.BD.year() : '');
 
-  const lastSnap = () => { const c = B().get().cur; return c.snaps.length ? c.snaps[c.snaps.length - 1] : null; };
+  const lastSnap = () => { const m = B().get().cur.months; return m.length ? m[m.length - 1] : null; };
+  // اللقطة المعروضة: الشهر الذي اختاره اللاعب (UI.sub.bdK) وإلا الأحدث
+  const shownSnap = () => { const ms = B().get().cur.months, k = UI.sub.bdK; return (k != null && ms.find((x) => x.k === k)) || (ms.length ? ms[ms.length - 1] : null); };
+  const mLabel = (m) => B().monthLabel(m.k, m.final);
   const trend = (d) => (d == null || d === 0 ? '<span class="mut sm">—</span>' : d > 0 ? '<span class="pos sm">▲' + d + '</span>' : '<span class="neg sm">▼' + (-d) + '</span>');
   const nat = (c) => esc(G.Intl ? G.Intl.name(c) : c);
   const tone = (v) => (v >= 70 ? '' : v >= 40 ? 'gold' : 'red');
@@ -35,22 +38,62 @@
   function listCard(s) {
     const uid = G.S.user;
     return '<div class="card"><h3>أفضل المرشحين</h3><table class="t"><tr><th>#</th><th class="l">اللاعب</th><th></th><th>الدرجة</th><th>فرص</th></tr>' +
-      s.list.slice(0, 20).map((x) => '<tr class="' + (x.id === uid ? 'me' : '') + '" data-a="bdPlayer" data-v="' + x.id + '" style="cursor:pointer"><td>' + x.rank + '</td><td class="l"><div>' + esc(x.n) + '</div><div class="sm mut">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + '</div></td><td>' + trend(x.d) + '</td><td><b>' + x.t.toFixed(1) + '</b></td><td class="sm">' + x.pr + '%</td></tr>').join('') + '</table>' +
-      '<p class="sm mut" style="margin:8px 0 0">اضغط على اسم لاعب لرؤية تفاصيل عوامله. الترتيب يُحدَّث كل 4 أسابيع.</p></div>';
+      s.list.slice(0, 20).map((x) => '<tr class="' + (x.id === uid ? 'me' : '') + '" data-a="bdPlayer" data-v="' + x.id + '" style="cursor:pointer"><td>' + x.rank + '</td><td class="l"><div>' + esc(x.n) + (UI.traitIcons ? UI.traitIcons(G.S.players[x.id]) : '') + '</div><div class="sm mut">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + '</div></td><td>' + trend(x.d) + '</td><td><b>' + x.t.toFixed(1) + '</b></td><td class="sm">' + x.pr + '%</td></tr>').join('') + '</table>' +
+      '<p class="sm mut" style="margin:8px 0 0">اضغط على اسم لاعب لرؤية تفاصيل عوامله. الترتيب يُحدَّث كل 4 أسابيع، وكل شهر محفوظ في الشريط أعلاه.</p></div>';
+  }
+
+  // شريط الأشهر: كل لقطة محفوظة من الموسم (الأشهر التي لم تأتِ بعد لا تظهر)
+  function monthStrip(sel) {
+    const ms = B().months();
+    return '<div class="chips fl bd-months" role="tablist" aria-label="أشهر الموسم">' + ms.map((m) => '<button class="chip' + (m.k === sel.k ? ' on' : '') + '" role="tab" aria-selected="' + (m.k === sel.k) + '" data-a="bdMonth" data-v="' + m.k + '">' + (m.final ? 'النهائي' : esc(mLabel(m))) + '</button>').join('') + '</div>';
+  }
+
+  // سباق المتصدّرين: درجات أفضل 5 مرشحين عبر الأشهر (خط لكل لاعب؛ الفجوات حيث غابوا عن أفضل 20)
+  function raceChart(sel) {
+    const R = B().race(5);
+    if (!R || R.ks.length < 2) return '';
+    const W = 320, H = 176, L = 30, Rr = 12, T = 14, Bm = 24, n = R.ks.length;
+    let lo = 1e9, hi = -1e9;
+    R.rows.forEach((r) => r.pts.forEach((q) => { if (q) { lo = Math.min(lo, q.t); hi = Math.max(hi, q.t); } }));
+    if (hi - lo < 6) { hi += 3; lo -= 3; }
+    const pad = (hi - lo) * 0.1; lo -= pad; hi += pad;
+    const X = (i) => L + (W - L - Rr) * (i / (n - 1)), Y = (v) => T + (H - T - Bm) * (1 - (v - lo) / (hi - lo));
+    let s = '<svg class="lchart bd-race" viewBox="0 0 ' + W + ' ' + H + '" style="direction:ltr" role="img" aria-label="سباق أفضل خمسة مرشحين عبر أشهر الموسم">';
+    for (let i = 0; i <= 3; i++) { const v = lo + (hi - lo) * i / 3, y = Y(v); s += '<line class="ch-grid" x1="' + L + '" y1="' + y.toFixed(1) + '" x2="' + (W - Rr) + '" y2="' + y.toFixed(1) + '"/><text class="ch-txt" x="' + (L - 4) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end">' + Math.round(v) + '</text>'; }
+    const si = R.ks.indexOf(sel.k);
+    if (si >= 0) s += '<line class="bd-sel" x1="' + X(si).toFixed(1) + '" y1="' + T + '" x2="' + X(si).toFixed(1) + '" y2="' + (H - Bm) + '"/>';
+    R.rows.forEach((r, ri) => {
+      let seg = [];
+      const flush = () => { if (seg.length > 1) s += '<polyline class="bd-ln l' + ri + '" points="' + seg.join(' ') + '"/>'; seg = []; };
+      r.pts.forEach((q, i) => { if (q) seg.push(X(i).toFixed(1) + ',' + Y(q.t).toFixed(1)); else flush(); });
+      flush();
+      r.pts.forEach((q, i) => { if (q) s += '<circle class="bd-dot l' + ri + '" cx="' + X(i).toFixed(1) + '" cy="' + Y(q.t).toFixed(1) + '" r="' + (i === si ? 4 : 2.4) + '"><title>' + esc(r.n) + ' · ' + esc(B().monthLabel(q.k, q.k > B().monthCount())) + ' · ' + q.t.toFixed(1) + '</title></circle>'; });
+    });
+    R.ks.forEach((k, i) => { s += '<text class="ch-txt" x="' + X(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + (k > B().monthCount() ? 'ن' : k) + '</text>'; });
+    s += '</svg>';
+    const leg = '<div class="bd-leg">' + R.rows.map((r, ri) => { const e = r.pts[si] || r.pts.filter(Boolean).pop(); return '<button class="bd-lg' + (r.user ? ' me' : '') + '" data-a="bdPlayer" data-v="' + r.id + '"><i class="bd-sw l' + ri + '"></i><span>' + esc(r.n) + '</span><b>' + (e ? e.t.toFixed(1) : '—') + '</b></button>'; }).join('') + '</div>';
+    return '<div class="card"><div class="row sb"><h3 style="margin:0">سباق المتصدّرين</h3><span class="sm mut">الدرجة عبر الأشهر</span></div>' + s + leg + '<p class="sm mut" style="margin:6px 0 0">المحور الأفقي: رقم الشهر (1 = ' + esc(B().MONTHS[0]) + ' … 9 = ' + esc(B().MONTHS[8]) + ' · ن = النهائي).</p></div>';
   }
 
   function nowView() {
-    const b = B().get(), cur = b.cur, s = lastSnap(), S = G.S;
+    const b = B().get(), cur = b.cur, s = shownSnap(), S = G.S;
     let h = '';
-    if (cur.done && S.bdLast && S.bdLast.season === S.season) return ceremonyView(S.bdLast, true);
+    if (cur.done && S.bdLast && S.bdLast.season === S.season) return ceremonyView(S.bdLast, true) + (lastSnap() ? raceChart(lastSnap()) : '');
     if (!s) {
       return '<div class="card hl"><h2>🏆 الكرة الذهبية ' + B().year() + '</h2><p class="sm mut">يُصدَر أول ترتيب للمرشحين بعد الأسبوع 4، ثم يتجدد كل شهر (4 أسابيع). تعتمد الدرجة على:</p>' + B().FACTORS.map((f) => '<div class="kv"><span>' + f[1] + '</span><b>' + Math.round(B().W[f[0]] * 100) + '%</b></div>').join('') + '<p class="sm mut">الفوز بدوري الأبطال أو الدوري أو كأس العالم يرفع حظوظك بقوة.</p></div>';
     }
-    const k = Math.min(9, Math.round(s.w / 4));
-    h += '<div class="card hl"><div class="row sb"><h2 style="margin:0">🏆 الكرة الذهبية ' + B().year() + '</h2>' + (s.final ? '<span class="pill y">النتيجة النهائية</span>' : '<span class="pill b">التحديث ' + k + ' / 9</span>') + '</div>' +
-      '<div class="sm mut" style="margin-top:6px">آخر ترتيب بعد الأسبوع ' + s.w + ' · ' + (S.phase === 'end' && S.intl && !S.intl.done ? 'الحفل بعد انتهاء ' + esc(S.intl.name) : 'الحفل في نهاية الموسم') + '</div></div>';
-    h += userCard(s) + listCard(s);
+    const isLast = s === lastSnap();
+    h += '<div class="card hl"><div class="row sb"><h2 style="margin:0">🏆 الكرة الذهبية ' + B().year() + '</h2>' + (s.final ? '<span class="pill y">النتيجة النهائية</span>' : '<span class="pill b">' + esc(mLabel(s)) + ' · ' + s.k + ' / 9</span>') + '</div>' +
+      '<div class="sm mut" style="margin-top:6px">' + (isLast ? 'آخر ترتيب' : 'ترتيب شهر سابق') + ' بعد الأسبوع ' + s.w + ' · ' + (S.phase === 'end' && S.intl && !S.intl.done ? 'الحفل بعد انتهاء ' + esc(S.intl.name) : 'الحفل في نهاية الموسم') + '</div></div>';
+    h += monthStrip(s) + userCard(s) + raceChart(s) + listCard(s);
     return h;
+  }
+
+  // رحلة السباق لموسم مضى: متصدّر كل شهر وترتيب اللاعب (محفوظة لآخر 10 مواسم)
+  function monthsTrail(rec) {
+    if (!rec.months || !rec.months.length) return '';
+    return '<div class="card"><h3>رحلة السباق شهرًا بشهر</h3><table class="t"><tr><th>الشهر</th><th class="l">المتصدر</th><th>ترتيبك</th></tr>' +
+      rec.months.map((m) => '<tr><td>' + esc(B().monthLabel(m.k, !!m.f)) + '</td><td class="l"><div>' + esc(m.top[0] ? m.top[0].n : '—') + '</div><div class="sm mut">' + (m.top[0] ? esc(m.top[0].c) + ' · ' + m.top[0].t.toFixed(1) : '') + '</div></td><td>' + (m.me ? m.me.r : '—') + '</td></tr>').join('') + '</table></div>';
   }
 
   function ceremonyView(rec, now) {
@@ -61,6 +104,7 @@
       rec.top.map((x, i) => '<tr class="' + (x.user ? 'me' : '') + '"><td>' + (i + 1) + '</td><td class="l"><div>' + esc(x.n) + '</div><div class="sm mut">' + esc(x.club) + ' · ' + nat(x.nat) + '</div></td><td><b>' + x.t.toFixed(1) + '</b></td></tr>').join('') + '</table>' +
       (rec.me ? '<div class="kv" style="margin-top:8px"><span>ترتيبك</span><b>' + rec.me.rank + '</b></div>' : '') + '</div>' +
       (rec.me ? '<div class="card"><h3>عواملك هذا الموسم</h3>' + factorBars(rec.me) + '</div>' : '') +
+      monthsTrail(rec) +
       (rec.tour ? '<div class="card sm mut">أُقيمت هذا العام بطولة منتخبات (' + esc(G.TOURS[rec.tour.type].ar) + ') وأثّرت في الترتيب.</div>' : '');
   }
 
@@ -112,13 +156,14 @@
   };
 
   // ---------- الإجراءات ----------
-  UI.on('bdOpen', () => { UI.sub.bd = 'now'; UI.cur = 'bd'; window.scrollTo(0, 0); });
+  UI.on('bdOpen', () => { UI.sub.bd = 'now'; UI.sub.bdK = null; UI.cur = 'bd'; window.scrollTo(0, 0); });
+  UI.on('bdMonth', (k) => { UI.sub.bdK = +k; });
   UI.on('bdPlayer', (id) => {
-    const s = lastSnap();
+    const s = shownSnap();
     if (!s) return false;
     const x = s.list.find((y) => y.id === id) || (s.me && s.me.id === id ? s.me : null);
     if (!x) return false;
-    UI.sheet('<h3>' + esc(x.n) + '</h3><div class="sm mut" style="margin-bottom:8px">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + ' · تقييم ' + x.ovr + '</div><div class="kv"><span>الترتيب</span><b>' + x.rank + '</b></div><div class="kv"><span>الدرجة</span><b>' + x.t.toFixed(1) + '</b></div><div class="kv"><span>فرص الفوز</span><b>' + (x.pr || 0) + '%</b></div>' + factorBars(x) + '<button class="btn" data-a="closeSheet">إغلاق</button>');
+    UI.sheet('<h3>' + esc(x.n) + '</h3><div class="sm mut" style="margin-bottom:8px">' + esc(x.club) + ' · ' + nat(x.nat) + ' · ' + G.POS_AR[x.pos] + ' · تقييم ' + x.ovr + '</div>' + (UI.traitChips ? UI.traitChips(G.S.players[x.id]) : '') + '<div class="kv"><span>الترتيب</span><b>' + x.rank + '</b></div><div class="kv"><span>الدرجة</span><b>' + x.t.toFixed(1) + '</b></div><div class="kv"><span>فرص الفوز</span><b>' + (x.pr || 0) + '%</b></div>' + factorBars(x) + '<button class="btn" data-a="closeSheet">إغلاق</button>');
     return false;
   });
   UI.on('bdCer', (season) => {

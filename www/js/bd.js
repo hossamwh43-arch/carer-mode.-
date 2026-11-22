@@ -1,6 +1,8 @@
 /* bd.js — الكرة الذهبية: ترتيب شهري للمرشحين وحفل التتويج في نهاية الموسم.
  * الدرجة (0–100) = 0.18·الشهرة + 0.20·نجاح الفريق + 0.37·الأداء + 0.25·أثر البطولات الكبرى (دوري الأبطال، حسم الدوري، كأس العالم/آسيا).
- * لا يستخدم U.rnd أبدًا: التذبذب الصغير بين اللاعبين «بصمة» ثابتة من (البذرة|الموسم|المعرّف) فلا يتأثر مسار المحاكاة. */
+ * لا يستخدم U.rnd أبدًا: التذبذب الصغير بين اللاعبين «بصمة» ثابتة من (البذرة|الموسم|المعرّف) فلا يتأثر مسار المحاكاة.
+ * Build 28: تُحفظ لقطة كل شهر من الموسم كاملة (cur.months: 9 أشهر + النهائية) بدل آخر لقطتين فقط، وتُلخَّص عند التتويج في rec.months
+ * (أفضل 5 لكل شهر + ترتيب اللاعب) فتُعرض رحلة السباق لكل موسم سابق. الحقول القديمة (cur.snaps) تُرحَّل تلقائيًا. */
 (function (G) {
   'use strict';
   const U = G.U, P = (id) => G.S.players[id], C = (id) => G.S.clubs[id];
@@ -12,10 +14,20 @@
   BD.W = W;
   BD.FACTORS = [['fame', 'الشهرة'], ['team', 'نجاح الفريق'], ['perf', 'الأداء'], ['ev', 'البطولات الكبرى']];
 
+  // أسماء الأشهر: اللقطة k تأتي بعد الأسبوع 4k (الموسم يبدأ في أغسطس؛ اللقطة 1 ≈ سبتمبر … 9 ≈ مايو)
+  BD.MONTHS = ['سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'];
+  BD.monthCount = () => LAST / MONTH;   // 9
+  BD.kOf = (w) => Math.round(w / MONTH);
+  BD.monthLabel = (k, final) => (final || k > LAST / MONTH ? 'النهائي' : BD.MONTHS[k - 1] || 'الشهر ' + k);
   BD.get = () => {
     const S = G.S;
     if (!S.bd) S.bd = { hist: [], cur: null };
-    if (!S.bd.cur || S.bd.cur.season !== S.season) S.bd.cur = { season: S.season, snaps: [], track: [], closed: false, done: false };
+    if (!S.bd.cur || S.bd.cur.season !== S.season) S.bd.cur = { season: S.season, months: [], track: [], closed: false, done: false };
+    const cur = S.bd.cur;
+    if (!cur.months) { // ترحيل حفظ قديم (Build ≤ 27): كانت تُحفظ آخر لقطتين فقط
+      cur.months = (cur.snaps || []).map((x) => Object.assign({ k: x.final ? LAST / MONTH + 1 : BD.kOf(x.w) }, x));
+      delete cur.snaps;
+    }
     return S.bd;
   };
   BD.year = (season) => G.CONFIG.startYear + (season == null ? G.S.season : season);
@@ -151,7 +163,7 @@
   BD.snapshot = (w, final) => {
     const S = G.S, b = BD.get(), cur = b.cur, list = BD.rank(w), uid = S.user;
     const mi = list.findIndex((e) => e.id === uid);
-    const prev = cur.snaps.length ? cur.snaps[cur.snaps.length - 1] : null;
+    const prev = cur.months.length ? cur.months[cur.months.length - 1] : null;
     const prevRank = {}; if (prev) prev.list.forEach((x) => { prevRank[x.id] = x.rank; });
     const top = list.slice(0, 20).map((e, i) => { const x = brief(e, i + 1); x.d = prevRank[e.id] ? prevRank[e.id] - (i + 1) : null; return x; });
     const me = mi >= 0 ? brief(list[mi], mi + 1) : null;
@@ -160,10 +172,22 @@
     const top30 = list.slice(0, 30), mx = top30.length ? top30[0].t : 0, ex = top30.map((e) => Math.exp((e.t - mx) / 3.5)), sum = ex.reduce((s, v) => s + v, 0) || 1;
     top.forEach((x, i) => { x.pr = Math.round(ex[i] / sum * 100); });
     if (me) me.pr = mi < 30 ? Math.round(ex[mi] / sum * 100) : 0;
-    const snap = { w, final: !!final, list: top, me, n: list.length };
-    cur.snaps.push(snap); if (cur.snaps.length > 2) cur.snaps.shift();
+    const snap = { w, k: final ? LAST / MONTH + 1 : BD.kOf(w), final: !!final, list: top, me, n: list.length };
+    cur.months = cur.months.filter((x) => x.k !== snap.k); // لا تكرار لو أُعيد حساب الشهر نفسه
+    cur.months.push(snap);
     if (me) cur.track.push({ w, r: me.rank, t: me.t });
     return snap;
+  };
+
+  // كل لقطات الموسم الحالي بالترتيب الزمني (الشهر 1 … 9 ثم النهائية)
+  BD.months = () => BD.get().cur.months;
+  BD.latest = () => { const m = BD.get().cur.months; return m.length ? m[m.length - 1] : null; };
+  // سباق المتصدّرين: أفضل n مرشحًا في آخر لقطة مع مسار درجاتهم عبر الأشهر (null حيث لم يكونوا ضمن أفضل 20)
+  BD.race = (n) => {
+    const ms = BD.months(), last = ms.length ? ms[ms.length - 1] : null;
+    if (!last) return null;
+    const rows = last.list.slice(0, n || 5).map((x) => ({ id: x.id, n: x.n, user: x.user, pts: ms.map((m) => { const e = m.list.find((y) => y.id === x.id); return e ? { k: m.k, t: e.t, r: e.rank } : null; }) }));
+    return { ks: ms.map((m) => m.k), rows };
   };
 
   // يُستدعى بعد كل أسبوع منتهٍ
@@ -174,7 +198,7 @@
     if (snap.me && snap.list.length) {
       const lead = snap.list[0], me = snap.me;
       const t = me.rank <= 30 ? 'أنت في المركز ' + me.rank + ' بين المرشحين للكرة الذهبية (' + me.t.toFixed(1) + ' نقطة).' : 'لم تدخل بعدُ قائمة أفضل 30 مرشحًا للكرة الذهبية (المركز ' + me.rank + ').';
-      G.Inbox.add('news', 'ترتيب الكرة الذهبية — ' + (w / MONTH) + '/9', t + ' المتصدر: ' + lead.n + ' (' + lead.club + ' · ' + lead.t.toFixed(1) + ').' + (me.rank > 1 && me.rank <= 30 ? ' الفارق عن الصدارة ' + (lead.t - me.t).toFixed(1) + ' نقطة.' : ''));
+      G.Inbox.add('news', 'ترتيب الكرة الذهبية — ' + BD.monthLabel(snap.k) + ' (' + snap.k + '/9)', t + ' المتصدر: ' + lead.n + ' (' + lead.club + ' · ' + lead.t.toFixed(1) + ').' + (me.rank > 1 && me.rank <= 30 ? ' الفارق عن الصدارة ' + (lead.t - me.t).toFixed(1) + ' نقطة.' : ''));
     }
     return snap;
   };
@@ -199,10 +223,12 @@
       season: S.season, year: BD.year(), label: G.Season.label(S.season), winner: { id: win.id, n: win.n, club: win.club, nat: win.nat, pos: win.pos, t: win.t, user: win.user },
       top: list.slice(0, 10).map((x) => ({ id: x.id, n: x.n, club: x.club, nat: x.nat, t: x.t, user: x.user })),
       me: me ? { rank: me.rank, t: me.t, fame: me.fame, team: me.team, perf: me.perf, ev: me.ev } : null,
-      tour: I ? { type: I.type, winner: I.winner } : null
+      tour: I ? { type: I.type, winner: I.winner } : null,
+      months: cur.months.map((m) => ({ k: m.k, w: m.w, f: m.final ? 1 : 0, top: m.list.slice(0, 5).map((x) => ({ id: x.id, n: x.n, c: x.club, t: x.t })), me: m.me ? { r: m.me.rank, t: m.me.t } : null }))
     };
     b.hist.push(rec);
     if (b.hist.length > 40) b.hist.shift();
+    b.hist.forEach((r, i) => { if (i < b.hist.length - 10 && r.months) delete r.months; }); // رحلة السباق تُحفظ لآخر 10 مواسم فقط (حجم الحفظ)
     S.bdLast = rec;
     u.bdCar = u.bdCar || [];
     if (me) u.bdCar.push({ y: rec.year, r: me.rank, t: me.t });

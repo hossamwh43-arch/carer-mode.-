@@ -104,7 +104,9 @@
     let D = 0.45 * def + 0.20 * mid + 0.35 * gk;
     const missing = 11 - xi.length;
     if (missing > 0) { A -= 3 * missing; D -= 3 * missing; }
-    return { A, D, M: mid, gk };
+    let M = mid;
+    if (G.Traits) { const tl = G.Traits.teamLift(xi); A += tl.A + 0.3 * tl.M; D += tl.D; M += tl.M; } // قدرات النجوم الأساسيين (مسقوفة)
+    return { A, D, M, gk };
   };
 
   // الأهداف المتوقعة (λ) لفريق ضد آخر

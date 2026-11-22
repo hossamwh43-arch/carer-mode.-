@@ -44,6 +44,9 @@
     if (!c.ok) return c;
     if (S.phase !== 'summer') return { ok: false, msg: 'الموسم قيد التقدم' };
     Object.keys(S.clubs).forEach((id) => { if (!S.clubs[id].light) G.Transfers.fixSquad(S.clubs[id]); });
+    if (G.Traits) G.safe(() => G.Traits.refreshAll(), 'traits'); // Build 28: قدرات النجوم (حتمية، بلا عشوائية)
+    if (G.Director) G.safe(() => G.Director.init(), 'director'); // Build 28: مدير فني لكل نادٍ (حتمي)
+    if (G.WorldRank) G.safe(() => G.WorldRank.init(), 'crkInit'); // Build 28: سمعة البداية لتقدير نوافذ التصنيف (قراءة فقط)
     G.World.startSeason(S.season); // جداول كل الدوريات (دوري المستخدم كاملًا والبقية مضغوطة)
     S.ucl = G.Ucl.setup(S.season, S.uclTeams);
     if (G.Cups) G.Cups.startSeason(S.season); // الكؤوس المحلية والسوبر (الأسبوع 1)
@@ -383,6 +386,7 @@
     if (G.BD) G.safe(() => G.BD.tryFinalize(), 'bd'); // أمان: الحفل لا يضيع إن لم يُجرَ بعد
     if (G.Intl) G.Intl.archive();
     if (G.WorldRank) G.safe(() => G.WorldRank.archive(S.year, S.season), 'worldrank'); // Build 26: أرشفة التصنيف العالمي (قراءة فقط)
+    if (G.Director) G.safe(() => G.Director.review(S.season), 'director'); // Build 28: إقالة/تقاعد وتعيين مديرين (حتمي بلا عشوائية؛ قبل تصفير الجداول)
     const u = P(S.user);
     if (u.age >= Season.RETIRE.forced) { // v4: الموسم الأخير الإجباري — تنتهي المسيرة بدل موسم جديد
       G.Inbox.add('news', 'اعتزال ' + u.n, 'أنهى ' + u.n + ' موسمه الأخير بعمر ' + u.age + ' عامًا وأعلن اعتزاله بعد مسيرة ' + (u.car || []).length + ' مواسم.');
@@ -399,6 +403,7 @@
     // 2) العمر والاعتزال والعقود
     Object.keys(S.players).forEach((id) => { S.players[id].age++; });
     G.Transfers.retireOld();
+    if (G.Traits) G.safe(() => G.Traits.refreshAll(), 'traits'); // بعد النمو والعمر: تظهر قدرات النجوم الجدد وتزول من المتراجعين
     const expired = G.Transfers.rollContracts();
     G.Transfers.seasonFinance();
     if (G.Agent) G.safe(() => G.Agent.seasonEnd(), 'agent');

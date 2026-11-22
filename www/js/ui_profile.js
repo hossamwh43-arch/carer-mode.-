@@ -136,6 +136,7 @@
     h += '<div class="card mgr"><div class="row sb"><div class="row"><span class="tl-ic">' + UI.ico('clipboard') + '</span><div><b>المدرب</b><div class="sm mut">تقييمه لأدائك: ' + G.Coach.evaluation(p) + '</div></div></div>' + UI.rolePill(p.role) + '</div>' +
       '<div class="row sb sm" style="margin-top:10px"><span class="mut">الثقة</span><span>' + Math.round(p.trust) + ' — ' + G.Coach.trustLabel(p.trust) + '</span></div>' + UI.bar(p.trust, p.trust < 30 ? 'red' : '') +
       '<button class="btn sm" style="margin-top:10px;width:100%" data-a="goSub" data-v="train" data-v2="tr:coach">تفاصيل قرار المدرب</button></div>';
+    if (UI.mgrCard) h += UI.mgrCard(cid); // Build 28: المدير الفني للنادي وأسلوبه وقراراته الأخيرة
     // التدريب
     const t = S.training || {}, fo = G.Training.FOCUS.find((x) => x.id === t.focus), it = G.Training.INTENSITY[t.intensity];
     h += '<div class="card"><div class="row sb"><div class="row"><span class="tl-ic">' + UI.ico('dumbbell') + '</span><div><b>تدريب الأسبوع</b><div class="sm mut">تركيز: ' + (fo ? fo.ar : '—') + ' · شدة: ' + (it ? it.ar : '—') + '</div></div></div><button class="btn sm" data-a="go" data-v="train">تغيير</button></div></div>';
@@ -163,7 +164,7 @@
     const shown = all ? list : list.slice(0, 10);
     h += '<div class="card sq-list">' + (shown.length ? shown.map((q) => {
       const xi = L.xi.some((x) => x.id === q.id);
-      return '<button class="sq-r' + (q.user ? ' me' : '') + '" data-a="sqPlayer" data-v="' + q.id + '"><i class="sq-pos">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></button>';
+      return '<button class="sq-r' + (q.user ? ' me' : '') + '" data-a="sqPlayer" data-v="' + q.id + '"><i class="sq-pos">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (UI.traitIcons ? UI.traitIcons(q) : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></button>';
     }).join('') : '<div class="mut c">لا لاعبين في هذه الخانة.</div>') + '</div>';
     if (list.length > 10) h += '<button class="btn sm" style="width:100%" data-a="sqAll">' + (all ? 'عرض أقل' : 'عرض الكل (' + list.length + (f === 'all' ? '' : ' من ' + total) + ')') + '</button>';
     return h;
@@ -176,7 +177,7 @@
     const cmp = q.id === u.id ? '' : '<div class="sqp-cmp"><div class="sm mut">' + (same ? 'منافسك على المركز' : 'مقارنة بك') + '</div>' +
       '<div class="sqp-bar"><b>' + u.ovr + '</b><div class="sqp-tr"><i class="me" style="width:' + U.clamp(u.ovr, 30, 99) + '%"></i><i class="op" style="width:' + U.clamp(q.ovr, 30, 99) + '%"></i></div><b>' + q.ovr + '</b></div>' +
       '<div class="sm ' + (q.ovr > u.ovr ? 'neg' : q.ovr < u.ovr ? 'pos' : 'mut') + '">' + (q.ovr === u.ovr ? 'نفس مستواك' : q.ovr > u.ovr ? 'يتفوّق عليك بـ ' + (q.ovr - u.ovr) : 'تتفوّق عليه بـ ' + (u.ovr - q.ovr)) + (same && q.ovr > u.ovr ? ' — يزاحمك على مكان أساسي' : '') + '</div></div>';
-    UI.sheet('<div class="sqp"><div class="sqp-h"><div class="ovr ' + UI.tierCls(q) + '">' + q.ovr + '</div><div class="grow"><h3>' + esc(q.n) + (q.user ? ' <em class="gold">أنت</em>' : '') + '</h3><div class="sm mut">' + G.POS_AR[q.pos] + ' · ' + q.age + ' سنة · ' + esc(UI.natName(q.nat)) + '</div></div></div>' + cmp +
+    UI.sheet('<div class="sqp"><div class="sqp-h"><div class="ovr ' + UI.tierCls(q) + '">' + q.ovr + '</div><div class="grow"><h3>' + esc(q.n) + (q.user ? ' <em class="gold">أنت</em>' : '') + '</h3><div class="sm mut">' + G.POS_AR[q.pos] + ' · ' + q.age + ' سنة · ' + esc(UI.natName(q.nat)) + '</div></div></div>' + (UI.traitList && q.tr ? '<h4 style="margin:10px 0 6px">القدرات المميزة</h4>' + UI.traitList(q) : '') + cmp +
       '<div class="grid3" style="margin:12px 0"><div class="stat"><b>' + st.apps + '</b><small>مباراة دوري</small></div><div class="stat"><b>' + st.g + '</b><small>هدف</small></div><div class="stat"><b>' + st.a + '</b><small>صناعة</small></div></div>' +
       '<div class="kv"><span>الحالة</span><b>' + (q.inj > 0 ? 'مصاب · ' + q.inj + ' أسبوع' : 'جاهز') + '</b></div>' +
       (q.ct ? '<div class="kv"><span>العقد</span><b>' + q.ct.y + ' ' + (q.ct.y === 1 ? 'سنة' : 'سنوات') + ' · ' + UI.money(q.ct.w) + ' أسبوعيًا</b></div>' : '') +

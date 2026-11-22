@@ -29,3 +29,11 @@ jobs:
         run: node tests/engine/calib_real.js 6 3
       - name: تصنيفات العالم — أرشفة ومحرك (Build 26)
         run: node tests/engine/world_rank.js 5 3
+      - name: الكرة الذهبية الشهرية وترحيل الحفظ القديم (Build 28)
+        run: node tests/engine/bd_months.js
+      - name: نوافذ تصنيف الأندية 1 و5 و10 و50 و100 سنة (Build 28)
+        run: node tests/engine/crk_windows.js
+      - name: قدرات النجوم المميزة (Build 28)
+        run: node tests/engine/traits.js
+      - name: المدير الفني لكل نادٍ ومقارنته بالمنطق القديم (Build 28)
+        run: node tests/engine/director.js 3
