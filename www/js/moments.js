@@ -66,6 +66,9 @@
     const mk = (id, k, label, extra) => {
       const o2 = Object.assign({ id, k, label }, extra);
       if (wkOn && o2.k === 'shot' && !o2.tag && o2.pg != null) o2.pg = Math.max(0.02, o2.pg * wfm);
+      // Build 29: معايرة لحظات اللعب المفتوح — كانت النسب المعروضة سخية (انفراد 57٪، مراوغة+تسديدة 50٪...) و5 لحظات بالمباراة تُضيف ~1 هدف فوق أهداف الفريق فيسجّل مهاجم 78 نحو 37 هدفًا.
+      // الركلات الثابتة تبقى بنسبها الواقعية (tag)؛ التسديد/المراوغة/الضغط بمقياس gs، والتمرير الحاسم (صناعة) بمقياس ga. النسبة المعروضة = الفعلية (EV يُحسب بعدها).
+      if (o2.pg != null && !o2.tag) o2.pg = Math.max(0.02, o2.pg * Moments.ovrK(u) * (o2.k === 'pass' ? Moments.TUNE.ga * (Moments.TUNE.gaGrp[grp] || 1) : Moments.TUNE.gs));
       const succ = o2.pp != null ? o2.pp : null;
       o2.ev = o2.k === 'shot' ? o2.pg : (o2.k === 'pass' || o2.k === 'drib' || o2.k === 'press') ? o2.pp * o2.pg : o2.k === 'safe' ? o2.pp * 0.03 : o2.pp * 0.4 + 0.05;
       let h = o2.k === 'shot' ? 'فرصة التسجيل: ' + pct(o2.pg)
@@ -365,7 +368,7 @@
   Moments.auto = (ctx) => U.wpick(ctx.options, (o) => Math.pow(o.ev + 0.02, 1.5)) || ctx.options[0];
 
   // ---------- تنفيذ القرار ----------
-  Moments.resolve = (m, ctx, optId) => {
+  const resolveRaw = (m, ctx, optId) => {
     const L = G.Live, S = G.S, u = P(S.user), uid = u.id;
     const opt = ctx.options.find((x) => x.id === optId) || ctx.options[0];
     const s = m.side, o = s === 'h' ? 'a' : 'h', ps = m.ps[uid];
@@ -449,5 +452,19 @@
       }
     }
     m.pending = null;
+  };
+
+  // Build 29: ميزانية الفرص. اللحظات كانت تُضيف أهدافًا فوق λ الفريق (≈+1/مباراة لمهاجم) فتتضخم أهداف اللاعب والفريق معًا.
+  // الآن كل هدف يأتي من لحظة (لك أو عليك) يخصم «دَينًا» من فرص الفريق نفسه الأصلية: ينسخ أول تسديدة أصلية لاحقة لنفس الفريق من الهدف (بنسبة TUNE.debt)،
+  // فيبقى مجموع أهداف الفريق قريبًا من λ، وتقرّر قراراتك من يسجّل وكيف، وتُحسّن النتيجة جزئيًا فقط (1 − debt).
+  // أثر تقييمك العام على إنتاجك: +1.5٪ لكل نقطة فوق 80 (من 0.8 إلى 1.3) حتى لا يتساوى لاعب 88 ولاعب 95 بعد تخفيض الأرقام
+  Moments.ovrK = (u) => U.clamp(1 + ((u && u.ovr) - 80) * 0.015, 0.8, 1.3);
+  Moments.TUNE = { gs: 0.45, ga: 0.8, gaGrp: { att: 1, mid: 0.7, def: 0.7, gk: 0.5 }, debt: 0.7, base: 0.3, baseA: 0.5 };
+  Moments.resolve = (m, ctx, optId) => {
+    const before = { h: m.score.h, a: m.score.a };
+    m.inMom = true;
+    try { resolveRaw(m, ctx, optId); } finally { m.inMom = false; }
+    const d = m.debt || (m.debt = { h: 0, a: 0 });
+    ['h', 'a'].forEach((x) => { const n = m.score[x] - before[x]; if (n > 0) d[x] += n * Moments.TUNE.debt; });
   };
 })(window.G = window.G || {});

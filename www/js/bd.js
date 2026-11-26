@@ -67,7 +67,7 @@
       const as = G.World.leaguePlayers(lg).filter((p) => p.st.lg[2] > 0).sort((a, b) => b.st.lg[2] - a.st.lg[2])[0];
       if (as && as.st.lg[2] >= 6) hon[as.id] = (hon[as.id] || 0) + 7 * pr;
     });
-    const ub = Object.keys(S.players).map((k) => S.players[k]).filter((p) => p.club && p.st.uc && p.st.uc[1] >= 3).sort((a, b) => b.st.uc[1] - a.st.uc[1])[0];
+    const ub = Object.keys(S.players).map((k) => S.players[k]).filter((p) => p.club && p.st.uc && p.st.uc[1] >= 3 && S.ucl && S.ucl.teams.indexOf(p.club) >= 0).sort((a, b) => b.st.uc[1] - a.st.uc[1])[0];
     if (ub) hon[ub.id] = (hon[ub.id] || 0) + 10;
     const u = S.ucl;
     if (u) {

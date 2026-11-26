@@ -148,6 +148,7 @@
       if (!sm || S.phase !== 'end' || !sm.row) return false;
       const tr = sm.row.trophies || {}, mine = (sm.awards || []).filter((a) => a.user);
       if (tr.ucl) { UI.fx('fanfare'); UI.banner('win', '🌟 بطل أوروبا!', 'توّجتَ بدوري أبطال أوروبا', { art: 'ucl', ms: 3400 }); return true; }
+      if (tr.uel) { UI.fx('fanfare'); UI.banner('win', '🏅 بطل الدوري الأوروبي!', 'توّجتَ بلقب الدوري الأوروبي', { art: 'uel', ms: 3400 }); return true; }
       if (tr.liga || tr.d2) { UI.fx('fanfare'); UI.banner('win', tr.d2 ? '🥈 بطل الدرجة الثانية!' : '🥇 بطل الدوري!', 'لقب ' + G.leagueName(sm.row.lgId) + ' لك', { art: tr.d2 ? 'd2' : 'liga', ms: 3400 }); return true; }
       if (mine.length) { UI.fx('fanfare'); UI.banner('win', '🎖️ ' + G.Season.AWARD_AR[mine[0].type], mine.length > 1 ? 'و' + (mine.length - 1) + ' جوائز أخرى' : 'جائزة الموسم', { art: ({ scorer: 'scorer', player: 'player', assist: 'assist', ucl: 'uclp', young: 'young' })[mine[0].type] || 'player', ms: 3200 }); return true; }
       UI.fx('done');

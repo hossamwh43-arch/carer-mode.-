@@ -7,7 +7,7 @@ W = int(sys.argv[2]) if len(sys.argv) > 2 else 390
 common.SHOTS = sys.argv[1] if len(sys.argv) > 1 else ''
 
 def offers(page, n=3):
-    ev(page, "G.S.rel.cool={}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]")
+    ev(page, "G.S.rel.cool={}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null")  # Build 29: حصة العروض بالنافذة (offerQuota) تُصفَّر أيضًا لأن الاختبار يفرض العروض عمدًا
     for i in range(60):
         if ev(page, "G.S.offers.filter(o=>o.type==='transfer').length") >= n: break
         ev(page, "G.Transfers.generateOffers(3)")

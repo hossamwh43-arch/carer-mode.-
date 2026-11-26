@@ -11,7 +11,7 @@ with sync_playwright() as p:
     play_weeks(page, 3)
     # لاعب قوي بما يكفي ليجذب عروضًا
     ev(page, "const u=G.S.players[G.S.user]; u.ovr=Math.max(u.ovr,80); u.pot=Math.max(u.pot,85); u.val=G.Players.value(u); G.Players.refresh(u)")
-    ev(page, "G.S.week=G.Season.WINTER_OPEN; G.S.window={open:true,kind:'winter'}; G.S.offers=[]")
+    ev(page, "G.S.week=G.Season.WINTER_OPEN; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null")
     print('--- الاهتمام')
     sw = ev(page, "G.Transfers.suitors().slice(0,5).map(x=>({c:x.club,s:x.score,r:x.reasons,a:x.afford}))")
     print(sw)
@@ -20,10 +20,12 @@ with sync_playwright() as p:
     # توليد عروض عدة مرات: كم عرضًا في المتوسط؟
     tot = 0; trials = 12
     for i in range(trials):
-        tot += ev(page, "G.S.offers=[]; G.Transfers.generateOffers(1.3)")
+        tot += ev(page, "G.S.offers=[]; G.S.offerQuota=null; G.Transfers.generateOffers(1.3)")
     print('متوسط العروض/نافذة:', tot / trials)
-    check(tot / trials >= 0.5, 'تُولَّد عروض بمعدل معقول (%.1f)' % (tot / trials))
-    # نريد 3 عروض على الأقل
+    # Build 29: العروض أقل وأثقل عمدًا (سقف حيّ 4، حصة 5 لكل نافذة، حدّ أدنى للاهتمام 42، عرض واحد لكل استدعاء عادي): ~0.25–0.3 للاستدعاء بدل >0.5، وقِيس ~2.5 عرض بالموسم
+    check(0.12 <= tot / trials <= 1.0, 'تُولَّد عروض بمعدل معقول للتصميم الجديد (%.2f للاستدعاء)' % (tot / trials))
+    # نريد 3 عروض على الأقل. هذه الفقرة تختبر آلية المنافسة/المزاد لا ندرة الأندية القادرة ماليًا: نمنح الأندية ميزانية كبيرة (الندرة يقيسها اختبار b29_offers_rate)
+    ev(page, "Object.values(G.S.clubs).forEach(c => { c.tb = Math.max(c.tb, 4e8); }); G.Transfers.wageRoom = () => 1e9")  # الأندية القادرة ماليًا نادرة بتصميم Build 29 (قيد الأجور هو المانع: قِيس بالمحاكاة)
     for i in range(30):
         if ev(page, "G.S.offers.filter(o=>o.type==='transfer').length") >= 3: break
         ev(page, "G.Transfers.generateOffers(2.5)")
@@ -52,7 +54,7 @@ with sync_playwright() as p:
     check(ev(page, "G.S.offers.every(o=>!o.bonus || o.bonus < 50*o.wage*52)"), 'مكافآت التوقيع بعد التفويض ضمن المعقول')
 
     print('--- التفاوض بحزمة كاملة')
-    ev(page, "G.S.offers=[]; G.S.window={open:true,kind:'winter'}")
+    ev(page, "G.S.offers=[]; G.S.offerQuota=null; G.S.window={open:true,kind:'winter'}")
     for i in range(30):
         if ev(page, "G.S.offers.filter(o=>o.type==='transfer').length") >= 1: break
         ev(page, "G.Transfers.generateOffers(3)")
@@ -60,7 +62,7 @@ with sync_playwright() as p:
     # مطلب مبالغ فيه جدًا: انسحاب النادي
     got = set()
     for i in range(14):
-        ev(page, "G.S.offers=[]")
+        ev(page, "G.S.offers=[]; G.S.offerQuota=null")
         for j in range(30):
             if ev(page, "G.S.offers.length"): break
             ev(page, "G.Transfers.generateOffers(3)")
@@ -71,7 +73,7 @@ with sync_playwright() as p:
     print('نتائج المطالب المبالغ فيها:', got)
     check(got & {'withdraw', 'reject'}, 'المطالب المبالغ فيها تُرفض أو ينسحب النادي')
     # طلب دور أساسي لا يمنحه النادي
-    ev(page, "G.S.offers=[]")
+    ev(page, "G.S.offers=[]; G.S.offerQuota=null")
     for j in range(40):
         if ev(page, "G.S.offers.length"): break
         ev(page, "G.Transfers.generateOffers(3)")
@@ -90,7 +92,7 @@ with sync_playwright() as p:
     r = ev(page, "G.Transfers.withdrawRequest()"); check(r['ok'], 'سحب الطلب')
 
     print('--- فشل الصفقة بسبب رسوم النادي البائع')
-    ev(page, "G.S.treq={status:'refused',until:0}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.players[G.S.user].role='starter'; G.S.players[G.S.user].inj=0")
+    ev(page, "G.S.treq={status:'refused',until:0}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null; G.S.players[G.S.user].role='starter'; G.S.players[G.S.user].inj=0")
     for j in range(40):
         if ev(page, "G.S.offers.length"): break
         ev(page, "G.Transfers.generateOffers(3)")
@@ -103,7 +105,7 @@ with sync_playwright() as p:
     ev(page, "G.S.treq={status:'none'}; G.S.transferRequest=false")
     outcomes = {'ok': 0, 'collapsed': 0}
     for i in range(24):
-        ev(page, "G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.players[G.S.user].role='starter'")
+        ev(page, "G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null; G.S.players[G.S.user].role='starter'")
         for j in range(40):
             if ev(page, "G.S.offers.length"): break
             ev(page, "G.Transfers.generateOffers(3)")
@@ -122,7 +124,7 @@ with sync_playwright() as p:
     check(outcomes['collapsed'] > 0 and outcomes['ok'] > 0, 'تفاوض الناديين على الرسوم ينجح أحيانًا ويفشل أحيانًا')
 
     print('--- المصاب لا يجتاز الفحص الطبي')
-    ev(page, "G.S.rel.cool={}; G.S.rel.ex={}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.treq={status:'accepted'}; G.S.transferRequest=true; G.S.players[G.S.user].inj=6")
+    ev(page, "G.S.rel.cool={}; G.S.rel.ex={}; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null; G.S.treq={status:'accepted'}; G.S.transferRequest=true; G.S.players[G.S.user].inj=6")
     for j in range(40):
         if ev(page, "G.S.offers.length"): break
         ev(page, "G.Transfers.generateOffers(3)")
@@ -132,7 +134,7 @@ with sync_playwright() as p:
     ev(page, "G.S.players[G.S.user].inj=0")
 
     print('--- انتقال كامل: علاقات ومكافآت ووعد وأخبار')
-    ev(page, "G.S.rel.cool={}; G.S.rel.ex={}; G.S.treq={status:'accepted'}; G.S.transferRequest=true; G.S.players[G.S.user].role='bench'; G.S.offers=[]")
+    ev(page, "G.S.rel.cool={}; G.S.rel.ex={}; G.S.treq={status:'accepted'}; G.S.transferRequest=true; G.S.players[G.S.user].role='bench'; G.S.offers=[]; G.S.offerQuota=null")
     for j in range(40):
         if ev(page, "G.S.offers.length"): break
         ev(page, "G.Transfers.generateOffers(3)")
@@ -157,13 +159,13 @@ with sync_playwright() as p:
     check(ev(page, "G.S.rel.broken") == ev(page, "G.S.season"), 'وعد غير مُوفى يُسجَّل ويتيح رحيلًا بلا غضب')
 
     print('--- الإعارة')
-    ev(page, "G.S.rel.cool={}; const u=G.S.players[G.S.user]; u.age=27; u.role='starter'; u.ct.y=4; G.S.rel.club=50; G.S.window={open:true,kind:'winter'}; G.S.offers=[]")
+    ev(page, "G.S.rel.cool={}; const u=G.S.players[G.S.user]; u.age=27; u.role='starter'; u.ct.y=4; G.S.rel.club=50; G.S.window={open:true,kind:'winter'}; G.S.offers=[]; G.S.offerQuota=null")
     r = ev(page, "G.Transfers.requestLoan()"); print(r)
     check(not r['ok'], 'النادي يرفض إعارة لاعب أساسي')
     ev(page, "G.S.players[G.S.user].role='bench'; G.S.players[G.S.user].age=22")
     n = 0
     for i in range(12):
-        ev(page, "G.S.offers=[]")
+        ev(page, "G.S.offers=[]; G.S.offerQuota=null")
         r = ev(page, "G.Transfers.requestLoan()")
         if r['ok']: n += 1; break
     check(n == 1, 'وافق النادي الأم وجاءت عروض إعارة')

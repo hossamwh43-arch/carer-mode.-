@@ -177,7 +177,7 @@
       prow('الجاهزية', fr.fit, to.fit, (v) => v + '%', true) +
       (fr.role !== to.role ? '<div class="kv"><span>دورك</span><span>' + esc(G.Coach.ROLE_AR[fr.role] || '—') + ' ← <b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></span></div>' : '<div class="kv"><span>دورك</span><b>' + esc(G.Coach.ROLE_AR[to.role] || '—') + '</b></div>') +
       (to.pos ? prow('مركز ' + esc(UI.cname(rep.club)) + ' في الدوري', fr.pos || to.pos, to.pos, (v) => v, true, true) : '') +
-      (to.ucl ? '<div class="kv"><span>دوري الأبطال</span><span class="sm" style="text-align:end">' + esc(to.ucl) + '</span></div>' : '') +
+      (to.ucl ? '<div class="kv"><span>' + esc(to.uclName || 'دوري الأبطال') + '</span><span class="sm" style="text-align:end">' + esc(to.ucl) + '</span></div>' : '') +
       (to.cup ? '<div class="kv"><span>' + esc(to.cupName || 'الكأس') + '</span><span class="sm" style="text-align:end">' + esc(to.cup) + '</span></div>' : '') + '</div>';
 
     // التدريب

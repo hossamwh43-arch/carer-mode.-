@@ -95,7 +95,7 @@
     const S = G.S, u = me();
     let h = (UI.predCard ? '<div class="card pred-card">' + UI.predCard(fix) + '</div>' : '') + vsBars(fix) + standings(fix);
     h += '<div class="card"><h4>أدائك الأخير</h4>' + UI.formDots(u.form) + '</div>';
-    if (UI.uclLine && fix.comp === 'UCL') h += UI.uclLine();
+    if (UI.uclLine && (fix.comp === 'UCL' || fix.comp === 'UEL')) h += UI.uclLine();
     if (UI.cupLine && (fix.comp === 'CUP' || fix.comp === 'SUP')) h += UI.cupLine(fix);
     return h;
   }

@@ -33,7 +33,7 @@
         const tr = trophyIcons(r.trophies || {}) + ((r.awards || []).length ? '🎖️' : '');
         return '<div class="card ssn' + (r === cur ? ' now' : '') + '"><div class="ssn-h"><b class="ssn-s">' + r.label + '</b><span class="ssn-cl">' + esc(UI.cname(r.club)) + (r.loan ? ' · إعارة' : '') + '</span>' + (tr ? '<span class="ssn-tr">' + tr + '</span>' : '') + '</div>' +
           '<div class="ssn-m"><span>عمر <b>' + r.age + '</b></span><span>التقييم <b>' + r.ovrStart + '→' + r.ovrEnd + '</b></span>' + (r.pos ? '<span>المركز <b>' + r.pos + '</b></span>' : '') + '</div>' +
-          '<div class="ssn-g">' + cell('الدوري', trio(r.lg)) + cell('الأبطال', trio(r.uc)) + cell('الكأس', r.cp ? trio(r.cp) : '<span class="mut">—</span>') + cell('المنتخب', nt(r)) + '</div></div>';
+          '<div class="ssn-g">' + cell('الدوري', trio(r.lg)) + cell(r.ucK === 'UEL' ? 'الأوروبي' : 'الأبطال', trio(r.uc)) + cell('الكأس', r.cp ? trio(r.cp) : '<span class="mut">—</span>') + cell('المنتخب', nt(r)) + '</div></div>';
       }).join('');
   }
 
@@ -131,6 +131,8 @@
     h += '<div class="card"><h3>📘 دليل اللعبة</h3><p class="sm mut">شرح مختصر لأهم أجزاء اللعبة.</p><button class="btn" data-a="tourOpen">افتح الدليل</button></div>';
     const P = UI.prefs;
     const tgl = (k, on, title, sub) => '<div class="setrow"><div>' + title + '<small>' + sub + '</small></div><button class="tgl ' + (on ? 'on' : '') + '" data-a="prefToggle" data-v="' + k + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" aria-label="' + title + '"></button></div>';
+    h += '<div class="card"><h3>🎬 عرض المباراة</h3>' +
+      tgl('stage', P.stage !== false, 'الملعب المرئي (رسوم متحركة)', 'أوقفه إن شعرت ببطء أو سخونة: تبقى المباراة كاملة بأحداثها ونتيجتها بدون رسم الملعب') + '</div>';
     h += '<div class="card"><h3>🔊 الصوت والاهتزاز</h3>' +
       tgl('sound', P.sound !== false, 'المؤثرات الصوتية', 'صافرات وجمهور وأهداف — تُولَّد داخل اللعبة بلا ملفات') +
       tgl('haptics', P.haptics !== false, 'الاهتزاز', 'عند الأهداف والبطاقات ولحظات القرار (الهواتف التي تدعمه)') +
@@ -146,17 +148,18 @@
         '<button class="btn" data-a="benchRun">' + UI.ico('bolt') + ' اختبار أداء الجهاز (3 ثوانٍ)</button><button class="btn" data-a="diagCopy">' + UI.ico('clipboard') + ' نسخ تقرير التشخيص</button></div>';
     }
     h += '<div class="card"><h3>🧪 سلامة البيانات</h3><button class="btn" data-a="validateNow">فحص الجداول والنتائج</button>' + (S.check ? '<p class="sm ' + (S.check.ok ? 'pos' : 'neg') + '">آخر فحص: ' + (S.check.ok ? 'سليم ✔️' : S.check.errs.length + ' ملاحظات (أُصلحت تلقائيًا)') + '</p>' : '') + '</div>';
-    h += '<div class="card"><h3>🔄 المسيرة</h3><button class="btn" data-a="newCareer">✨ بدء مسيرة جديدة (يبقى الحفظ الحالي كنسخة احتياطية)</button><button class="btn red" data-a="wipeAsk">🗑️ حذف كل البيانات</button></div>';
+    h += '<div class="card"><h3>🔄 المسيرة</h3><p class="sm mut">أنت الآن في الخانة <b>' + G.Save.slot + '</b> من ' + G.Save.SLOTS + '.</p><button class="btn" data-a="slotsOpen">🗂️ خانات الحفظ (تبديل أو متابعة مسيرة أخرى)</button><button class="btn" data-a="newCareer">✨ بدء مسيرة جديدة (اختر الخانة)</button><button class="btn red" data-a="wipeAsk">🗑️ حذف هذه الخانة</button></div>';
     h += '<div class="card"><h3>ℹ️ عن البيانات</h3><p class="sm mut">أسماء الأندية والمنتخبات حقيقية (موسم 2025/26 كمرجع) والتقييمات والقيم تقريبية وقابلة للتعديل من <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>. أسماء اللاعبين حقيقية (نحو 4,800 لاعب في 212 نادٍ من تشكيلات 2026) لكن مراكزهم وتقييماتهم وأعمارهم تقديرات مني وليست بيانات رسمية، ويُكمَل النقص بأسماء مولَّدة؛ وليست مرخّصة رسميًا فهي للاستخدام الشخصي فقط. المسابقات: الدوريات الخمسة الكبرى ودرجاتها الثانية، دوري أبطال أوروبا، كأس العالم وكأس آسيا، والكرة الذهبية.</p></div>';
     if (S.errors && S.errors.length) h += '<div class="card"><h4>سجل الأخطاء (للدعم)</h4>' + S.errors.slice(-6).reverse().map((e) => '<div class="sm mut ltr">' + esc(e.label) + ': ' + esc(e.msg) + '</div>').join('') + '</div>';
     return h;
   };
 
   UI.on('prefToggle', (k) => {
-    if (k !== 'sound' && k !== 'haptics') return false;
+    if (k !== 'sound' && k !== 'haptics' && k !== 'stage') return false;
     UI.prefs[k] = UI.prefs[k] === false; // الافتراضي مفعّل: غير المعرَّف أو true يصبح false، وfalse يصبح true
     UI.savePrefs();
     if (k === 'sound' && UI.prefs.sound === false && G.Audio) G.Audio.crowd(false);
+    if (k === 'stage' && UI.prefs.stage === false && UI.stadium && UI.stadium.destroy) UI.stadium.destroy();
     if (UI.prefs[k]) UI.fx(k === 'sound' ? 'ping' : 'done');
   });
   UI.on('fxTest', () => { UI.fx('goalMe'); UI.banner('me', '⚽ هدف!', 'هكذا تبدو المؤثرات'); return false; });
@@ -186,14 +189,9 @@
     return false;
   });
   UI.on('validateNow', () => { const c = G.Season.validateAll(); G.Save.save(); UI.toast(c.ok ? 'كل شيء سليم ✔️' : 'وُجدت ' + c.errs.length + ' ملاحظات وأُصلحت'); });
-  UI.on('newCareer', () => {
-    UI.confirm('بدء مسيرة جديدة؟', 'ستُفتح شاشة إنشاء لاعب جديد. حفظك الحالي لا يُحذف فورًا — يبقى كنسخة احتياطية حتى تبدأ المسيرة الجديدة.', () => {
-      G.Save.save(true); G.S = null; UI.wz = null; UI.cur = 'home'; UI.sub = {}; UI.acts.wzNew(); UI.render();
-    }, 'متابعة');
-    return false;
-  });
+  UI.on('newCareer', () => { G.Save.save(true); UI.sheetRender(() => UI.slotsSheet('new')); return false; });
   UI.on('wipeAsk', () => {
-    UI.confirm('حذف كل البيانات؟', 'سيُحذف الحفظ والنسخة الاحتياطية نهائيًا. لا يمكن التراجع.', () => { G.Save.reset(); UI.wz = null; UI.cur = 'home'; UI.render(); }, 'احذف');
+    UI.confirm('حذف هذه الخانة؟', 'سيُحذف الحفظ والنسخة الاحتياطية في الخانة ' + G.Save.slot + ' نهائيًا. لا يمكن التراجع. الخانات الأخرى لا تتأثر.', () => { G.Save.reset(); UI.wz = null; UI.cur = 'home'; UI.render(); }, 'احذف');
     return false;
   });
 })(window.G = window.G || {});

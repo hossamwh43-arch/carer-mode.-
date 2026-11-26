@@ -37,3 +37,13 @@ jobs:
         run: node tests/engine/traits.js
       - name: المدير الفني لكل نادٍ ومقارنته بالمنطق القديم (Build 28)
         run: node tests/engine/director.js 3
+      - name: الإصابات الواقعية وخطط التأهيل (Build 29)
+        run: node tests/engine/b29_injury.js
+      - name: مال اللاعب والأصول والاستثمار (Build 29)
+        run: node tests/engine/b29_money.js
+      - name: خانات الحفظ الثلاث وضغط الخانات الخاملة (Build 29)
+        run: node tests/engine/b29_slots.js
+      - name: الدوري الأوروبي — تأهل وجدولة وموسم كامل وحفظ قديم (Build 29)
+        run: node tests/engine/b29_uel.js
+      - name: معدل العروض وسقفها وحصة النافذة (Build 29)
+        run: node tests/engine/b29_offers.js

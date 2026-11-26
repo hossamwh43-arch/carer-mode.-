@@ -73,7 +73,7 @@
     '<ellipse cx="25" cy="33" rx="6" ry="2.6" transform="rotate(-38 25 33)" fill="rgb(255 255 255 / .4)"/>';
 
   const ART = {
-    liga: ['cup', 'gold'], d2: ['cup', 'silver'], cup: ['lidCup', 'gold'], sup: ['shield', 'gold'], ucl: ['earCup', 'silver'],
+    liga: ['cup', 'gold'], d2: ['cup', 'silver'], cup: ['lidCup', 'gold'], sup: ['shield', 'gold'], ucl: ['earCup', 'silver'], uel: ['earCup', 'green'],
     wc: ['globe', 'gold'], ac: ['laurel', 'gold'], bd: ['ball', 'gold'], scorer: ['boot', 'gold'], player: ['medal', 'gold'],
     assist: ['medal', 'silver'], uclp: ['medal', 'silver'], young: ['medal', 'green']
   };
