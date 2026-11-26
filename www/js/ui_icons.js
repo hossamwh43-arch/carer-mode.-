@@ -122,7 +122,7 @@
     '⬆': 'arrowup', '⬇': 'arrowdown', '🥈': 'trophy2', '🏅': 'medal', '↗': 'arrowur', '🪑': 'bench', '🔥': 'flame', '⏱': 'timer', '⏳': 'hourglass', '🎮': 'gamepad', '💾': 'save', '👥': 'users', '⏭': 'skip', '🧠': 'brain',
     '🔋': 'battery', '🃏': 'pcard', '🌱': 'sprout', '📰': 'news', '📨': 'mail', '✉': 'mail', '📭': 'mail', '🧑‍🏫': 'whistle', '🤝': 'handshake', '🎩': 'user',
     '🌍': 'globe', '🚀': 'rocket', '📥': 'download', '📤': 'upload', '📘': 'book', '📖': 'book', '🧤': 'glove', '😬': 'face', '😮': 'face', '👌': 'check2', '🎉': 'party',
-    '🎚': 'sliders', '⏹': 'stop', '⏸': 'pause', '📅': 'calendar', '🗓': 'calendar', '🟢': 'dotg', '🔴': 'dotr', '🎽': 'shirt', '👕': 'shirt', '💡': 'bulb', '👁': 'eye',
+    '🎚': 'sliders', '⏹': 'stop', '⏸': 'pause', '📅': 'calendar', '🗓': 'calendar', '🟢': 'dotg', '🔴': 'dotr', '🎽': 'shirt', '👕': 'shirt', '💡': 'bulb', '👁': 'eye', '🎬': 'play', '🗂': 'clipboard',
     '🏃': 'bolt', '🕸': 'web', '🔟': 'ten', '💯': 'hundred', '🧓': 'old', '💎': 'gem', '🐐': 'crown2', '🔊': 'speaker', '🧪': 'flask', '🗑': 'trash', '✈': 'plane',
     '🚪': 'door', '🔮': 'crystal', '☰': 'menu', '⏩': 'ffwd', '✍': 'pen', '⚙': 'gear', '🧰': 'gear', 'ℹ': 'info', '🛡': 'shield'
   };

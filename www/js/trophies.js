@@ -7,8 +7,8 @@
   const T = (G.Trophies = {});
 
   // مفتاح ← [رمز، اسم افتراضي]
-  T.KEYS = { liga: ['🥇', 'الدوري'], d2: ['🥈', 'الدرجة الثانية'], cup: ['🏆', 'الكأس المحلية'], sup: ['🛡️', 'السوبر'], ucl: ['🌟', 'دوري أبطال أوروبا'], wc: ['🌍', 'كأس العالم'], ac: ['🏅', 'كأس آسيا'], bd: ['👑', 'الكرة الذهبية'] };
-  T.ORDER = ['liga', 'd2', 'cup', 'sup', 'ucl', 'wc', 'ac', 'bd'];
+  T.KEYS = { liga: ['🥇', 'الدوري'], d2: ['🥈', 'الدرجة الثانية'], cup: ['🏆', 'الكأس المحلية'], sup: ['🛡️', 'السوبر'], uel: ['🏅', 'الدوري الأوروبي'], ucl: ['🌟', 'دوري أبطال أوروبا'], wc: ['🌍', 'كأس العالم'], ac: ['🏅', 'كأس آسيا'], bd: ['👑', 'الكرة الذهبية'] };
+  T.ORDER = ['liga', 'd2', 'cup', 'sup', 'ucl', 'uel', 'wc', 'ac', 'bd'];
 
   T.name = (e) => {
     switch (e.k) {
@@ -55,7 +55,9 @@
       if (t.liga) T.add(u, 'liga', { s: r.season, c: r.club, x: r.lgId || 'ESP1' });
       if (t.d2) T.add(u, 'd2', { s: r.season, c: r.club, x: r.lgId });
       if (t.ucl) T.add(u, 'ucl', { s: r.season, c: r.club });
-      else if (r.ucExit === 'final' && r.uc && r.uc.apps >= 3) T.add(u, 'ucl', { s: r.season, c: r.club, r: 'f' });
+      else if (r.ucExit === 'final' && r.ucK !== 'UEL' && r.uc && r.uc.apps >= 3) T.add(u, 'ucl', { s: r.season, c: r.club, r: 'f' });
+      if (t.uel) T.add(u, 'uel', { s: r.season, c: r.club });
+      else if (r.ucExit === 'final' && r.ucK === 'UEL' && r.uc && r.uc.apps >= 3) T.add(u, 'uel', { s: r.season, c: r.club, r: 'f' });
       if (!t.liga && !t.d2 && r.pos === 2 && r.lg && r.lg.apps >= 10 && !r.loan) T.add(u, G.LEAGUES[r.lgId] && G.LEAGUES[r.lgId].tier === 2 ? 'd2' : 'liga', { s: r.season, c: r.club, x: r.lgId || 'ESP1', r: 'f' });
     });
     (u.ntCar || []).forEach((e) => {

@@ -62,6 +62,7 @@
     }
     if (!sv && G.loadFailed) h += '<div class="card warn"><h4>⚠️ تعذّر فتح الحفظ</h4><p class="sm mut">الملف تالف ولم نجد نسخة احتياطية سليمة. احتفظنا بنسخة منه للإنقاذ (' + Math.round(G.loadFailed.size / 1024) + ' ك.ب) ولن تُمسح حين تبدأ مسيرة جديدة.</p></div>';
     h += '<button class="btn ' + (sv ? '' : 'pri') + '" data-a="wzNew">✨ مسيرة جديدة</button>';
+    h += '<button class="btn" data-a="slotsOpen">🗂️ خانات الحفظ (النشطة: ' + G.Save.slot + ' من ' + G.Save.SLOTS + ')</button>';
     h += '<button class="btn" data-a="importSheet">📥 استيراد حفظ من نص</button>';
     h += '<div class="notice" style="margin-top:14px">' + UI.more('ℹ️ عن بيانات اللعبة', 'أسماء الأندية واللاعبين حقيقية (تشكيلات 2026 تقريبًا) لكن التقييمات والمراكز والأعمار تقديرية وبعض اللاعبين قد يكونون انتقلوا أو غادروا، ويُكمَل النقص بأسماء مولَّدة. الأسماء غير مرخّصة رسميًا فهي للاستخدام الشخصي فقط. الأخبار والمقالات الصحفية في اللعبة كلها مُحاكاة. كل البيانات الأولية قابلة للتعديل من الملفين <span class="ltr">js/data.js</span> و<span class="ltr">js/data_world.js</span>.') + '</div>';
     return h;
@@ -166,6 +167,58 @@
   UI.on('continueGame', () => {
     if (!G.Save.load()) { UI.toast('تعذّر تحميل الحفظ'); return false; }
     UI.cur = G.S.phase === 'retired' ? 'career' : 'home';
+  });
+
+  // ---------- خانات الحفظ (Build 29) ----------
+  // mode 'open': متابعة/مسيرة جديدة/حذف لكل خانة · mode 'new': اختيار الخانة التي ستُنشأ فيها المسيرة الجديدة
+  UI.slotsSheet = (mode) => {
+    const sl = G.Save.slots();
+    let h = '<h3>' + (mode === 'new' ? '✨ اختر خانة للمسيرة الجديدة' : '🗂️ خانات الحفظ') + '</h3><p class="sm mut">ثلاث مسيرات مستقلة. الخانة النشطة تُحفظ تلقائيًا؛ وعند الانتقال لغيرها تُضغط التي تغادرها (توفيرًا للمساحة) دون أن يضيع شيء.</p>';
+    sl.forEach((x) => {
+      const i = x.info;
+      h += '<div class="card' + (x.active ? ' hl' : '') + '"><div class="row sb"><h4>الخانة ' + x.n + '</h4>' + (x.active ? '<span class="pill g">نشطة</span>' : x.cold ? '<span class="pill">مضغوطة</span>' : '') + '</div>';
+      if (i) {
+        h += '<div class="kv"><span>اللاعب</span><b>' + esc(i.name) + '</b></div><div class="kv"><span>النادي</span><span>' + esc(i.clubId && UI.cname ? UI.cname(i.clubId) : i.club) + '</span></div><div class="kv"><span>الموسم</span><span>' + esc(G.Season.label(i.season)) + (i.retired ? ' · معتزل' : '') + '</span></div><div class="kv"><span>التقييم / العمر</span><span>' + i.ovr + ' / ' + i.age + '</span></div>';
+        if (mode !== 'new') h += '<button class="btn pri" data-a="slotLoad" data-v="' + x.n + '">▶ ' + (x.active && G.S ? 'أنت فيها الآن' : 'متابعة هذه المسيرة') + '</button>';
+        h += '<div class="grid2"><button class="btn" data-a="slotNew" data-v="' + x.n + '">✨ مسيرة جديدة هنا</button>' + (mode === 'new' ? '' : '<button class="btn red" data-a="slotDel" data-v="' + x.n + '">🗑️ حذف</button>') + '</div>';
+      } else {
+        h += '<p class="sm mut">فارغة</p><button class="btn pri" data-a="slotNew" data-v="' + x.n + '">✨ مسيرة جديدة هنا</button>';
+      }
+      h += '</div>';
+    });
+    return h + '<button class="btn" data-a="closeSheet">إغلاق</button>';
+  };
+  UI.on('slotsOpen', () => { if (G.S) G.Save.save(true); UI.sheetRender(() => UI.slotsSheet('open')); return false; });
+  UI.on('slotLoad', (n) => {
+    n = Number(n);
+    if (G.S && n === G.Save.slot) { UI.closeSheet(); return false; }
+    if (G.S) G.Save.save(true);
+    G.S = null; // لا نترك مسيرة أخرى في الذاكرة كي لا تُحفظ فوق الخانة المحمَّلة إن فشل التحميل
+    if (!G.Save.setSlot(n) || !G.Save.load()) { UI.closeSheet(); UI.wz = null; UI.cur = 'home'; UI.sub = {}; UI.toast('تعذّر تحميل الخانة ' + n); return; }
+    G.safe(() => { if (G.S.active && G.S.active.m && G.S.active.m.done) G.Season.commitUser(G.S.active.m); }, 'slotLoad');
+    UI.closeSheet(); UI.wz = null; UI.sub = {}; UI.cur = G.S.phase === 'retired' ? 'career' : 'home'; window.scrollTo(0, 0);
+    UI.toast('فُتحت الخانة ' + n);
+  });
+  UI.on('slotNew', (n) => {
+    n = Number(n);
+    const x = G.Save.slots()[n - 1];
+    const go = () => {
+      if (G.S) G.Save.save(true);
+      if (!G.Save.setSlot(n)) return;
+      G.S = null; UI.wz = null; UI.sub = {}; UI.cur = 'home'; UI.acts.wzNew(); UI.closeSheet(); UI.render();
+    };
+    if (x && x.info) UI.confirm('استبدال مسيرة الخانة ' + n + '؟', 'ستُستبدل مسيرة «' + x.info.name + '» عند أول حفظ للمسيرة الجديدة. إن أغلقتَ شاشة الإنشاء دون إكمالها تبقى المسيرة القديمة كما هي.', go, 'استبدل');
+    else go();
+    return false;
+  });
+  UI.on('slotDel', (n) => {
+    n = Number(n);
+    UI.confirm('حذف الخانة ' + n + '؟', 'سيُحذف حفظ هذه الخانة نهائيًا ولا يمكن التراجع. الخانات الأخرى لا تتأثر.', () => {
+      G.Save.deleteSlot(n);
+      if (n === G.Save.slot) { G.S = null; UI.wz = null; UI.cur = 'home'; UI.sub = {}; }
+      UI.closeSheet(); UI.render();
+    }, 'احذف');
+    return false;
   });
 
   UI.on('importSheet', () => {

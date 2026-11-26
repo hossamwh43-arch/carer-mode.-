@@ -390,25 +390,41 @@
   };
   T.clubNeedsOut = (o) => { const club = C(o.club); return club.tb < o.fee || !canAffordWage(club, o.wage); };
 
-  // يولّد عروضًا جديدة من أندية مهتمة (في نافذة الانتقالات فقط)
+  // يولّد عروضًا جديدة من أندية مهتمة (في نافذة الانتقالات فقط).
+  // Build 29: كانت العروض 19–28 بالموسم (حتى 77) فتفقد قيمتها. الآن: عروض أقل وأثقل — سقف للعروض الحيّة وحصة لكل نافذة،
+  // وتُرتَّب الأندية بقوة اهتمامها فيصل أفضلها أولًا، وعتبة دنيا لدرجة الاهتمام، وعرض واحد (أو اثنان في أول يوم بالنافذة) لكل أسبوع.
+  T.TUNE = { liveMax: 4, winMax: 5, minScore: 42, pScale: 0.75, perCall: 1, perCallBoost: 2 };
+  T.windowKey = () => { const S = G.S; return S.season + ':' + ((S.window && S.window.kind) || 'x'); };
+  T.windowUsed = () => { const q = G.S.offerQuota; return q && q.k === T.windowKey() ? q.n : 0; };
   T.generateOffers = (boost) => {
     const S = G.S, p = P(S.user), Ag = AG();
     if (!S.window || !S.window.open || p.parentPays) return 0;
+    const TU = T.TUNE, key = T.windowKey();
+    if (!S.offerQuota || S.offerQuota.k !== key) S.offerQuota = { k: key, n: 0 };
+    const live = () => S.offers.filter((o) => o.type === 'transfer' && o.status !== 'withdrawn').length;
+    if (live() >= TU.liveMax || S.offerQuota.n >= TU.winMax) return 0;
     const exist = {};
     S.offers.forEach((o) => { exist[o.club] = true; });
     let made = 0;
-    const ab = Ag.boost().offers;
+    const ab = Ag.boost().offers, cands = [];
     T.market().forEach((cid) => {
       if (cid === p.club || exist[cid] || !T.userClubOk(cid) || Ag.cooling(cid)) return;
       const club = C(cid), gap = T.interest(p, club);
       if (gap < -3 || p.ovr < T.clubQ(club) - 9) return;
       const sc = T.suitor(club, p);
-      let pr = clamp(0.05 + (sc.score - 34) * 0.021, 0, 0.6) * (boost || 1) * ab;
+      if (sc.score < TU.minScore) return;
+      let pr = clamp(0.05 + (sc.score - 34) * 0.021, 0, 0.6) * (boost || 1) * ab * TU.pScale;
       if (S.transferRequest) pr *= 1.4;
       if (G.Media) pr *= G.Media.offerBoost();
       pr *= G.diff().offers;
-      if (U.rnd() < pr && T.makeOffer(club, p, sc)) made++;
+      cands.push({ club, sc, pr });
     });
+    cands.sort((x, y) => y.sc.score - x.sc.score);
+    const cap = (boost || 1) >= 1.5 ? TU.perCallBoost : TU.perCall;
+    for (let i = 0; i < cands.length && made < cap; i++) {
+      if (live() >= TU.liveMax || S.offerQuota.n >= TU.winMax) break;
+      if (U.rnd() < cands[i].pr && T.makeOffer(cands[i].club, p, cands[i].sc)) { made++; S.offerQuota.n++; }
+    }
     if (made) T.refreshRivals();
     return made;
   };

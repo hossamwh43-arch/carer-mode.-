@@ -25,7 +25,7 @@
   function topTable(comp, kind) {
     const S = G.S, inL = {};
     if (comp === 'lg' && S.league) S.league.clubs.forEach((id) => { inL[id] = true; });
-    const list = top(comp, kind, 15, comp === 'uc' ? (id) => S.ucl && S.ucl.teams.indexOf(id) >= 0 : comp === 'lg' ? (id) => !!inL[id] : null);
+    const list = top(comp, kind, 15, comp === 'uc' ? (id) => { const e = EUR(); return !!(e.st && e.st.teams.indexOf(id) >= 0); } : comp === 'lg' ? (id) => !!inL[id] : null);
     if (!list.length) return '<div class="card mut c">لا توجد إحصاءات بعد — ستظهر مع تقدّم المباريات.</div>';
     return listTable(list, comp, kind);
   }
@@ -133,13 +133,24 @@
   UI.on('wlg', (v) => { if (G.LEAGUES[v]) UI.sub.wlg = v; });
 
   // ---------- دوري الأبطال ----------
-  const clubIn = (id) => G.S.ucl && G.S.ucl.teams.indexOf(id) >= 0;
+  // Build 29: الشاشة تعرض دوري الأبطال أو الدوري الأوروبي (افتراضيًا بطولة نادي اللاعب إن وُجدت)
+  const EUR = () => {
+    const S = G.S, eu = G.Season.euroOf(me().club);
+    let k = UI.sub.eu;
+    if (k !== 'ucl' && k !== 'uel') k = eu ? eu.k : 'ucl';
+    return k === 'uel'
+      ? { k, mod: G.Uel, st: S.uel, name: 'الدوري الأوروبي', champ: 'بطل الدوري الأوروبي', teams: S.uelTeams || [], hist: S.uelHistory || [] }
+      : { k, mod: G.Ucl, st: S.ucl, name: 'دوري أبطال أوروبا', champ: 'بطل أوروبا', teams: S.uclTeams || [], hist: S.uclHistory || [] };
+  };
+  UI.euroSel = EUR; // يُستعمل لعنوان الشاشة
+  const clubIn = (id) => { const e = EUR(); return !!(e.st && e.st.teams.indexOf(id) >= 0); };
+  UI.on('euSel', (v) => { UI.sub.eu = v === 'uel' ? 'uel' : 'ucl'; });
 
   function uclTable() {
-    const u = G.S.ucl, mine = me().club, order = G.Ucl.sorted();
+    const e = EUR(), u = e.st, mine = me().club, order = e.mod.sorted();
     return '<div class="card"><table class="t"><tr><th>#</th><th class="l">النادي</th><th>لعب</th><th>ف</th><th>ت</th><th>خ</th><th>فارق</th><th>نقاط</th></tr>' +
       order.map((id, i) => { const r = u.league.table[id]; return '<tr class="' + (id === mine ? 'me ' : '') + (i < 8 ? 'z1' : i < 24 ? 'z2' : 'z3') + '"><td>' + (i + 1) + '</td><td class="l">' + UI.clubTag(id, 18) + '</td><td>' + r.p + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td class="ltr">' + (r.gf - r.ga) + '</td><td><b>' + r.pts + '</b></td></tr>'; }).join('') +
-      '</table><p class="sm mut" style="margin:8px 0 0"><span class="pos">▌</span> 1–8 إلى دور الـ16 مباشرةً · <span class="gold">▌</span> 9–24 إلى الملحق · <span class="neg">▌</span> 25–36 خارج البطولة</p></div>';
+      '</table><p class="sm mut" style="margin:8px 0 0"><span class="pos">▌</span> 1–8 إلى دور الـ16 مباشرةً · <span class="gold">▌</span> 9–24 إلى الملحق · <span class="neg">▌</span> 25–' + u.teams.length + ' خارج البطولة</p></div>';
   }
 
   function tieCard(t) {
@@ -155,7 +166,7 @@
   }
 
   function uclKo() {
-    const u = G.S.ucl, ST = G.Ucl.STAGE_AR;
+    const e = EUR(), u = e.st, ST = e.mod.STAGE_AR;
     let h = '';
     ['po', 'r16', 'qf', 'sf'].forEach((st) => {
       if (u.ties[st].length) h += '<h4 style="margin:12px 2px 6px">' + ST[st] + '</h4>' + u.ties[st].map(tieCard).join('');
@@ -164,24 +175,31 @@
       const f = u.final;
       h += '<h4 style="margin:12px 2px 6px">النهائي</h4><div class="card hl">' + UI.fixLine(f, true) + '<div class="sm mut c">' + (f.played ? '' : 'الأسبوع ' + f.w + ' · ملعب محايد') + '</div></div>';
     }
-    if (u.winner) h += '<div class="card hl c"><div style="font-size:40px">🏆</div><h3>بطل أوروبا: ' + esc(UI.cname(u.winner)) + '</h3></div>';
+    if (u.winner) h += '<div class="card hl c"><div style="font-size:40px">🏆</div><h3>' + e.champ + ': ' + esc(UI.cname(u.winner)) + '</h3></div>';
     return h || '<div class="card mut c">ستبدأ الأدوار الإقصائية بعد انتهاء مرحلة الدوري (الملحق في الأسبوع 30).</div>';
   }
 
   function uclMine() {
-    const S = G.S, mine = me().club, u = S.ucl;
-    if (!clubIn(mine)) return '<div class="card mut c">ناديك لا يشارك في دوري الأبطال هذا الموسم.</div>';
-    const fx = G.Ucl.allFixtures().filter((f) => f.h === mine || f.a === mine).sort((a, b) => a.w - b.w);
+    const S = G.S, mine = me().club, e = EUR(), u = e.st;
+    if (!clubIn(mine)) return '<div class="card mut c">ناديك لا يشارك في ' + e.name + ' هذا الموسم.</div>';
+    const fx = e.mod.allFixtures().filter((f) => f.h === mine || f.a === mine).sort((a, b) => a.w - b.w);
     return '<div class="card">' + fx.map((f) => '<div style="padding:8px 0;border-bottom:1px solid rgba(36,50,79,.5)"><div class="sm mut">' + UI.fixLabel(f) + ' · الأسبوع ' + f.w + '</div><div class="row sb"><span>' + UI.clubTag(f.h, 20) + '</span><b class="sco">' + (f.played ? f.hg + ' - ' + f.ag + (f.pens ? ' (' + f.pens.h + '-' + f.pens.a + ')' : '') : '—') + '</b><span>' + UI.clubTag(f.a, 20) + '</span></div></div>').join('') + '</div>' +
       '<p class="sm mut">الدور القادم يتحدد بحسب ترتيبك. الخروج من البطولة يظهر هنا فور حدوثه.</p>';
   }
 
   UI.screens.ucl = () => {
-    const S = G.S;
-    if (!S.ucl) {
+    const S = G.S, e = EUR();
+    const sel = '<div class="chips" style="margin-bottom:8px"><button class="chip ' + (e.k === 'ucl' ? 'on' : '') + '" data-a="euSel" data-v="ucl">دوري الأبطال</button><button class="chip ' + (e.k === 'uel' ? 'on' : '') + '" data-a="euSel" data-v="uel">الدوري الأوروبي</button></div>';
+    if (e.k === 'uel' && !e.st) {
+      const mine = me().club, q = e.teams;
+      return sel + '<div class="card c"><div style="font-size:40px">🏅</div><h3>الدوري الأوروبي</h3><p class="mut">28 فريقًا · 6 مباريات لكل فريق · 1–8 إلى دور الـ16 مباشرةً و9–24 إلى الملحق. ' + (q.length ? 'تبدأ البطولة مع بداية الموسم.' : 'تبدأ في الموسم القادم.') + '</p></div>' +
+        (q.indexOf(mine) >= 0 ? '<div class="notice ok">✅ ناديك مؤهل للدوري الأوروبي هذا الموسم.</div>' : '') +
+        (q.length ? '<div class="card"><h3>الأندية المؤهلة</h3><div class="chips">' + q.map((id) => '<span class="chip ' + (id === mine ? 'on' : '') + '">' + esc(UI.cname(id)) + '</span>').join('') + '</div></div>' : '');
+    }
+    if (e.k === 'ucl' && !S.ucl) {
       const mine = me().club, q = S.uclTeams || [], inL = q.filter((id) => S.clubs[id].lg), out = q.filter((id) => !S.clubs[id].lg);
       const my = S.clubs[mine], mySlots = my && my.lg ? G.UCL_SLOTS[my.lg] : 0;
-      return '<div class="card c"><div style="font-size:40px">⭐</div><h3>دوري أبطال أوروبا ' + G.Season.label(S.season) + '</h3><p class="mut">تُجرى القرعة تلقائيًا عند بدء الموسم (36 فريقًا، مرحلة دوري من 8 مباريات).</p>' +
+      return sel + '<div class="card c"><div style="font-size:40px">⭐</div><h3>دوري أبطال أوروبا ' + G.Season.label(S.season) + '</h3><p class="mut">تُجرى القرعة تلقائيًا عند بدء الموسم (36 فريقًا، مرحلة دوري من 8 مباريات).</p>' +
         (q.indexOf(mine) >= 0 ? '<div class="notice ok">✅ ناديك مؤهل لدوري الأبطال هذا الموسم.</div>' : '<div class="notice">ناديك غير مؤهل هذا الموسم. ' + (mySlots ? 'أنهِ ضمن أول ' + mySlots + ' في ' + esc(G.leagueName(my.lg)) : 'تتأهل الأندية من الدوريات الخمسة الكبرى بحسب ترتيبها') + ' أو انتقل إلى نادٍ مشارك.</div>') + '</div>' +
         G.LEAGUE_ORDER.filter((lg) => G.UCL_SLOTS[lg]).map((lg) => { const ids = inL.filter((id) => S.clubs[id].lg === lg); return ids.length ? '<div class="card"><h3>' + esc(G.leagueName(lg)) + ' <span class="sm mut">(' + G.UCL_SLOTS[lg] + ' مقاعد)</span></h3><div class="chips">' + ids.map((id) => '<span class="chip ' + (id === mine ? 'on' : '') + '">' + UI.clubTag(id, 18) + '</span>').join('') + '</div></div>' : ''; }).join('') +
         '<div class="card"><h3>أندية من بقية أوروبا</h3><div class="chips">' + out.map((id) => '<span class="chip ' + (id === mine ? 'on' : '') + '">' + esc(UI.cname(id)) + '</span>').join('') + '</div></div>' +
@@ -189,7 +207,7 @@
     }
     const tabs = UI.tabs('uc', [['table', 'الترتيب'], ['mine', 'مبارياتي'], ['ko', 'الإقصائيات'], ['scorers', 'الهدافون'], ['assists', 'الصنّاع']], 'table');
     const t = UI.curTab('uc', 'table');
-    const head = '<div class="notice ok">المرحلة الحالية: <b>' + G.Ucl.STAGE_AR[S.ucl.phase] + '</b></div>';
-    return tabs + head + (t === 'table' ? uclTable() : t === 'mine' ? uclMine() : t === 'ko' ? uclKo() : t === 'scorers' ? topTable('uc', 'g') : topTable('uc', 'a'));
+    const head = '<div class="notice ok">' + e.name + ' · المرحلة الحالية: <b>' + e.mod.STAGE_AR[e.st.phase] + '</b></div>';
+    return sel + tabs + head + (t === 'table' ? uclTable() : t === 'mine' ? uclMine() : t === 'ko' ? uclKo() : t === 'scorers' ? topTable('uc', 'g') : topTable('uc', 'a'));
   };
 })(window.G = window.G || {});

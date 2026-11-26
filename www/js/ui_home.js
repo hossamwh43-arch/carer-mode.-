@@ -9,12 +9,12 @@
     if (f.comp === 'LL') return (G.S && G.S.league ? G.leagueName(G.S.league.lg) : 'الدوري') + ' · الجولة ' + f.r;
     if (f.comp === 'NT') return (G.S.intl ? G.S.intl.name : 'المنتخبات') + ' · ' + (f.stage === 'group' ? 'المجموعة ' + 'ABCDEFGHIJKL'[f.g] + ' · الجولة ' + f.day : G.STAGE_NT_AR[f.stage] || f.stage) + (f.stage === 'final' || f.stage === 'third' ? ' (ملعب محايد)' : '');
     if (f.comp === 'CUP' || f.comp === 'SUP') return G.Cups.label(f).replace(' (ملعب محايد)', '');
-    const st = G.Ucl.STAGE_AR[f.stage] || '';
-    if (f.stage === 'league') return 'دوري الأبطال · ' + st + ' · الجولة ' + f.r;
-    if (f.stage === 'final') return 'دوري الأبطال · النهائي (ملعب محايد)';
-    return 'دوري الأبطال · ' + st + (f.leg ? ' · ' + (f.leg === 1 ? 'الذهاب' : 'الإياب') : '');
+    const st = G.Ucl.STAGE_AR[f.stage] || '', nm = f.comp === 'UEL' ? 'الدوري الأوروبي' : 'دوري الأبطال';
+    if (f.stage === 'league') return nm + ' · ' + st + ' · الجولة ' + f.r;
+    if (f.stage === 'final') return nm + ' · النهائي (ملعب محايد)';
+    return nm + ' · ' + st + (f.leg ? ' · ' + (f.leg === 1 ? 'الذهاب' : 'الإياب') : '');
   };
-  UI.compName = (c) => ({ LL: 'الدوري', NT: 'المنتخب', CUP: 'الكأس', SUP: 'السوبر' })[c] || 'دوري الأبطال';
+  UI.compName = (c) => ({ LL: 'الدوري', NT: 'المنتخب', CUP: 'الكأس', SUP: 'السوبر', UEL: 'الدوري الأوروبي' })[c] || 'دوري الأبطال';
   UI.fixLine = (f, big) => {
     const sc = f.played ? '<b class="sco">' + f.hg + ' - ' + f.ag + '</b>' + (f.pens ? '<div class="sm mut ltr">(' + f.pens.h + '-' + f.pens.a + ' ر.ج)</div>' : '') : '<span class="vstag">ضد</span>';
     return '<div class="score"><div class="tm">' + UI.badge(f.h, big ? 54 : 34) + '<div>' + esc(UI.cname(f.h)) + '</div></div><div class="' + (big ? 'sc' : '') + '" style="min-width:70px;text-align:center">' + sc + '</div><div class="tm">' + UI.badge(f.a, big ? 54 : 34) + '<div>' + esc(UI.cname(f.a)) + '</div></div></div>';
@@ -78,14 +78,15 @@
 
   function uclLine() {
     const S = S_(), u = me();
-    if (!S.ucl || S.ucl.teams.indexOf(u.club) < 0) return S.phase === 'season' ? '<div class="card"><div class="sm mut">⭐ ناديك لا يشارك في دوري الأبطال هذا الموسم.</div></div>' : '';
-    const ex = S.ucl.exit[u.club], ST = G.Ucl.STAGE_AR;
+    const eu = G.Season.euroOf(u.club); // Build 29: دوري الأبطال أو الدوري الأوروبي
+    if (!eu) return S.phase === 'season' ? '<div class="card"><div class="sm mut">⭐ ناديك لا يشارك في بطولة أوروبية هذا الموسم.</div></div>' : '';
+    const st = eu.st, M = eu.mod, ex = st.exit[u.club], ST = M.STAGE_AR;
     let t;
-    if (S.ucl.winner === u.club) t = '🏆 بطل أوروبا!';
-    else if (S.ucl.phase === 'done') t = 'انتهت مشاركتكم عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex);
-    else if (S.ucl.phase === 'league') { const o = G.Ucl.sorted(), r = S.ucl.league.table[u.club]; t = 'مرحلة الدوري — المركز ' + (o.indexOf(u.club) + 1) + ' من 36 · ' + r.pts + ' نقطة بعد ' + r.p + ' مباريات'; }
-    else t = G.Ucl.userAlive(u.club) ? 'نادٍ في ' + ST[S.ucl.phase] : 'ودّع البطولة في ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex);
-    return '<div class="card"><div class="row sb"><b>⭐ دوري الأبطال</b><button class="btn sm" data-a="go" data-v="ucl">التفاصيل</button></div><div class="sm" style="margin-top:6px">' + t + '</div></div>';
+    if (st.winner === u.club) t = '🏆 ' + eu.champ + '!';
+    else if (st.phase === 'done') t = 'انتهت مشاركتكم عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex);
+    else if (st.phase === 'league') { const o = M.sorted(), r = st.league.table[u.club]; t = 'مرحلة الدوري — المركز ' + (o.indexOf(u.club) + 1) + ' من ' + st.teams.length + ' · ' + r.pts + ' نقطة بعد ' + r.p + ' مباريات'; }
+    else t = M.userAlive(u.club) ? 'نادٍ في ' + ST[st.phase] : 'ودّع البطولة في ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex);
+    return '<div class="card"><div class="row sb"><b>⭐ ' + eu.short + '</b><button class="btn sm" data-a="go" data-v="ucl">التفاصيل</button></div><div class="sm" style="margin-top:6px">' + t + '</div></div>';
   }
 
   function summerPanel() {
@@ -121,7 +122,7 @@
       (sm.uclWinner ? '<div class="kv"><span>بطل أوروبا</span><b>' + cl(sm.uclWinner) + '</b></div>' : '') +
       '<div class="kv"><span>مركز ناديك</span><span>' + (r.pos || '—') + '</span></div>' + fate(r, sm) +
       '<div class="kv"><span>الدوري</span><span>' + r.lg.apps + ' مباراة · ' + r.lg.g + ' هدف · ' + r.lg.a + ' صناعة · متوسط ' + (r.lg.apps ? r.lg.avg.toFixed(2) : '—') + '</span></div>' +
-      (r.uc.apps ? '<div class="kv"><span>دوري الأبطال</span><span>' + r.uc.apps + ' · ' + r.uc.g + ' هدف · ' + r.uc.a + ' صناعة · متوسط ' + r.uc.avg.toFixed(2) + '</span></div>' : '') +
+      (r.uc.apps ? '<div class="kv"><span>' + (r.ucK === 'UEL' ? 'الدوري الأوروبي' : 'دوري الأبطال') + '</span><span>' + r.uc.apps + ' · ' + r.uc.g + ' هدف · ' + r.uc.a + ' صناعة · متوسط ' + r.uc.avg.toFixed(2) + '</span></div>' : '') +
       '<div class="kv"><span>تقييمك</span><span>' + r.ovrStart + ' ← ' + r.ovrEnd + '</span></div></div>';
     const mine = (sm.awards || []).filter((a) => a.user);
     if (G.Season.trophyTotal(r.trophies) || mine.length) {

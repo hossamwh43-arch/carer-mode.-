@@ -36,7 +36,7 @@
   const ageRec = (a) => (a <= 23 ? 1.08 : a <= 29 ? 1 : a <= 33 ? 0.92 : 0.84);
   Stamina.recRate = (p, intensity, hurt) => {
     const base = hurt ? Stamina.REC.hurt : (Stamina.REC[intensity] || Stamina.REC.normal);
-    return clamp(base * ageRec(p.age) * (0.9 + (Stamina.cond(p) - 60) / 200), 0.2, 0.9);
+    return clamp(base * ageRec(p.age) * (0.9 + (Stamina.cond(p) - 60) / 200) * (p.user && G.Money ? 1 + G.Money.recBonus() : 1), 0.2, 0.9);
   };
 
   // خصم الجاهزية بعد مباراة (الدقائق × الجهد × عكس اللياقة الأساسية)

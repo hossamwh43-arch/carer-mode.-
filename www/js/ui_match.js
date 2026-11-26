@@ -5,7 +5,7 @@
   const SPEED = { 1: 260, 2: 110, 3: 35 };
   const P = (id) => G.S.players[id];
   const activeM = () => (G.S && G.S.active ? G.S.active.m : null);
-  const SS = () => (UI.stadium && UI.stadium.update ? UI.stadium : null); // الملعب المرئي (زينة): قد يغيب فتعمل الشاشة بدونه
+  const SS = () => (UI.stadium && UI.stadium.update && UI.prefs.stage !== false ? UI.stadium : null); // الملعب المرئي (زينة): قد يغيب أو يوقفه اللاعب (UI.prefs.stage=false) فتعمل الشاشة بدونه
 
   // ---------- المؤثرات: صوت + اهتزاز + لافتة الأهداف (كلها زينة: لا تلمس العشوائية ولا حالة اللعبة) ----------
   const FX_WHISTLE = { kick: 'whistle', ht: 'whistle2', et: 'whistle2', pens: 'whistle2', ft: 'whistle3' };
@@ -107,7 +107,7 @@
     const start = ps.in || 0, end = ps.out != null ? ps.out : m.i, mins = end - start;
     if (mins < 8) return null;
     const diff = m.score[m.side] - m.score[m.side === 'h' ? 'a' : 'h'];
-    let r = 6.4 + (diff > 0 ? 0.25 : diff < 0 ? -0.25 : 0) + ps.g * 0.95 + ps.a * 0.6 + ps.sot * 0.06 - ps.big * 0.22 + ps.momOk * 0.16 - ps.momBad * 0.14 - ps.yel * 0.25 - ps.red * 1.6;
+    let r = 6.4 + (G.Match.POS_OFF[G.POS_GROUP[G.S.players[uid].pos]] || 0) + (diff > 0 ? 0.25 : diff < 0 ? -0.25 : 0) + ps.g * 0.95 + ps.a * 0.6 + ps.sot * 0.06 - ps.big * 0.22 + ps.momOk * 0.16 - ps.momBad * 0.14 - ps.yel * 0.25 - ps.red * 1.6;
     return U.clamp(Math.round(r * 10) / 10, 3, 10);
   }
 
@@ -199,6 +199,7 @@
       '<button class="mvb ' + (canSub ? '' : 'dis') + '" data-a="reqSub">' + UI.ico('swap') + '<span>استبدال</span></button>' +
       '<button class="mvb" data-a="mvLineup">' + UI.ico('users') + '<span>التشكيلة</span></button></div>' +
       '<div class="mvc2"><button class="mvb2 red" data-a="mvFinish">' + UI.ico('skip') + ' إنهاء المباراة فورًا</button><button class="mvb2" data-a="mvLeave">' + UI.ico('door') + ' خروج وحفظ</button></div>' +
+      '<div class="mvc3"><button class="mvb2" data-a="mvStage" aria-pressed="' + (UI.prefs.stage === false ? 'false' : 'true') + '">' + UI.ico(UI.prefs.stage === false ? 'eye' : 'ban') + (UI.prefs.stage === false ? ' تشغيل الملعب المرئي' : ' إيقاف الملعب المرئي (وضع خفيف)') + '</button></div>' +
       (pf ? '<div class="mvcoach sm mut">' + UI.ico('whistle') + ' مدربك: <b>' + esc(pf.ar) + '</b> — ' + esc(pf.desc) + '. يراقب طاقتك ويبدّلك عند الإرهاق.</div>' : '');
   }
 
@@ -214,7 +215,7 @@
     const mr = !m.pending && UI._momRes ? UI._momRes : null;
     const mk = m.pending ? m.pending.id : mr ? 'res' + mr.n : '';
     if (mk !== lastMomKey) { b.innerHTML = m.pending ? momentHtml(m) : mr ? momResHtml(mr) : ''; lastMomKey = mk; if (m.pending) { window.scrollTo(0, 0); UI.fx('ping'); } }
-    const ck = [UI.mv.paused, UI.mv.speed, G.Live.userOn(m), m.subs[m.side] > 0].join();
+    const ck = [UI.mv.paused, UI.mv.speed, G.Live.userOn(m), m.subs[m.side] > 0, UI.prefs.stage !== false].join();
     if (ck !== lastCtlKey) { c.innerHTML = ctlHtml(m); lastCtlKey = ck; }
   }
 
@@ -231,7 +232,10 @@
       lastRev = SS() ? SS().revNo() : 0;
       crowdOn(); paint(m); start();
     };
-    return '<div id="mvStage" class="stg" role="group" aria-label="بث المباراة"></div><div id="mvMoment"></div><div id="mvHead"></div><div id="mvCtl"></div><div class="card"><h4>مجريات المباراة</h4><div class="feed" id="mvFeed"></div></div>';
+    const stageHtml = UI.prefs.stage === false
+      ? '<div id="mvStage" class="stg-off sm mut">' + UI.ico('eye') + '<span>الملعب المرئي متوقف — وضع خفيف (أحداث نصية فقط).</span><button class="mvb2" data-a="mvStage">تشغيل</button></div>'
+      : '<div id="mvStage" class="stg" role="group" aria-label="بث المباراة"></div>';
+    return stageHtml + '<div id="mvMoment"></div><div id="mvHead"></div><div id="mvCtl"></div><div class="card"><h4>مجريات المباراة</h4><div class="feed" id="mvFeed"></div></div>';
   }
 
   function postScreen() {
@@ -309,6 +313,14 @@
     lastMomKey = null;
     paint(m);
     return false;
+  });
+  // إيقاف/تشغيل الملعب المرئي أثناء المباراة: تصوير فقط، لا يمسّ المحرك ولا النتيجة. يُحفظ كتفضيل ويسري على المباريات القادمة.
+  UI.on('mvStage', () => {
+    const turnOff = UI.prefs.stage !== false;
+    UI.prefs.stage = !turnOff; UI.savePrefs();
+    if (turnOff && UI.stadium && UI.stadium.destroy) UI.stadium.destroy();
+    UI.toast(turnOff ? 'أُوقف الملعب المرئي — وضع خفيف' : 'عاد الملعب المرئي');
+    // يعاد رسم الشاشة: يبقى المؤقّت وحالة المباراة كما هي
   });
   UI.on('mvPause', () => { UI.mv.paused = !UI.mv.paused; const m = activeM(); if (m) paint(m); return false; });
   UI.on('mvSpeed', () => { UI.mv.speed = ((UI.mv.speed || 1) % 3) + 1; if (UI.mv.speed === 3 && SS()) SS().flush(); start(); const m = activeM(); if (m) paint(m); return false; });

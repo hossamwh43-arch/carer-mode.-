@@ -13,7 +13,7 @@
   UI.money = U.money;
   UI.num = (v, d) => (Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0)).toFixed(d || 0);
 
-  UI.titles = { home: 'الرئيسية', league: () => (G.S && G.S.league ? G.leagueTitle(G.S.league.lg) : 'الدوري'), ucl: 'دوري أبطال أوروبا', train: 'التدريب والمدرب', market: 'سوق الانتقالات', inbox: 'الرسائل', career: 'مسيرتي', stats: 'الإحصائيات والإنجازات', match: 'المباراة', settings: 'الإعدادات' };
+  UI.titles = { home: 'الرئيسية', league: () => (G.S && G.S.league ? G.leagueTitle(G.S.league.lg) : 'الدوري'), ucl: () => (UI.euroSel && G.S ? G.safe(() => UI.euroSel().name, 'euTitle') || 'دوري أبطال أوروبا' : 'دوري أبطال أوروبا'), train: 'التدريب والمدرب', market: 'سوق الانتقالات', inbox: 'الرسائل', career: 'مسيرتي', stats: 'الإحصائيات والإنجازات', match: 'المباراة', settings: 'الإعدادات' };
 
   // ---------- الأدوات المرئية ----------
   const lum = (hex) => { const h = hex.replace('#', ''); const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };

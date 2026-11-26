@@ -104,7 +104,10 @@
     const fin = sh.slot === 'GK' ? 30 : p.a.sho + (p.user && m.gro ? m.gro.bonus : 0);
     const pg = U.clamp(SHOT_BASE * (big ? 2.4 : 1) * Math.exp(0.035 * (fin - tf / Math.max(tw, 0.01))), 0.02, 0.45);
     m.st[s].sh++; m.ps[sh.id].sh++;
-    if (U.rnd() < pg) {
+    // Build 29: دَين لحظات المستخدم (Moments.resolve): يُلغى هدف أصلي لاحق بدل أن يتضاعف مجموع أهداف الفريق
+    let scored = U.rnd() < pg;
+    if (scored && !m.inMom && m.debt && m.debt[s] >= 1) { m.debt[s] -= 1; scored = false; }
+    if (scored) {
       m.st[s].sot++; m.ps[sh.id].sot++;
       const as = U.chance(0.72) ? G.Match.pickAssist(list, sh.id, m.gro && m.gro.bonus) : null;
       Live.addGoal(m, s, sh.id, as ? as.id : null);
@@ -143,7 +146,7 @@
   Live.perf = (m) => {
     const ps = m.ps[G.S.user]; if (!ps) return null;
     const my = m.score[m.side], op = m.score[m.side === 'h' ? 'a' : 'h'];
-    return 6.45 + (my > op ? 0.3 : my < op ? -0.3 : 0) + (ps.g || 0) * 0.95 + (ps.a || 0) * 0.6 + (ps.sot || 0) * 0.06 - (ps.big || 0) * 0.22 +
+    return 6.45 + (G.Match.POS_OFF[GRP[G.S.players[G.S.user].pos]] || 0) + (my > op ? 0.3 : my < op ? -0.3 : 0) + (ps.g || 0) * 0.95 + (ps.a || 0) * 0.6 + (ps.sot || 0) * 0.06 - (ps.big || 0) * 0.22 +
       (ps.momOk || 0) * 0.16 - (ps.momBad || 0) * 0.14 - (ps.yel || 0) * 0.25 - (ps.red || 0) * 1.6;
   };
   const matchImp = (m) => (m.ko && m.ko.final ? 2 : m.ko || m.comp === 'uc' ? 1 : 0);
@@ -255,8 +258,8 @@
   Live.injuries = (m, s) => {
     const uid = G.S.user;
     for (const x of m.xi[s].slice()) {
-      let pr = 0.00004;
-      if (x.id === uid) { const u = P(uid); pr *= 1 + (100 - Math.min(100, m.fat[uid])) / 60 + (u.training && u.training.heavy ? 0.3 : 0); }
+      // Build 29: معدل واقعي (≈2.4٪ بالمباراة، يزيد بالعمر والإرهاق) — انظر injury.js
+      const pr = G.Injury.perMin(P(x.id), m.fat[x.id]);
       if (U.rnd() < pr) {
         const wk = G.Match.injWeeks();
         m.ps[x.id].inj = wk;

@@ -10,14 +10,17 @@
 
   // Build 28: القدرات المميزة (G.Traits) ترفع حصة النجم من أهداف فريقه وصناعته دون تغيير مجموع أهداف الفريق (λ كما هي)
   const TM = (p, k) => (G.Traits && p.tr ? G.Traits.mult(p, k) : 1);
-  Match.scorerWeight = (p, slot, bonus) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'g');
-  Match.assistWeight = (p, slot, bonus) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'a');
+  // Build 29: لاعبك يتحرك عبر «اللحظات» (Moments) التي تمثّل فرصه الشخصية؛ فنخفّض حصته من التسديد/الصناعة الآلية (وإلا تُحسب فرصه مرتين: آليًّا ومن اللحظات)
+  const UW = (p, k) => (p.user && G.Moments && G.Moments.TUNE ? G.Moments.TUNE[k] * G.Moments.ovrK(p) : 1);
+  Match.scorerWeight = (p, slot, bonus) => (W_SCORE[slot] || 1) * Math.pow(Math.max(20, p.a.sho + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'g') * UW(p, 'base');
+  Match.assistWeight = (p, slot, bonus) => (W_ASSIST[slot] || 1) * Math.pow(Math.max(20, p.a.pas + (p.user && bonus ? bonus : 0)) / 65, 1.5) * TM(p, 'a') * UW(p, 'baseA');
   Match.pickScorer = (list, bonus) => U.wpick(list, (x) => Match.scorerWeight(P(x.id), x.slot, bonus));
   Match.pickAssist = (list, exceptId, bonus) => U.wpick(list.filter((x) => x.id !== exceptId), (x) => Match.assistWeight(P(x.id), x.slot, bonus));
 
   Match.injWeeks = () => { const r = U.rnd(); return r < 0.55 ? U.int(1, 2) : r < 0.88 ? U.int(3, 6) : U.int(7, 16); };
 
   // تقييم اللاعب (من 3 إلى 10)
+  Match.POS_OFF = { att: -0.05, mid: 0, def: 0.35, gk: 0.3 };
   Match.rating = (pos, o) => {
     let r = 6.45 + U.gauss() * 0.3;
     if (o.mins < 20) r = 6.3 + U.gauss() * 0.15;
@@ -26,6 +29,7 @@
     r += (o.momOk || 0) * 0.16 - (o.momBad || 0) * 0.14;
     if (o.syn && o.mins >= 20) r += o.syn * (G.Growth ? G.Growth.SYN_RATING : 0.35); // زملاء من الطراز الرفيع يرفعون أداء اللاعب
     const g = GRP[pos];
+    r += Match.POS_OFF[g] || 0; // Build 29: المدافع/الحارس كانا يتوسطان 6.7–6.9 مقابل 7.8–8.4 للمهاجم رغم أداء مكافئ، فتُظلم تقييماتهم وجوائزهم ونموّهم
     if (o.mins >= 45) {
       if (o.cs) r += g === 'gk' ? 0.55 : g === 'def' ? 0.4 : g === 'mid' ? 0.12 : 0;
       else if (o.conc > 1 && (g === 'gk' || g === 'def')) r -= 0.18 * (o.conc - 1);
@@ -119,7 +123,7 @@
         const g = goals[x.id] || 0, a = ast[x.id] || 0;
         const r = Match.rating(p.pos, { mins: mins[x.id], res: res[s], g, a, cs: conc[s] === 0, conc: conc[s] });
         Match.addStat(x.id, comp, mins[x.id], g, a, r);
-        if (!p.user && U.rnd() < 0.007 * (mins[x.id] / 90)) p.inj = Match.injWeeks();
+        if (!p.user && U.rnd() < G.Injury.TUNE.aiPerMatch * (1 + Math.max(0, p.age - G.Injury.TUNE.ageFrom) * G.Injury.TUNE.agePer) * (mins[x.id] / 90)) p.inj = Match.injWeeks();
       });
     });
     return { hg, ag, et, pens, lam };

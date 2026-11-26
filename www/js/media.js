@@ -193,7 +193,7 @@
     const my = sum.userSide, gf = my === 'h' ? sum.score.h : sum.score.a, ga = my === 'h' ? sum.score.a : sum.score.h;
     const opp = my === 'h' ? sum.a : sum.h;
     const fix = G.Season.findFix(sum.fixId) || {};
-    const stage = sum.comp === 'UCL' || sum.comp === 'NT' ? fix.stage || null : null, knock = !!(stage && stage !== 'league' && stage !== 'group');
+    const stage = sum.comp === 'UCL' || sum.comp === 'UEL' || sum.comp === 'NT' ? fix.stage || null : null, knock = !!(stage && stage !== 'league' && stage !== 'group');
     const played = sum.mins > 0, r = sum.rating || 6.4;
     // 1) أثر الأداء المباشر على الشعبية
     let d = 0;

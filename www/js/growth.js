@@ -46,7 +46,7 @@
   };
   // مضاعف الخبرة الكلي (المباريات والتدريب الأسبوعي)
   Growth.xpMult = (u) => {
-    const lk = G.Locker ? G.Locker.xpMult() : 1; // v4: غرفة الملابس ±8%
+    const lk = (G.Locker ? G.Locker.xpMult() : 1) * (G.Money ? G.Money.xpMult(u) : 1); // v4: غرفة الملابس ±8% · Build 29: المدرب الخاص
     if (!Growth.on || !u) return lk;
     const g = Growth.st(u);
     let m = 1 + Growth.MENTOR_XP * Growth.mentor(u);
@@ -62,7 +62,7 @@
   };
 
   // ---------- السمات والتقدم ----------
-  const okAttr = (u, k) => !(k === 'gk' && u.pos !== 'GK') && (u.gain[k] || 0) < G.Training.seasonCap(u.age) && u.a[k] < G.Training.maxAttr(u, k);
+  const okAttr = (u, k) => !G.Training.atCap(u) && !(k === 'gk' && u.pos !== 'GK') && (u.gain[k] || 0) < G.Training.seasonCap(u.age) && u.a[k] < G.Training.maxAttr(u, k);
   const topAttrs = (u) => G.Training.relevant(u).filter((k) => !(k === 'gk' && u.pos !== 'GK'))
     .sort((a, b) => G.Players.OVR_W[u.pos][b] - G.Players.OVR_W[u.pos][a] || u.a[a] - u.a[b]);
   // ترقية فورية لسمات (ضمن سقف الموسم والإمكانات نفسهما)

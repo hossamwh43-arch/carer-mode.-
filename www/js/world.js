@@ -194,6 +194,7 @@
         if (tier === 1 && cfg.down && act > n - cfg.down) d -= 1.2;
         if (tier === 2 && cfg.up && act <= cfg.up) d += 0.8;
         if (S.ucl && S.ucl.winner === id) d += 1.5;
+        if (S.uel && S.uel.winner === id) d += 0.7; // Build 29: بطل الدوري الأوروبي
         const off = c.repF - c.rep0;
         d *= d > 0 ? U.clamp(1 - off / 9, 0.15, 1.6) : U.clamp(1 + off / 9, 0.15, 1.6);
         d += 0.12 * (c.rep0 - c.repF);

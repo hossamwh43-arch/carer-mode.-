@@ -52,18 +52,19 @@
 
   // حالة دوري الأبطال للاعب (نصًّا) — للتقرير
   function uclStatus() {
-    const S = G.S, u = P(S.user), ucl = S.ucl;
-    if (!ucl || ucl.teams.indexOf(u.club) < 0) return null;
-    const ex = ucl.exit[u.club], ST = G.Ucl.STAGE_AR;
-    if (ucl.winner === u.club) return { key: 'win', text: 'بطل أوروبا 🏆' };
-    if (ucl.phase === 'done') return { key: 'out:' + ex, text: 'انتهت المشاركة عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex) };
+    const S = G.S, u = P(S.user), eu = G.Season.euroOf(u.club); // Build 29: دوري الأبطال أو الدوري الأوروبي
+    if (!eu) return null;
+    const ucl = eu.st, M = eu.mod, sh = eu.short;
+    const ex = ucl.exit[u.club], ST = M.STAGE_AR;
+    if (ucl.winner === u.club) return { key: 'win', text: eu.champ + ' 🏆', short: sh };
+    if (ucl.phase === 'done') return { key: 'out:' + ex, text: 'انتهت المشاركة عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex), short: sh };
     if (ucl.phase === 'league') {
-      const o = G.Ucl.sorted(), r = ucl.league.table[u.club];
-      if (!r.p) return { key: 'league', text: 'مرحلة الدوري — لم تبدأ مبارياتها بعد' };
-      return { key: 'league', text: 'مرحلة الدوري — المركز ' + (o.indexOf(u.club) + 1) + ' من 36 (' + ptsAr(r.pts) + ' بعد ' + matchesAr(r.p) + ')' };
+      const o = M.sorted(), r = ucl.league.table[u.club];
+      if (!r.p) return { key: 'league', text: 'مرحلة الدوري — لم تبدأ مبارياتها بعد', short: sh };
+      return { key: 'league', text: 'مرحلة الدوري — المركز ' + (o.indexOf(u.club) + 1) + ' من ' + ucl.teams.length + ' (' + ptsAr(r.pts) + ' بعد ' + matchesAr(r.p) + ')', short: sh };
     }
-    if (G.Ucl.userAlive(u.club)) return { key: 'alive:' + ucl.phase, text: 'ناديك في ' + ST[ucl.phase] };
-    return { key: 'out:' + ex, text: 'ودّع البطولة عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex) };
+    if (M.userAlive(u.club)) return { key: 'alive:' + ucl.phase, text: 'ناديك في ' + ST[ucl.phase], short: sh };
+    return { key: 'out:' + ex, text: 'ودّع البطولة عند: ' + (ex === 'league' ? 'مرحلة الدوري' : ST[ex] || ex), short: sh };
   }
 
   // حالة الكأس المحلية للاعب (نصًّا) — للتقرير
@@ -86,7 +87,7 @@
       ovr: u.ovr, pot: u.pot, val: u.val, trust: Math.round(u.trust), fit: Math.round(u.fit), role: u.role, lvl: u.lvl, dp: u.dp,
       inj: u.inj, susp: u.susp, club: u.club, age: u.age, week: S.week, phase: S.phase,
       pos: inL ? G.League.position(u.club) : null, pts: inL ? S.league.table[u.club].pts : null,
-      ucl: uc ? uc.text : null, uclKey: uc ? uc.key : null, cup: cc ? cc.text : null, cupKey: cc ? cc.key : null, cupName: cc ? cc.name : null,
+      ucl: uc ? uc.text : null, uclName: uc ? uc.short : null, uclKey: uc ? uc.key : null, cup: cc ? cc.text : null, cupKey: cc ? cc.key : null, cupName: cc ? cc.name : null,
       pop: G.Media ? G.Media.pop() : null, fans: G.Media ? G.Media.fans() : null
     };
   }
@@ -104,9 +105,9 @@
 
   // أقرب مباراة إقصائية للاعب في الأسبوع w (دوري الأبطال)
   // (+ نهائي السوبر وأدوار الكأس المحلية من ربع النهائي)
-  const isKey = (f) => !f.played && ((f.comp === 'UCL' && f.stage && f.stage !== 'league') || f.comp === 'SUP' || (f.comp === 'CUP' && ['qf', 'sf', 'final'].indexOf(f.stage) >= 0));
+  const isKey = (f) => !f.played && (((f.comp === 'UCL' || f.comp === 'UEL') && f.stage && f.stage !== 'league') || f.comp === 'SUP' || (f.comp === 'CUP' && ['qf', 'sf', 'final'].indexOf(f.stage) >= 0));
   Sim.keyFixture = (w) => G.Season.userFixtures(w).find(isKey) || null;
-  const keyLabel = (k) => (k.comp === 'UCL' ? G.Ucl.STAGE_AR[k.stage] + (k.leg ? ' (' + (k.leg === 1 ? 'الذهاب' : 'الإياب') + ')' : '') : G.Cups.label(k).replace(' (ملعب محايد)', ''));
+  const keyLabel = (k) => (k.comp === 'UCL' || k.comp === 'UEL' ? G.Ucl.STAGE_AR[k.stage] + (k.leg ? ' (' + (k.leg === 1 ? 'الذهاب' : 'الإياب') + ')' : '') : G.Cups.label(k).replace(' (ملعب محايد)', ''));
 
   // ---------- الإنفاق التلقائي لنقاط التطوير ----------
   // الأفضل قيمةً أولًا: وزن السمة في تقييم المركز ÷ كلفتها، مع احترام السقوف الموسمية وحدّ الإمكانات
@@ -236,7 +237,7 @@
     if (before.win && !winNow) ev(run, S.week, 'window', 'أُغلقت نافذة الانتقالات');
     if (tr.ups) ev(run, before.w, 'lvl', 'مستوى جديد: +' + dpAr(tr.ups));
     const uc = uclStatus();
-    if (uc && uc.key !== before.uclKey && S.phase !== 'end') ev(run, before.w, 'ucl', 'دوري الأبطال: ' + uc.text);
+    if (uc && uc.key !== before.uclKey && S.phase !== 'end') ev(run, before.w, 'ucl', (uc.short || 'دوري الأبطال') + ': ' + uc.text);
     const cc = cupStatus();
     if (cc && cc.key !== before.cupKey && !(cc.key === 'win' && S.phase === 'end')) ev(run, before.w, 'cup', cc.name + ': ' + cc.text);
     (u.tlog || []).slice(before.tl).filter((e) => e.k === 'cup' || e.k === 'sup').forEach((e) => ev(run, before.w, 'award', e.r === 'w' ? '🏆 توّجتَ بلقب ' + G.Trophies.name(e) : '🥈 وصيف ' + G.Trophies.name(e)));
@@ -263,6 +264,7 @@
         if (sm && sm.row && sm.row.trophies) {
           if (sm.row.trophies.liga || sm.row.trophies.d2) ev(run, LAST_WEEK, 'award', '🥇 توّجتَ بلقب ' + G.leagueName(sm.row.lgId));
           if (sm.row.trophies.ucl) ev(run, LAST_WEEK, 'award', '🌟 توّجتَ بلقب دوري أبطال أوروبا');
+          if (sm.row.trophies.uel) ev(run, LAST_WEEK, 'award', '🏅 توّجتَ بلقب الدوري الأوروبي');
         }
         ((sm && sm.awards) || []).filter((a) => a.user).forEach((a) => ev(run, LAST_WEEK, 'award', '🎖️ جائزة: ' + G.Season.AWARD_AR[a.type]));
       }
@@ -358,7 +360,7 @@
       if (best && best.r >= 7.5) H.push('🔥 أفضل مباراة: ضد ' + cname(best.o) + ' (' + best.gf + '-' + best.ga + ') بتقييم ' + best.r.toFixed(1) + (best.g ? ' و' + goalsAr(best.g) : '') + '.');
     }
     if (from.pos && to.pos) H.push('🏆 ترتيب ' + cname(u.club) + ' في الدوري: ' + (from.pos === to.pos ? 'المركز ' + to.pos : 'من ' + from.pos + ' إلى ' + to.pos) + ' (' + ptsAr(to.pts) + ').');
-    if (to.ucl && run.weeks) H.push('⭐ دوري الأبطال: ' + to.ucl + '.');
+    if (to.ucl && run.weeks) H.push('⭐ ' + (to.uclName || 'دوري الأبطال') + ': ' + to.ucl + '.');
     if (to.cup && run.weeks) H.push('🏆 ' + to.cupName + ': ' + to.cup + '.');
     if (to.ovr !== from.ovr) H.push('📈 تقييمك العام ' + from.ovr + ' ← ' + to.ovr + '.');
     if (run.train.ups) H.push('💪 ارتقيتَ ' + lvlAr(run.train.ups) + (attrTotal ? ' وتحسّنت ' + attrAr(attrTotal) + ' بالتدريب' : '') + '.');

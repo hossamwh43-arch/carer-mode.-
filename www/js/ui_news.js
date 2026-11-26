@@ -137,6 +137,8 @@
     // 1) مؤتمر صحفي: إجابتك تغيّر الشعبية وعلاقة الصحافة وثقة المدرب
     const pr = G.Media && G.Media.pending();
     if (pr) out.push({ id: 'press', ic: 'mic', tone: 'warn', t: 'مؤتمر صحفي ينتظرك', s: '«' + G.Media.question(pr) + '»', fx: 'يؤثر على: الشعبية · علاقة الصحافة · ثقة المدرب', cta: 'أجب عن السؤال', a: 'pressOpen' });
+    // 1b) إصابة تنتظر خطة تعافٍ (Build 29)
+    if (G.Injury && G.Injury.pending(u)) out.push({ id: 'rehab', ic: 'plus', tone: 'hot', t: 'إصابة: اختر خطة التعافي', s: u.injInfo.name + ' · ' + u.inj + ' أسابيع غياب', fx: 'يغيّر: مدة الغياب · خطر الانتكاسة · لياقتك', cta: 'اختر الخطة', a: 'rehabSheet' });
     // 2) عروض الانتقال
     const offs = (S.offers || []).filter((o) => o.status !== 'withdrawn');
     if (offs.length) {
@@ -161,6 +163,27 @@
     }
     return out;
   };
+  // ---------- خطة التعافي من الإصابة (Build 29) ----------
+  function rehabSheet() {
+    const u = me(), I = G.Injury;
+    if (!I || !I.pending(u)) return '<h3>🩺 لا إصابة تنتظر قرارًا</h3><button class="btn" data-a="closeSheet">إغلاق</button>';
+    let h = '<h3>🩺 ' + esc(u.injInfo.name) + '</h3><p class="sm mut">الغياب المتوقع: <b>' + u.inj + '</b> أسابيع. اختر كيف تتعافى — القرار يُحسم مرة واحدة.</p>';
+    I.PLAN_ORDER.forEach((id) => {
+      const pl = I.PLANS[id], w = Math.max(1, Math.round(u.inj * (1 - pl.cut)));
+      h += '<button class="popt ' + (pl.risk > 0.2 ? 'bold' : pl.risk ? 'mid' : 'safe') + '" data-a="rehabPick" data-v="' + id + '"><span class="pt">' + esc(pl.ar) + '</span>' +
+        '<span class="pm"><span class="pl">⏱️ تغيب <b class="ltr">' + w + '</b> أسبوعًا' + (pl.cut ? ' (وفّرتَ <b class="ltr">' + (u.inj - w) + '</b>)' : '') + '</span>' +
+        '<span class="pl' + (pl.risk ? ' neg' : '') + '">' + esc(pl.hint) + '</span></span></button>';
+    });
+    return h + '<button class="btn" data-a="closeSheet">لاحقًا</button>';
+  }
+  UI.on('rehabSheet', () => { UI.sheetRender(rehabSheet); return false; });
+  UI.on('rehabPick', (id) => {
+    const r = G.Injury.choose(id);
+    if (!r.ok) { UI.toast(r.msg); return false; }
+    UI.closeSheet(); UI.render();
+    UI.toast('خطة التعافي: ' + G.Injury.PLANS[id].ar + ' · تغيب ' + r.weeks + ' أسابيع');
+    return false;
+  });
   const TONE_ORD = { hot: 0, warn: 1, ok: 2 };
   const dAttr = (d) => ' data-a="' + d.a + '"' + (d.v ? ' data-v="' + d.v + '"' : '') + (d.v2 ? ' data-v2="' + d.v2 + '"' : '');
 

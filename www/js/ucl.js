@@ -1,10 +1,13 @@
-/* ucl.js — دوري أبطال أوروبا بالنظام الحديث: مرحلة الدوري (36 فريقًا × 8 مباريات) ثم الملحق والإقصائيات */
+/* ucl.js — دوري أبطال أوروبا بالنظام الحديث: مرحلة الدوري (36 فريقًا × 8 مباريات) ثم الملحق والإقصائيات.
+   Build 29: صار الملف «مصنعًا» ينتج بطولتين بالمنطق نفسه: G.Ucl (دوري الأبطال: 36 فريقًا، 8 مباريات) و G.Uel (الدوري الأوروبي: 28 فريقًا، 6 مباريات، النظام نفسه
+   بعد مرحلة الدوري: 1–8 إلى دور الـ16 و9–24 للملحق). مباريات البطولتين تُسجَّل في خانة الإحصاء القارية 'uc' نفسها فيعمل النمو والإعلام والثقة بلا تغيير. */
 (function (G) {
   'use strict';
   const U = G.U, P = (id) => G.S.players[id];
-  const Ucl = (G.Ucl = {});
+  const make = (cfg) => {
+  const Ucl = {};
 
-  const LEAGUE_WEEKS = [3, 5, 8, 11, 14, 17, 20, 23, 25, 27];
+  const LEAGUE_WEEKS = cfg.leagueWeeks;
   const KO_WEEKS = { po: [30, 31], r16: [32, 33], qf: [34, 35], sf: [36, 37], final: [39] };
   Ucl.STAGE_AR = { league: 'مرحلة الدوري', po: 'ملحق الإقصائيات', r16: 'دور الـ16', qf: 'ربع النهائي', sf: 'نصف النهائي', final: 'النهائي', done: 'انتهت البطولة' };
 
@@ -14,7 +17,7 @@
   // ---------- التأهل ----------
   // orders: ترتيب نهاية الموسم لكل دوري كبير { ESP1: [...], ENG1: [...] } (أو null في الموسم الأول: يُرتَّب بالسمعة)
   // المقاعد: G.UCL_SLOTS (20 ناديًا من الدوريات الخمسة) + G.CONFIG.uclOther من الأندية خارج هذه الدوريات
-  Ucl.qualify = (orders) => {
+  Ucl.qualify = cfg.qualify ? cfg.qualify : (orders) => {
     const S = G.S, all = Object.keys(S.clubs);
     const picked = [];
     Object.keys(G.UCL_SLOTS).forEach((lg) => {
@@ -35,7 +38,7 @@
 
   // ---------- القرعة والجدولة ----------
   const SIDE = (arr, pot) => pot.map((i) => arr[i]);
-  Ucl.draw = (teams) => {
+  Ucl.draw = cfg.draw ? cfg.draw : (teams) => {
     const sorted = teams.slice().sort((a, b) => strength(b) - strength(a));
     const pots = [0, 1, 2, 3].map((k) => sorted.slice(k * 9, k * 9 + 9));
     const same = (a, b) => G.C(a).country === G.C(b).country; // لا مواجهات بين أندية الاتحاد نفسه في مرحلة الدوري (قدر الإمكان)
@@ -57,7 +60,7 @@
   };
 
   // جدولة 144 مباراة على جولات (كل فريق ≤ مباراة واحدة في الجولة)
-  Ucl.schedule = (edges) => {
+  Ucl.schedule = cfg.schedule ? cfg.schedule : (edges) => {
     let bestRounds = null;
     for (let attempt = 0; attempt < 250; attempt++) {
       const es = U.shuffle(edges.slice());
@@ -69,11 +72,11 @@
           if (!r.used[e.h] && !r.used[e.a]) { r.used[e.h] = r.used[e.a] = true; r.list.push(e); placed = true; break; }
         }
         if (!placed) {
-          if (rounds.length >= 10) { ok = false; break; }
+          if (rounds.length >= cfg.maxRounds) { ok = false; break; }
           const r = { used: {}, list: [e] }; r.used[e.h] = r.used[e.a] = true; rounds.push(r);
         }
       }
-      if (ok && (!bestRounds || rounds.length < bestRounds.length)) { bestRounds = rounds; if (rounds.length <= 8) break; }
+      if (ok && (!bestRounds || rounds.length < bestRounds.length)) { bestRounds = rounds; if (rounds.length <= cfg.goodRounds) break; }
     }
     if (!bestRounds) throw new Error('تعذّرت جدولة مرحلة الدوري');
     return bestRounds.map((r) => r.list);
@@ -89,7 +92,7 @@
       season, teams: teams.slice(), phase: 'league', clashes: d.clashes, weeks: { league: weeks },
       league: {
         table,
-        rounds: rounds.map((rd, ri) => rd.map((e) => ({ id: 'UCL' + season + '-L' + (ri + 1) + '-' + e.h + '-' + e.a, comp: 'UCL', stage: 'league', r: ri + 1, h: e.h, a: e.a, played: false, hg: null, ag: null, w: weeks[ri] })))
+        rounds: rounds.map((rd, ri) => rd.map((e) => ({ id: cfg.comp + season + '-L' + (ri + 1) + '-' + e.h + '-' + e.a, comp: cfg.comp, stage: 'league', r: ri + 1, h: e.h, a: e.a, played: false, hg: null, ag: null, w: weeks[ri] })))
       },
       ties: { po: [], r16: [], qf: [], sf: [] }, final: null, winner: null, exit: {}, seeds: []
     };
@@ -99,22 +102,22 @@
 
   // ---------- أدوات ----------
   Ucl.allFixtures = (u) => {
-    u = u || G.S.ucl;
+    u = u || G.S[cfg.key];
     let out = [].concat.apply([], u.league.rounds);
     ['po', 'r16', 'qf', 'sf'].forEach((st) => u.ties[st].forEach((t) => { out = out.concat(t.legs); }));
     if (u.final) out.push(u.final);
     return out;
   };
-  Ucl.fixturesForWeek = (w) => (G.S.ucl ? Ucl.allFixtures().filter((f) => f.w === w) : []);
+  Ucl.fixturesForWeek = (w) => (G.S[cfg.key] ? Ucl.allFixtures().filter((f) => f.w === w) : []);
   Ucl.sorted = (u) => {
-    u = u || G.S.ucl;
+    u = u || G.S[cfg.key];
     return u.teams.slice().sort((x, y) => {
       const a = u.league.table[x], b = u.league.table[y];
       return (b.pts - a.pts) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf) || (b.w - a.w) || (G.C(x).name < G.C(y).name ? -1 : 1);
     });
   };
 
-  Ucl.findTie = (fix) => G.S.ucl.ties[fix.stage].find((t) => t.id === fix.tid);
+  Ucl.findTie = (fix) => G.S[cfg.key].ties[fix.stage].find((t) => t.id === fix.tid);
 
   // سياق الإقصاء للمباراة (للوقت الإضافي والترجيح)
   Ucl.koCtx = (fix) => {
@@ -133,7 +136,7 @@
   Ucl.record = (fix, hg, ag, pens) => {
     if (fix.played) throw new Error('مباراة مكررة: ' + fix.id);
     fix.played = true; fix.hg = hg; fix.ag = ag; fix.pens = pens || null;
-    const u = G.S.ucl;
+    const u = G.S[cfg.key];
     if (fix.stage === 'league') {
       const H = u.league.table[fix.h], A = u.league.table[fix.a];
       H.p++; A.p++; H.gf += hg; H.ga += ag; A.gf += ag; A.ga += hg;
@@ -159,8 +162,8 @@
 
   const makeTie = (stage, id, hi, lo, weeks, season) => {
     const t = { id, stage, hi, lo, legs: [], winner: null };
-    t.legs.push({ id: 'UCL' + season + '-' + id + '-1', comp: 'UCL', stage, leg: 1, h: lo, a: hi, played: false, hg: null, ag: null, w: weeks[0], tid: id });
-    t.legs.push({ id: 'UCL' + season + '-' + id + '-2', comp: 'UCL', stage, leg: 2, h: hi, a: lo, played: false, hg: null, ag: null, w: weeks[1], tid: id });
+    t.legs.push({ id: cfg.comp + season + '-' + id + '-1', comp: cfg.comp, stage, leg: 1, h: lo, a: hi, played: false, hg: null, ag: null, w: weeks[0], tid: id });
+    t.legs.push({ id: cfg.comp + season + '-' + id + '-2', comp: cfg.comp, stage, leg: 2, h: hi, a: lo, played: false, hg: null, ag: null, w: weeks[1], tid: id });
     return t;
   };
 
@@ -168,8 +171,9 @@
 
   // ينقل البطولة للمرحلة التالية متى اكتملت الحالية
   Ucl.advance = () => {
-    const u = G.S.ucl, season = u.season;
-    if (!u || u.phase === 'done') return;
+    const u = G.S[cfg.key];
+    if (!u || u.phase === 'done') return false;
+    const season = u.season;
     const leagueDone = u.league.rounds.every((rd) => rd.every((f) => f.played));
     if (u.phase === 'league' && leagueDone) {
       const order = Ucl.sorted(u);
@@ -204,7 +208,7 @@
     } else if (u.phase === 'sf' && stageDone(u.ties.sf)) {
       u.ties.sf.forEach((t) => { t.winner = Ucl.tieWinner(t); u.exit[t.winner] = 'final'; });
       const [a, b] = u.ties.sf.map((t) => t.winner);
-      u.final = { id: 'UCL' + season + '-F', comp: 'UCL', stage: 'final', h: a, a: b, played: false, hg: null, ag: null, w: KO_WEEKS.final[0], neutral: true };
+      u.final = { id: cfg.comp + season + '-F', comp: cfg.comp, stage: 'final', h: a, a: b, played: false, hg: null, ag: null, w: KO_WEEKS.final[0], neutral: true };
       u.phase = 'final';
     } else if (u.phase === 'final' && u.final.played) {
       const f = u.final;
@@ -218,7 +222,7 @@
 
   // نادي المستخدم: هل لا يزال في البطولة؟
   Ucl.userAlive = (clubId) => {
-    const u = G.S.ucl;
+    const u = G.S[cfg.key];
     if (!u || u.teams.indexOf(clubId) < 0) return false;
     if (u.phase === 'done') return false;
     const ex = u.exit[clubId];
@@ -227,20 +231,76 @@
 
   // التحقق من سلامة مرحلة الدوري
   Ucl.validate = () => {
-    const u = G.S.ucl, err = [];
+    const u = G.S[cfg.key], err = [];
     if (!u) return err;
     let sgf = 0, sga = 0, sp = 0, played = 0;
     u.teams.forEach((id) => {
       const t = u.league.table[id];
-      if (t.p !== t.w + t.d + t.l || t.pts !== 3 * t.w + t.d) err.push('UCL ' + id + ': أرقام غير متسقة');
+      if (t.p !== t.w + t.d + t.l || t.pts !== 3 * t.w + t.d) err.push(cfg.tag + ' ' + id + ': أرقام غير متسقة');
       sgf += t.gf; sga += t.ga; sp += t.p;
     });
-    if (sgf !== sga) err.push('UCL: مجموع الأهداف غير متساوٍ');
+    if (sgf !== sga) err.push(cfg.tag + ': مجموع الأهداف غير متساوٍ');
     u.league.rounds.forEach((rd, i) => {
       const used = {};
-      rd.forEach((f) => { if (used[f.h] || used[f.a]) err.push('UCL: نادٍ مكرر في الجولة ' + (i + 1)); used[f.h] = used[f.a] = true; if (f.played) played++; });
+      rd.forEach((f) => { if (used[f.h] || used[f.a]) err.push(cfg.tag + ': نادٍ مكرر في الجولة ' + (i + 1)); used[f.h] = used[f.a] = true; if (f.played) played++; });
     });
-    if (sp !== played * 2) err.push('UCL: عدد المباريات لا يطابق الترتيب');
+    if (sp !== played * 2) err.push(cfg.tag + ': عدد المباريات لا يطابق الترتيب');
     return err;
   };
+  return Ucl;
+  };
+
+  // ---------- دوري الأبطال ----------
+  G.Ucl = make({ key: 'ucl', comp: 'UCL', tag: 'UCL', size: 36, leagueWeeks: [3, 5, 8, 11, 14, 17, 20, 23, 25, 27], maxRounds: 10, goodRounds: 8 });
+
+  // ---------- الدوري الأوروبي (Build 29) ----------
+  // 28 فريقًا: 4 من كل دوري كبير عدا إنجلترا/إسبانيا/إيطاليا/ألمانيا 5 (بعد مقاعد الأبطال مباشرةً) + 4 من بقية أوروبا. 6 مباريات لكل فريق (3 ضيافة و3 استضافة).
+  G.UEL_SLOTS = { ENG1: 5, ESP1: 5, ITA1: 5, GER1: 5, FRA1: 4 };
+  const uelStrength = (id) => G.Players.clubStrength(G.C(id));
+  const uelQualify = (orders, exclude) => {
+    const S = G.S, all = Object.keys(S.clubs), taken = {}, SIZE = 28;
+    (exclude || []).forEach((id) => { taken[id] = true; });
+    const picked = [];
+    const ordOf = (lg) => (orders && orders[lg] && orders[lg].length ? orders[lg] : all.filter((i) => S.clubs[i].lg === lg).sort((a, b) => S.clubs[b].rep - S.clubs[a].rep));
+    Object.keys(G.UEL_SLOTS).forEach((lg) => { ordOf(lg).filter((id) => !taken[id]).slice(0, G.UEL_SLOTS[lg]).forEach((id) => { picked.push(id); taken[id] = true; }); });
+    const prev = S.uelHistory && S.uelHistory.length ? S.uelHistory[S.uelHistory.length - 1].exit || {} : {};
+    const stageBonus = { final: 2, sf: 1.5, qf: 1, r16: 0.5 };
+    const outside = all.filter((i) => !S.clubs[i].lg && !S.clubs[i].nt && !taken[i]);
+    const score = {};
+    outside.forEach((id) => { score[id] = uelStrength(id) + U.gauss() * 3.2 + (stageBonus[prev[id]] || 0); });
+    outside.sort((a, b) => score[b] - score[a]).slice(0, Math.max(0, SIZE - picked.length)).forEach((id) => { picked.push(id); taken[id] = true; });
+    // إن نقص العدد (عدد الأندية الخارجية أقل من المتوقع) نكمل من الأندية التالية في الدوريات الكبرى
+    for (let k = 0; picked.length < SIZE && k < 40; k++) {
+      Object.keys(G.UEL_SLOTS).forEach((lg) => { if (picked.length >= SIZE) return; const nx = ordOf(lg).find((id) => !taken[id]); if (nx) { picked.push(nx); taken[nx] = true; } });
+    }
+    return picked;
+  };
+  // قرعة 28 فريقًا: 4 أوعية من 7 بترتيب القوة، تُرتَّب في حلقة بحيث يتبادل الأوعية، ثم كل فريق يواجه الأقرب إليه بخطوات 1 و2 و3 (6 خصوم بلا تكرار من وعائه)
+  const uelDraw = (teams) => {
+    const sorted = teams.slice().sort((a, b) => uelStrength(b) - uelStrength(a));
+    const pots = [0, 1, 2, 3].map((k) => sorted.slice(k * 7, k * 7 + 7));
+    const same = (a, b) => G.C(a).country === G.C(b).country;
+    let best = null, bestScore = 1e9;
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const pp = pots.map((p) => U.shuffle(p.slice()));
+      const ring = [];
+      for (let i = 0; i < 7; i++) for (let k = 0; k < 4; k++) ring.push(pp[k][i]);
+      const edges = [];
+      for (let i = 0; i < 28; i++) for (let d = 1; d <= 3; d++) edges.push({ h: ring[i], a: ring[(i + d) % 28], i: i, d: d });
+      const clash = edges.filter((e) => same(e.h, e.a)).length;
+      if (clash < bestScore) { bestScore = clash; best = edges; if (clash === 0) break; }
+    }
+    return { edges: best, pots, clashes: bestScore };
+  };
+  // جدولة دقيقة بلا بحث عشوائي: رسم الحلقة C28(1,2,3) يُفكَّك إلى 6 تطابقات كاملة (كل فريق مرة واحدة في كل جولة):
+  // لكل خطوة d تُقسَّم دورات الرسم إلى تطابقين بالتناوب (d=1: زوجي/فردي، d=2: j=⌊i/2⌋ زوجي/فردي، d=3: j=19·i mod 28 زوجي/فردي)
+  const uelSchedule = (edges) => {
+    const rounds = [[], [], [], [], [], []];
+    edges.forEach((e) => {
+      const k = e.d === 1 ? e.i % 2 : e.d === 3 ? 2 + ((e.i * 19) % 28) % 2 : 4 + Math.floor(e.i / 2) % 2;
+      rounds[k].push(e);
+    });
+    return rounds;
+  };
+  G.Uel = make({ key: 'uel', comp: 'UEL', tag: 'UEL', size: 28, leagueWeeks: [3, 5, 8, 11, 14, 17], maxRounds: 6, goodRounds: 6, qualify: uelQualify, draw: uelDraw, schedule: uelSchedule });
 })(window.G = window.G || {});

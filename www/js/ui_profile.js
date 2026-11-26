@@ -179,7 +179,7 @@
       '<div class="sm ' + (q.ovr > u.ovr ? 'neg' : q.ovr < u.ovr ? 'pos' : 'mut') + '">' + (q.ovr === u.ovr ? 'نفس مستواك' : q.ovr > u.ovr ? 'يتفوّق عليك بـ ' + (q.ovr - u.ovr) : 'تتفوّق عليه بـ ' + (u.ovr - q.ovr)) + (same && q.ovr > u.ovr ? ' — يزاحمك على مكان أساسي' : '') + '</div></div>';
     UI.sheet('<div class="sqp"><div class="sqp-h"><div class="ovr ' + UI.tierCls(q) + '">' + q.ovr + '</div><div class="grow"><h3>' + esc(q.n) + (q.user ? ' <em class="gold">أنت</em>' : '') + '</h3><div class="sm mut">' + G.POS_AR[q.pos] + ' · ' + q.age + ' سنة · ' + esc(UI.natName(q.nat)) + '</div></div></div>' + (UI.traitList && q.tr ? '<h4 style="margin:10px 0 6px">القدرات المميزة</h4>' + UI.traitList(q) : '') + cmp +
       '<div class="grid3" style="margin:12px 0"><div class="stat"><b>' + st.apps + '</b><small>مباراة دوري</small></div><div class="stat"><b>' + st.g + '</b><small>هدف</small></div><div class="stat"><b>' + st.a + '</b><small>صناعة</small></div></div>' +
-      '<div class="kv"><span>الحالة</span><b>' + (q.inj > 0 ? 'مصاب · ' + q.inj + ' أسبوع' : 'جاهز') + '</b></div>' +
+      '<div class="kv"><span>الحالة</span><b>' + (q.inj > 0 ? 'مصاب · ' + (q.user && q.injInfo ? q.injInfo.name + ' · ' : '') + q.inj + ' أسبوع' : 'جاهز') + '</b></div>' +
       (q.ct ? '<div class="kv"><span>العقد</span><b>' + q.ct.y + ' ' + (q.ct.y === 1 ? 'سنة' : 'سنوات') + ' · ' + UI.money(q.ct.w) + ' أسبوعيًا</b></div>' : '') +
       (q.val ? '<div class="kv"><span>القيمة السوقية</span><b>' + UI.money(q.val) + '</b></div>' : '') +
       (uc.apps ? '<div class="kv"><span>دوري الأبطال</span><b>' + uc.apps + ' مباراة · ' + uc.g + ' هدف</b></div>' : '') +

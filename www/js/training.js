@@ -25,7 +25,14 @@
     return U.clamp(base, 45, 99);
   };
 
+  // Build 29: سقف عالمي للاعب المستخدم (الذكاء الاصطناعي يتوقف عند 95): لا أحد يتجاوز 97 ويبقى «الأفضل في العالم» إنجازًا نادرًا لا حتميًا
+  // السقف يختلف بالمركز: أفضل لاعب ذكاء اصطناعي في العالم بكل مركز (قياسًا بالعالم الابتدائي: حارس 90، قلب دفاع 90، ظهير 87-88، ارتكاز 91، وسط 89، صانع 92، جناح 90-93، رأس حربة 94) + 3
+  Training.POS_CAP = { GK: 93, CB: 93, LB: 91, RB: 91, CDM: 94, CM: 93, CAM: 95, LW: 95, RW: 96, ST: 97 };
+  Training.OVR_CAP = 97;
+  Training.capOf = (p) => (p && Training.POS_CAP[p.pos]) || Training.OVR_CAP;
+  Training.atCap = (p) => !!p && p.ovr >= Training.capOf(p);
   Training.canSpend = (p, k) => {
+    if (Training.atCap(p)) return { ok: false, reason: 'بلغتَ أعلى مستوى ممكن في مركزك (' + Training.capOf(p) + ')' };
     if (k === 'gk' && p.pos !== 'GK') return { ok: false, reason: 'للحراس فقط' };
     if (k !== 'gk' && p.pos === 'GK' && !(G.Players.OVR_W.GK[k])) return { ok: false, reason: 'غير مؤثرة للحارس' };
     const c = Training.cost(p, k);
@@ -80,6 +87,7 @@
       const share = t.focus === 'balanced' ? 4 : 10;
       keys.forEach((k) => {
         if (k === 'gk' && p.pos !== 'GK') return;
+        if (Training.atCap(p)) return;
         p.prog[k] = (p.prog[k] || 0) + share * I.prog * fac * am;
         if (p.prog[k] >= 100) {
           p.prog[k] -= 100;
@@ -124,6 +132,7 @@
   };
 
   // نمو اللاعب المستخدم: نصف المعدل الطبيعي + أثر الأداء (التدريب الأسبوعي ونقاط التطوير تُضاف أثناء الموسم)
+  Training.PERF_OFF = { att: 0.3, mid: -0.05, def: 0, gk: 0.05 };
   Training.growUser = (p, seasonInfo) => {
     let d = Training.ageDelta(p.age) * 0.7;
     const apps = seasonInfo.apps, avg = seasonInfo.avg;
@@ -132,8 +141,9 @@
     // لياقته المنهارة سابقًا كانت تُضعف أداءه وتقلّص تدريبه فتخفي المشكلة؛ بعد إصلاح اللياقة ظهرت: مكافآت +1 وجوائز كل موسم تلغي التراجع)
     const damp = Training.ageBonusDamp(p.age);
     let bonus = 0;
-    if (apps >= 12 && avg >= 7.2) { bonus += 1; note = 'مكافأة الأداء المتميز'; }
-    else if (apps >= 20 && avg >= 6.8) bonus += 0.4;
+    const po = Training.PERF_OFF[G.POS_GROUP[p.pos]] || 0; // Build 29: عتبة التقييم حسب المركز (المهاجم يحقق تقييمًا أعلى طبيعيًا بالأهداف)
+    if (apps >= 12 && avg >= 7.2 + po) { bonus += 1; note = 'مكافأة الأداء المتميز'; }
+    else if (apps >= 20 && avg >= 6.8 + po) bonus += 0.4;
     if (apps < 5 && p.age <= 22) { d -= 0.6; note = 'قلة المشاركة أبطأت تطورك'; }
     const aw = G.Growth ? G.Growth.takePend(p) : 0;
     if (aw > 0) { bonus += aw; note = (note ? note + '، ' : '') + 'ثمرة جوائزك الفردية'; }
@@ -145,10 +155,10 @@
     d *= d > 0 ? G.diff().grow : G.diff().decl;
     d += U.gauss() * 0.5;
     const old = p.ovr;
-    const target = U.clamp(Math.round(old + d), old - (p.age >= 35 ? 9 : 4), p.age < 24 ? Math.max(old, p.pot + 1) : old + 1);
+    const target = Math.min(Training.capOf(p), U.clamp(Math.round(old + d), old - (p.age >= 35 ? 9 : 4), p.age < 24 ? Math.max(old, p.pot + 1) : old + 1));
     if (target !== old) Training.setOvr(p, target);
     // الإمكانات تتحرك قليلًا مع الأداء
-    if (apps >= 12 && avg >= 7.5 && p.age <= 22 && p.ovr >= p.pot - 2) p.pot = Math.min(97, p.pot + 1);
+    if (apps >= 12 && avg >= 7.5 + po && p.age <= 22 && p.ovr >= p.pot - 2) p.pot = Math.min(97, p.pot + 1);
     if (p.age >= 25) p.pot = Math.max(p.ovr, p.pot - 1);
     if (p.ovr > p.pot) p.pot = p.ovr;
     p.gain = {}; p.prog = {};
