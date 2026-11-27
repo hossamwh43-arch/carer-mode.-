@@ -44,7 +44,7 @@
     const S = G.S, u = me(), imp = UI.matchImportance(fix), form = fix.comp === 'LL' && S.league && !opt.compact ? UI.lgForm(S.league) : null;
     const wk = fix.w != null ? fix.w : S.week, cd = opt.pending ? '<span class="cd now">' + UI.ico('bolt') + ' جاهزة للعب الآن</span>' : '<span class="cd">' + UI.ico('hourglass') + ' ' + weeksTxt(wk - S.week) + '</span>';
     const team = (id) => '<div class="mc-t' + (id === u.club ? ' me' : '') + '">' + UI.badge(id, opt.compact ? 52 : 68) + '<b>' + esc(UI.cname(id)) + '</b>' + (form ? f5(form[id]) : '') + '</div>';
-    let h = '<section class="mcta lv' + imp.lvl + (opt.compact ? ' compact' : '') + '">' + (imp.lvl ? '<div class="mc-rib">' + UI.ico('flame') + ' ' + imp.tag + '</div>' : '') +
+    let h = '<section class="mcta lv' + imp.lvl + (opt.compact ? ' compact' : '') + '">' + (opt.info && UI.stadiumArt ? '<div class="mc-sta">' + UI.stadiumArt(fix.h) + '</div>' : '') + (imp.lvl ? '<div class="mc-rib">' + UI.ico('flame') + ' ' + imp.tag + '</div>' : '') +
       '<div class="mc-top"><span>' + esc(UI.fixLabel(fix)) + '</span><span class="venue">' + venueOf(fix) + '</span></div>' +
       '<div class="mc-teams">' + team(fix.h) + '<div class="mc-mid"><span class="vstag">ضد</span></div>' + team(fix.a) + '</div>' +
       '<div class="mc-cd">' + cd + '<span class="pill b">' + UI.week() + '</span></div>';

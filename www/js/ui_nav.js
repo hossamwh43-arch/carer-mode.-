@@ -11,7 +11,7 @@
     home: { ar: 'الرئيسية', ico: 'home', def: 'home', items: [['home', 'الرئيسية']] },
     me: { ar: 'مسيرتي', ico: 'user', def: 'profile', items: [['profile', 'ملفي'], ['career', 'السجل'], ['trophies', 'البطولات'], ['market', 'الانتقالات'], ['money', 'أموالي'], ['stats', 'الإنجازات'], ['bd', 'الجوائز']] },
     matches: { ar: 'المباريات', ico: 'pitch', def: 'matches', items: [['matches', 'المركز'], ['league', 'الدوري'], ['cup', 'الكأس'], ['ucl', 'الأبطال'], ['intl', 'المنتخبات']] },
-    club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب'], ['mgrs', 'المدربون']] },
+    club: { ar: 'النادي', ico: 'club', def: 'club', items: [['club', 'النادي'], ['squad', 'التشكيلة'], ['train', 'التدريب'], ['facilities', 'الإدارة'], ['mgrs', 'المدربون']] },
     more: { ar: 'المزيد', ico: 'grid', def: 'more', items: [['more', 'المزيد'], ['press', 'الأخبار'], ['inbox', 'صندوقي'], ['worldrank', 'التصنيفات'], ['stars', 'النجوم'], ['settings', 'الإعدادات']] }
   };
   UI.GROUP_ORDER = ['home', 'me', 'matches', 'club', 'more'];
@@ -45,7 +45,7 @@
     market: ['swap', 'العروض والعقود والوكيل'], stats: ['chart', 'الموسم والإنجازات والسجل'], bd: ['crown', 'ترتيب المرشحين والحفلات'],
     matches: ['pitch', 'مباراتك القادمة والجدول'], league: ['podium', 'الترتيب والهدافون'], cup: ['shield', 'القرعة والنتائج والأبطال'],
     ucl: ['ucl', 'مرحلة الدوري والإقصائيات'], intl: ['globe', 'كأس العالم وآسيا'],
-    club: ['club', 'ناديك وأجواؤه'], squad: ['shirt', 'التشكيلة واللاعبون'], train: ['dumbbell', 'التدريب والسمات والمدرب'],
+    club: ['club', 'ناديك وأجواؤه'], squad: ['shirt', 'التشكيلة واللاعبون'], train: ['dumbbell', 'التدريب والسمات والمدرب'], facilities: ['gem', 'المالية والمنشآت'],
     money: ['gem', 'الرصيد والإنفاق والاستثمار'], more: ['grid', 'كل الأقسام'], press: ['mic', 'الصفحة الأولى وشعبيتك'], inbox: ['mail', 'قراراتك وعروضك ورسائلك'],
     worldrank: ['medal', 'الأندية والمنتخبات وأرشيف سنوي'], stars: ['star', 'نجوم العالم وقدراتهم المميزة'], mgrs: ['clipboard', 'مدربو الأندية وأسلوب تعاقداتهم'], settings: ['gear', 'الصوت والحفظ والصعوبة']
   };
@@ -182,7 +182,7 @@
     opt = opt || {};
     const club = G.S.clubs[p.club], tc = UI.tierCls(p);
     const chips = (opt.chips || []).filter(Boolean).map((c) => '<span class="hchip">' + c + '</span>').join('');
-    return '<section class="cine ' + tc + (opt.big ? ' big' : '') + '"><div class="cine-top"><div class="cine-ovr"><b class="ovr ' + tc + '">' + p.ovr + '</b><small>' + p.pos + '</small></div>' +
+    return '<section class="cine ' + tc + (opt.big ? ' big' : '') + '">' + (UI.stadiumBg ? UI.stadiumBg(p.club) : '') + '<div class="cine-top"><div class="cine-ovr"><b class="ovr ' + tc + '">' + p.ovr + '</b><small>' + p.pos + '</small></div>' +
       '<div class="cine-kick">' + (UI.natBadge(p.nat, 18) || '') + '<span>منتخب ' + esc(UI.natName(p.nat)) + '</span></div>' + (opt.act ? '<div class="cine-act">' + opt.act + '</div>' : '') + '</div>' +
       '<div class="cine-body"><div class="cine-art">' + UI.avatar(p.look, p.club, opt.big ? 210 : 176, p.n) + '</div><div class="cine-in">' +
       '<h1 class="cine-name">' + esc(p.n) + '</h1><div class="cine-sub">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + '</div>' +
@@ -194,7 +194,7 @@
   // غلاف النادي (شعار كبير بدل البورتريه)
   UI.cineClub = (clubId, title, sub, chips) => {
     const c = G.S.clubs[clubId];
-    return '<section class="cine is-club"><div class="cine-top"><div class="cine-kick"><span>' + esc(sub || '') + '</span></div></div><div class="cine-body"><div class="cine-art crest">' + UI.badge(clubId, 150) + '</div><div class="cine-in">' +
+    return '<section class="cine is-club">' + (UI.stadiumBg ? UI.stadiumBg(clubId) : '') + '<div class="cine-top"><div class="cine-kick"><span>' + esc(sub || '') + '</span></div></div><div class="cine-body"><div class="cine-art crest">' + UI.badge(clubId, 150) + '</div><div class="cine-in">' +
       '<h1 class="cine-name">' + esc(title || (c ? c.name : '')) + '</h1></div></div>' + ((chips || []).filter(Boolean).length ? '<div class="cine-chips">' + chips.filter(Boolean).map((x) => '<span class="hchip">' + x + '</span>').join('') + '</div>' : '') + '</section>';
   };
 
@@ -215,6 +215,7 @@
       tiles.push(tile('cup', 'shield', 'الكأس والسوبر', 'القرعة والنتائج والأبطال'));
       tiles.push(tile('bd', 'crown', 'الكرة الذهبية', 'ترتيب المرشحين'));
     }
+    if (!retired) tiles.push(tile('facilities', 'club', 'إدارة النادي', 'المالية والمنشآت والرواتب'));
     tiles.push(tile('money', 'gem', 'أموالي', 'الرصيد والإنفاق والاستثمار'));
     tiles.push(tile('worldrank', 'medal', 'تصنيفات العالم', 'الأندية والمنتخبات وأرشيف سنوي'));
     if (!retired) tiles.push(tile('stars', 'star', 'نجوم العالم', 'قدراتهم المميزة ومنافسوك'));
