@@ -5,7 +5,7 @@ from common import *
 import common
 common.SHOTS = sys.argv[1] if len(sys.argv) > 1 else ''
 VW = int(sys.argv[2]) if len(sys.argv) > 2 else 390
-ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd', 'worldrank', 'stars', 'mgrs', 'money']
+ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd', 'worldrank', 'stars', 'mgrs', 'money', 'facilities']
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--no-sandbox'])
     ctx = b.new_context(viewport={'width': VW, 'height': 844}, locale='ar', device_scale_factor=2)

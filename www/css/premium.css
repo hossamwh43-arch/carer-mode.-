@@ -1,0 +1,140 @@
+/* premium.css — Build 34 (Visual Overhaul). يُحمَّل بعد style.css فيعلو عليه بالترتيب. تصميم فقط: لا يمسّ منطق اللعبة ولا الحفظ.
+   قواعد الهندسة (Build 25) محترمة: أحجام خطوط صحيحة · أيقونات مربعة زوجية · أهداف لمس ≥44 · وسوم 24 · زوايا من --cut-*/--r-*.
+   الأداء: لا filter ولا blend-mode ولا حركات مكرّرة؛ الانتقالات قصيرة وبـ transform/opacity فقط، وتُلغى مع prefers-reduced-motion. */
+
+/* ================= 1) الرموز ================= */
+:root {
+  --ease: cubic-bezier(.22, .8, .3, 1); --d1: .16s; --d2: .26s;
+  --pn: #0b1324; --pn2: #111c36; --glass: rgb(7 12 26 / .74);
+  --ink2: #b9c4e4;
+}
+
+/* ================= 2) الملعب الليلي (غلاف الرئيسية وأغلفة الأندية) ================= */
+.sta-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; background: var(--bg2); }
+.sta-art { display: block; width: 100%; height: 100%; }
+.cine::before { content: none; }
+.cine::after { background: radial-gradient(60% 80% at 16% 52%, rgb(var(--cc-rgb) / .22), transparent 72%), linear-gradient(180deg, rgb(6 10 21 / .18) 0%, rgb(6 10 21 / 0) 30%, rgb(6 10 21 / .72) 78%, var(--bg) 100%); }
+.cine { transition: none; }
+.cine-name { letter-spacing: 0; }
+/* لوحة الغلاف: شريط مؤشرات بدل خليتين */
+.cine .cine-panel { gap: 10px; padding: 12px 14px; background: var(--glass); border-color: rgb(var(--cc-rgb) / .28); box-shadow: 0 10px 28px rgb(0 0 0 / .35), inset 0 1px 0 rgb(255 255 255 / .06); }
+.cp-kpis { display: grid; grid-template-columns: 1.15fr .85fr 1fr; align-items: stretch; }
+.cp-k { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-inline: 12px; }
+.cp-k:first-child { padding-inline-start: 0; }
+.cp-k + .cp-k { border-inline-start: var(--hair) solid var(--line2); }
+.cp-k small { font-size: 12px; line-height: 1.4; color: var(--mut); }
+.cp-k b { font-family: var(--f-n); font-size: 20px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.cp-k b.pos-n { font-size: 28px; font-style: italic; color: var(--cc-hi); }
+.cp-k em { font-style: normal; font-size: 12px; line-height: 1.4; color: var(--ink2); overflow-wrap: anywhere; }
+.cp-k .fstrip { margin-top: 4px; }
+
+/* ================= 3) لبنات النظام ================= */
+.fstrip { display: inline-flex; gap: 4px; align-items: center; }
+.fstrip i { display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--mut); }
+.fstrip i.g { background: #35e6a0; box-shadow: 0 0 8px rgb(53 230 160 / .5); } .fstrip i.y { background: #ffc53d; } .fstrip i.r { background: #ff6b7e; }
+.sec-h2 { display: flex; justify-content: space-between; align-items: center; min-height: 40px; margin: 8px 2px 4px; }
+.sec-h2 h3 { margin: 0; font-size: 17px; letter-spacing: 0; }
+.sec-h2 .cnt { display: inline-block; margin-inline-start: 6px; padding: 0 8px; min-width: 24px; line-height: 22px; text-align: center; border-radius: var(--cut-xxs); background: rgb(255 255 255 / .08); font-family: var(--f-n); font-size: 13px; font-weight: 800; color: var(--ink2); vertical-align: 1px; }
+.sec-h2 .lnk { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; font-size: 13px; font-weight: 700; color: var(--cc-hi); }
+.kpi { min-width: 0; padding: 10px 12px; text-align: start; color: inherit; border-radius: var(--cut-m); background: rgb(255 255 255 / .04); border: var(--hair) solid var(--line); }
+.kpi b { display: block; font-size: 24px; font-weight: 800; line-height: 1.15; }
+.kpi small { display: block; font-size: 12px; line-height: 1.4; color: var(--mut); }
+.kpi em { display: block; font-style: normal; font-size: 12px; color: var(--ink2); }
+.kpi.g b { color: #35e6a0; } .kpi.r b { color: #ff6b7e; } .kpi.y b { color: #ffd36a; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 8px; margin-bottom: 12px; }
+/* لوحة قوائم: صفوف بفواصل شعرية بدل بطاقات متراصّة */
+.pnl { margin-bottom: 12px; overflow: hidden; border-radius: var(--cut-l); background: linear-gradient(180deg, rgb(255 255 255 / .035), rgb(255 255 255 / 0) 46px), var(--pn); border: var(--hair) solid var(--line); box-shadow: var(--sh-1); }
+.pnl > * + * { border-top: var(--hair) solid var(--line); }
+.pnl-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; font-family: var(--f-d); font-weight: 800; font-size: 13px; color: var(--mut); }
+.lrow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; text-align: start; color: inherit; transition: background var(--d1) var(--ease); }
+button.lrow:active { background: rgb(255 255 255 / .06); }
+.lr-ic { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: var(--r-m); background: rgb(var(--cc-rgb) / .14); color: var(--cc-hi); }
+.lr-ic .ic { width: 18px; height: 18px; }
+.lr-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lr-t b { font-size: 14px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.lr-t small { font-size: 12px; line-height: 1.4; color: var(--mut); overflow-wrap: anywhere; }
+.lr-v { flex: none; font-family: var(--f-n); font-size: 17px; font-weight: 800; }
+.lr-go { flex: none; display: grid; place-items: center; width: 20px; color: var(--mut); } .lr-go .ic { width: 16px; height: 16px; }
+.zkey { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 2px 10px; font-size: 12px; color: var(--mut); }
+.zkey span { display: inline-flex; align-items: center; gap: 6px; }
+.zkey i { display: block; width: 10px; height: 10px; border-radius: var(--r-xs); background: var(--mut); }
+.zkey i.z1 { background: #35e6a0; } .zkey i.z2 { background: #5b9bff; } .zkey i.z3 { background: #ff5468; } .zkey i.z4 { background: #ffc53d; }
+
+/* ================= 4) هرمية الأزرار ================= */
+.btn { transition: transform var(--d1) var(--ease), filter var(--d1) var(--ease), border-color var(--d1) var(--ease); }
+.btn.ghost, .btn.nm-sim { background: transparent; border-color: var(--line2); color: var(--ink2); box-shadow: none; font-weight: 600; font-size: 13px; }
+.btn.ghost:active, .btn.nm-sim:active { background: rgb(255 255 255 / .06); }
+
+/* ================= 5) تذكرة المباراة القادمة ================= */
+.mcta { background: radial-gradient(120% 70% at 50% -10%, rgb(var(--cc-rgb) / .20), transparent 62%), linear-gradient(180deg, rgb(255 255 255 / .04), rgb(255 255 255 / 0) 56px), var(--pn); box-shadow: 0 14px 34px rgb(0 0 0 / .42), inset 0 1px 0 rgb(255 255 255 / .06); }
+.mcta::before { height: 2px; }
+.mc-top { font-size: 12px; letter-spacing: 0; }
+.mc-teams { position: relative; margin: 16px 0 10px; }
+.mc-teams::before { content: ""; position: absolute; inset: -6px 0; z-index: 0; pointer-events: none; background: radial-gradient(34% 80% at 18% 46%, rgb(255 255 255 / .06), transparent 72%), radial-gradient(34% 80% at 82% 46%, rgb(255 255 255 / .06), transparent 72%); }
+.mc-t { position: relative; z-index: 1; }
+.mc-t b { font-size: 15px; }
+.mc-mid { position: relative; z-index: 1; }
+.mc-mid .vstag { display: grid; place-items: center; width: 40px; height: 40px; margin-inline: auto; padding: 0; border-radius: 50%; font-family: var(--f-d); font-size: 12px; font-weight: 800; color: var(--cc-hi); background: rgb(var(--cc-rgb) / .12); border: var(--hair) solid rgb(var(--cc-rgb) / .55); box-shadow: 0 0 18px rgb(var(--cc-rgb) / .22); }
+.mc-cd { padding: 10px 0 0; border-top: var(--hair) dashed var(--line2); }
+.mcta .nm-go { min-height: 56px; font-size: 17px; letter-spacing: 0; }
+.mcta .nm-sim { min-height: 44px; margin-top: 6px; }
+
+/* ================= 6) لمحات وبلاطات الرئيسية ================= */
+.gl, .tile { background: linear-gradient(180deg, rgb(255 255 255 / .035), rgb(255 255 255 / 0) 46px), var(--pn); box-shadow: var(--sh-1); transition: transform var(--d1) var(--ease), border-color var(--d1) var(--ease); }
+.gl-trip b, .gl-t b { color: var(--txt); }
+.tile .tl-ic { color: var(--cc-hi); }
+.simcard .sm.mut { font-size: 12px; }
+.simcard .btn { min-height: 44px; font-size: 13px; }
+.dock-links .chip { min-height: 44px; }
+
+/* ================= 7) الحركة: دخول لطيف فقط ================= */
+@keyframes pxIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.app.scr-in .pnl, .app.scr-in .sec-h2, .app.scr-in .mcta { animation: pxIn var(--d2) var(--ease) both; }
+@media (prefers-reduced-motion: reduce) { .app.scr-in .pnl, .app.scr-in .sec-h2, .app.scr-in .mcta { animation: none; } .btn, .gl, .tile, .lrow { transition: none; } }
+
+/* ================= 8) التشكيلة: ملعب وصفوف لاعبين ================= */
+.pitch { border: var(--hair) solid rgb(255 255 255 / .22); border-radius: var(--cut-l); background: repeating-linear-gradient(180deg, #13663a 0 12.5%, #17803f 12.5% 25%); box-shadow: 0 16px 36px rgb(0 0 0 / .5), 0 0 0 1px rgb(0 0 0 / .5); }
+.pitch::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(90% 58% at 50% 42%, rgb(255 255 255 / .10), transparent 72%), linear-gradient(180deg, rgb(0 0 0 / .30), rgb(0 0 0 / 0) 20%, rgb(0 0 0 / 0) 80%, rgb(0 0 0 / .36)); }
+.pl { stroke: rgb(255 255 255 / .62); }
+.pp { z-index: 1; }
+.pp i { width: 32px; height: 32px; border-width: 2px; box-shadow: 0 4px 10px rgb(0 0 0 / .45), inset 0 -3px 0 rgb(0 0 0 / .18); }
+.pp span { padding: 0 6px; line-height: 16px; border-radius: var(--r-xs); background: rgb(6 10 21 / .74); }
+.pp.me i { box-shadow: 0 0 0 3px var(--cc-hi), 0 0 18px 4px rgb(var(--cc-rgb) / .6); }
+.sq-list { padding: 4px 8px; }
+.sq-r { grid-template-columns: 48px 1fr 28px 48px; gap: 10px; min-height: 56px; padding: 6px 4px; transition: background var(--d1) var(--ease); }
+.sq-r:active { background: rgb(255 255 255 / .05); }
+.sq-pos { padding: 4px 0; font-size: 13px; border-radius: var(--cut-xxs); }
+.sq-pos.k-gk { background: rgb(255 197 61 / .18); color: #ffd36a; } .sq-pos.k-d { background: rgb(91 155 255 / .18); color: #a9cbff; }
+.sq-pos.k-m { background: rgb(53 230 160 / .16); color: #8ff2c9; } .sq-pos.k-a { background: rgb(255 84 104 / .16); color: #ffb0ba; }
+.sq-o { padding: 4px 0; font-size: 18px; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .16); }
+.simcard .grid2 .btn.pri { background: rgb(255 255 255 / .06); color: var(--txt); border-color: rgb(var(--cc-rgb) / .5); box-shadow: none; }
+
+/* ================= 9) السوق: عروض بخلفية ملعب النادي العارض ================= */
+.of-hero, .ctr-top { position: relative; isolation: isolate; overflow: hidden; }
+.of-hero .sta-bg, .ctr-top .sta-bg { z-index: -1; opacity: .5; background: transparent; }
+.of-in h3, .ctr-in h2 { text-shadow: 0 2px 14px rgb(0 0 0 / .7); }
+.offer { box-shadow: 0 14px 34px rgb(0 0 0 / .4); }
+.of-tiles { background: rgb(6 10 21 / .5); }
+.mk-win { background: linear-gradient(180deg, rgb(255 255 255 / .035), rgb(255 255 255 / 0) 46px), var(--pn); }
+
+/* ================= 10) مركز المباريات: ملعب المضيف خلف التذكرة ================= */
+.mc-sta { position: absolute; inset-inline: 0; top: 0; height: 190px; z-index: 0; opacity: .75; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, #000 34%, transparent 100%); mask-image: linear-gradient(180deg, #000 34%, transparent 100%); }
+.mc-sta .sta-art { height: 100%; }
+.mcta > .mc-top, .mcta > .mc-teams, .mcta > .mc-cd, .mcta > .mc-info { position: relative; z-index: 1; }
+
+/* ================= 11) إدارة النادي ================= */
+.mg-barw { padding: 0 14px 14px; }
+.mg-bar { padding-bottom: 6px; min-height: 0; }
+.mg-fac { min-height: 64px; }
+.pnl > .mg-barw { border-top: 0; }
+
+/* ================= 12) الدوري والترتيب ================= */
+.lg-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 4px 2px 6px; }
+.lg-hd b { font-family: var(--f-d); font-size: 17px; font-weight: 800; } .lg-hd span { font-size: 13px; color: var(--mut); }
+table.t tr.me td, .lgt tr.me td { background: rgb(var(--cc-rgb) / .14); }
+table.t tr.z1 td:first-child, .lgt tr.z1 td:first-child { box-shadow: inset -3px 0 0 #35e6a0; }
+
+/* ================= 13) توحيد الأسطح (التنقل السفلي والعلوي يبقيان كما صُمّما في Build 25–27) ================= */
+.neg-h { position: relative; isolation: isolate; overflow: hidden; }
+.neg-h .sta-bg { z-index: -1; opacity: .45; background: transparent; }
+.card { background: linear-gradient(180deg, rgb(255 255 255 / .035), rgb(255 255 255 / 0) 46px), var(--pn); }

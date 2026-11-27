@@ -139,8 +139,11 @@
   function heroHome(u) {
     const S = S_(), pos = S.league && S.phase !== 'summer' ? G.League.position(u.club) : 0;
     const ph = S.phase === 'season' ? UI.week() : S.phase === 'summer' ? 'الصيف' : S.phase === 'end' ? 'نهاية الموسم' : '';
-    const cell = (k, v) => v ? '<div class="cp-c"><small>' + k + '</small><b>' + v + '</b></div>' : '';
-    const panel = '<div class="cp-row">' + cell('الموسم', G.Season.label(S.season) + (ph ? ' · ' + ph : '')) + cell('الترتيب', pos ? 'المركز ' + pos + ' · ' + esc(G.leagueName(S.league.lg)) : '') + '</div>' + (UI.mediaMini ? UI.mediaMini() : '');
+    const fm = S.league && S.phase === 'season' && UI.lgForm && UI.formStrip ? (UI.lgForm(S.league)[u.club] || []) : [];
+    const kp = (k, b, e, cls) => '<div class="cp-k"><small>' + k + '</small><b class="' + (cls || '') + '">' + b + '</b>' + (e ? '<em>' + e + '</em>' : '') + '</div>';
+    const panel = '<div class="cp-kpis">' + kp('الموسم', G.Season.label(S.season), ph) +
+      (pos ? kp('الترتيب', pos, esc(G.leagueName(S.league.lg)), 'pos-n num') : kp('الدوري', '—', '')) +
+      (fm.length ? '<div class="cp-k"><small>آخر المباريات</small>' + UI.formStrip(fm) + '</div>' : kp('الحالة', ph || '—', '')) + '</div>' + (UI.mediaMini ? UI.mediaMini() : '');
     return UI.cinePlayer(u, { act: '<button class="hbtn" data-a="cardOpen">' + UI.ico('pcard') + ' بطاقتي</button>', panel: panel });
   }
 

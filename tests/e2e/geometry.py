@@ -13,7 +13,7 @@ from common import *
 import common
 common.SHOTS = sys.argv[1] if len(sys.argv) > 1 else ''
 VW = int(sys.argv[2]) if len(sys.argv) > 2 else 390
-ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'more', 'press', 'inbox', 'bd', 'worldrank:clubs', 'worldrank:nations', 'worldrank:history', 'stars', 'mgrs']
+ROUTES = ['home', 'profile', 'career', 'trophies', 'market', 'stats', 'settings', 'matches', 'league', 'cup', 'ucl', 'intl', 'club', 'squad', 'train', 'facilities', 'more', 'press', 'inbox', 'bd', 'worldrank:clubs', 'worldrank:nations', 'worldrank:history', 'stars', 'mgrs']
 
 PROBE = r"""(()=>{
   const bad={font:[],icon:[],tap:[],pill:[],tgl:[],radius:[],mask:[]};

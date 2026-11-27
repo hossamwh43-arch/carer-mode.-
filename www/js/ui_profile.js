@@ -155,7 +155,10 @@
   UI.screens.squad = () => {
     const S = G.S, u = me(), cid = u.club, c = S.clubs[cid], f = UI.sub.sq || 'all', all = !!UI.sub.sqAll;
     const L = G.Lineup.forClub(cid, { role: u.role, rotStart: false, noise: 0 });
-    let h = '<div class="card sq-pitch"><div class="row sb"><b>التشكيلة المتوقعة</b><span class="pill b ltr">' + esc(c.form) + '</span></div>' + UI.pitch(L.xi, cid, { hi: u.id }) +
+    const all0 = squadOf(cid), xiP = L.xi.map((x) => S.players[x.id]).filter(Boolean);
+    const avg = (a, k) => (a.length ? a.reduce((t, q) => t + q[k], 0) / a.length : 0), injN = all0.filter((q) => q.inj > 0).length;
+    let h = UI.kpi ? '<div class="kpi-row">' + UI.kpi('متوسط الأساسيين', Math.round(avg(xiP, 'ovr')), { tone: 'y' }) + UI.kpi('متوسط العمر', avg(all0, 'age').toFixed(1)) + UI.kpi('مصابون', injN, { tone: injN ? 'r' : 'g' }) + UI.kpi('اللاعبون', all0.length) + '</div>' : '';
+    h += '<div class="card sq-pitch"><div class="row sb"><b>التشكيلة المتوقعة</b><span class="pill b ltr">' + esc(c.form) + '</span></div>' + UI.pitch(L.xi, cid, { hi: u.id }) +
       '<div class="row sb sm"><span class="mut">دورك</span>' + UI.rolePill(u.role) + '</div></div>';
     let list = squadOf(cid).slice().sort((a, b) => b.ovr - a.ovr);
     const total = list.length;
@@ -164,7 +167,7 @@
     const shown = all ? list : list.slice(0, 10);
     h += '<div class="card sq-list">' + (shown.length ? shown.map((q) => {
       const xi = L.xi.some((x) => x.id === q.id);
-      return '<button class="sq-r' + (q.user ? ' me' : '') + '" data-a="sqPlayer" data-v="' + q.id + '"><i class="sq-pos">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (UI.traitIcons ? UI.traitIcons(q) : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></button>';
+      return '<button class="sq-r' + (q.user ? ' me' : '') + '" data-a="sqPlayer" data-v="' + q.id + '"><i class="sq-pos' + (UI.posKind ? ' k-' + UI.posKind(q.pos) : '') + '">' + q.pos + '</i><span class="sq-n">' + esc(q.n) + (q.user ? ' <em>أنت</em>' : '') + (UI.traitIcons ? UI.traitIcons(q) : '') + (q.inj > 0 ? ' <span class="pill r">مصاب</span>' : xi ? ' <span class="sq-xi" title="أساسي">●</span>' : '') + '</span><span class="sq-a">' + q.age + '</span><b class="sq-o ' + UI.tierCls(q) + '">' + q.ovr + '</b></button>';
     }).join('') : '<div class="mut c">لا لاعبين في هذه الخانة.</div>') + '</div>';
     if (list.length > 10) h += '<button class="btn sm" style="width:100%" data-a="sqAll">' + (all ? 'عرض أقل' : 'عرض الكل (' + list.length + (f === 'all' ? '' : ' من ' + total) + ')') + '</button>';
     return h;

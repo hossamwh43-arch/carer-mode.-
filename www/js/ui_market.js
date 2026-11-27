@@ -64,7 +64,7 @@
     const ratio = o.type === 'transfer' && p.val ? Math.round(o.fee / p.val * 100) : 0;
     const hasAg = G.Agent.has();
     const type = o.type === 'transfer' ? 'tr' : o.type === 'loan' ? 'ln' : 'fr';
-    return '<article class="offer o-' + type + (top ? ' top' : '') + '" style="' + ck(o.club) + '"><div class="of-hero"><div class="of-in">' +
+    return '<article class="offer o-' + type + (top ? ' top' : '') + '" style="' + ck(o.club) + '"><div class="of-hero">' + (UI.stadiumBg ? UI.stadiumBg(o.club) : '') + '<div class="of-in">' +
       '<div class="of-tags"><span class="of-type">' + TYPE_AR[o.type] + '</span>' + (top ? '<span class="of-best">★ أفضل عرض</span>' : '') + '</div>' +
       '<h3>' + esc(UI.cname(o.club)) + '</h3><div class="of-sub">سمعة ' + c.rep + (isUcl(o.club) ? ' · يشارك في دوري الأبطال' : '') + (o.note ? ' · ' + esc(o.note) : '') + '</div></div><div class="of-crest">' + UI.badge(o.club, 84) + '</div></div>' +
       '<div class="of-tiles">' + tiles + '</div>' + pkgChips(o) + whyChips(o) +
@@ -161,7 +161,7 @@
   function contractTab() {
     const S = G.S, p = me(), club = S.clubs[p.club], A = G.Agent;
     const yl = p.parentPays ? 0 : p.ct.y, seg = [1, 2, 3, 4, 5].map((n) => '<i class="' + (n <= yl ? 'on' : '') + '"></i>').join('');
-    let h = '<section class="ctr" style="' + ck(p.club) + '"><div class="ctr-top"><div class="ctr-in"><small>عقدي الحالي</small><h2>' + esc(club.name) + '</h2><div class="ctr-chips"><span>' + p.age + ' سنة</span><span>تقييم ' + p.ovr + '</span><span>إمكانات ' + p.pot + '</span></div></div><div class="of-crest">' + UI.badge(p.club, 84) + '</div></div>' +
+    let h = '<section class="ctr" style="' + ck(p.club) + '"><div class="ctr-top">' + (UI.stadiumBg ? UI.stadiumBg(p.club) : '') + '<div class="ctr-in"><small>عقدي الحالي</small><h2>' + esc(club.name) + '</h2><div class="ctr-chips"><span>' + p.age + ' سنة</span><span>تقييم ' + p.ovr + '</span><span>إمكانات ' + p.pot + '</span></div></div><div class="of-crest">' + UI.badge(p.club, 84) + '</div></div>' +
       '<div class="of-tiles">' + tile('الراتب', UI.money(p.ct.w), '/ أسبوع') + tile('المتبقي', p.parentPays ? 'إعارة' : p.ct.y, p.parentPays ? '' : (p.ct.y === 1 ? 'سنة' : 'سنوات'), p.ct.y <= 1 && !p.parentPays ? 'warn' : '') + tile('قيمتك السوقية', UI.money(p.val), '', 'fee') + '</div>' +
       ((p.ct.ab || p.ct.gb) ? '<div class="of-pk">' + (p.ct.ab ? '<span class="pk"><small>مكافأة مشاركة</small><b>' + UI.money(p.ct.ab) + '</b></span>' : '') + (p.ct.gb ? '<span class="pk"><small>مكافأة هدف</small><b>' + UI.money(p.ct.gb) + '</b></span>' : '') + '</div>' : '') +
       '<div class="ctr-yrs"><div class="row sb sm"><span class="mut">مدة العقد المتبقية</span><span class="mut">≈ ' + UI.money(p.ct.w * 52) + ' سنويًا</span></div><div class="segs">' + seg + '</div></div></section>';
@@ -224,7 +224,7 @@
     const club = n.mode === 'renew' ? me().club : s.club, offer = n.mode === 'offer';
     const mt = T().maxTries(), left = Math.max(0, mt - (s.tries || 0));
     const chips = (arr, cur, act, fmt) => '<div class="chips">' + arr.map((v) => '<button class="chip ' + (cur === v ? 'on' : '') + '" data-a="' + act + '" data-v="' + v + '">' + fmt(v) + '</button>').join('') + '</div>';
-    let h = '<div class="neg-h" style="' + ck(club) + '"><span class="of-crest sm">' + UI.badge(club, 52) + '</span><div><small class="mut">' + (n.mode === 'renew' ? 'تجديد العقد' : 'طاولة التفاوض') + '</small><h3>' + esc(UI.cname(club)) + '</h3></div><div class="tries" title="المحاولات المتبقية">' + Array.from({ length: mt }, (x, i) => '<i class="' + (i < left ? 'on' : '') + '"></i>').join('') + '</div></div>' +
+    let h = '<div class="neg-h" style="' + ck(club) + '">' + (UI.stadiumBg ? UI.stadiumBg(club) : '') + '<span class="of-crest sm">' + UI.badge(club, 52) + '</span><div><small class="mut">' + (n.mode === 'renew' ? 'تجديد العقد' : 'طاولة التفاوض') + '</small><h3>' + esc(UI.cname(club)) + '</h3></div><div class="tries" title="المحاولات المتبقية">' + Array.from({ length: mt }, (x, i) => '<i class="' + (i < left ? 'on' : '') + '"></i>').join('') + '</div></div>' +
       '<div class="kv"><span>العرض الحالي</span><span>' + week(s.wage) + ' · ' + s.years + ' سنوات</span></div>' +
       (offer && (s.bonus || s.ab || s.gb) ? '<div class="kv"><span>المكافآت الحالية</span><span class="sm">' + [s.bonus ? 'توقيع ' + UI.money(s.bonus) : '', s.ab ? 'مشاركة ' + UI.money(s.ab) : '', s.gb ? 'هدف ' + UI.money(s.gb) : ''].filter(Boolean).join(' · ') + '</span></div>' : '') +
       '<div class="kv"><span>محاولات متبقية</span><b>' + left + ' من ' + mt + '</b></div>' +

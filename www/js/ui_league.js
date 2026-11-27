@@ -126,7 +126,10 @@
     }
     const tabs = UI.tabs('lg', [['table', 'الترتيب'], ['fix', 'المباريات'], ['scorers', 'الهدافون'], ['assists', 'الصنّاع'], ['world', '🌍 العالم']], 'table');
     const t = UI.curTab('lg', 'table');
-    const own = '<div class="notice ok" style="margin-top:0">' + esc(G.leagueName(S.league.lg)) + ' · ' + (S.league.clubs.length) + ' ناديًا</div>';
+    const ldef = G.LEAGUES[S.league.lg] || {}, zk = [];
+    if ((G.UCL_SLOTS[S.league.lg] || 0) > 0) zk.push(['z1', 'دوري الأبطال']); else if (ldef.up) zk.push(['z1', 'صعود']);
+    if (ldef.down) zk.push(['z3', 'هبوط']);
+    const own = '<div class="lg-hd"><b>' + esc(G.leagueName(S.league.lg)) + '</b><span>' + (S.league.clubs.length) + ' ناديًا</span></div>' + (UI.zoneKey && zk.length ? UI.zoneKey(zk) : '');
     return tabs + (t === 'table' ? own + tableFor(S.league.lg) : t === 'fix' ? leagueFixtures() : t === 'scorers' ? topTable('lg', 'g') : t === 'assists' ? topTable('lg', 'a') : worldTab());
   };
   UI.on('lgRound', (v) => { UI.sub.lgRound = U.clamp(+v, 1, G.S.league ? G.League.rounds(G.S.league) : 38); });
