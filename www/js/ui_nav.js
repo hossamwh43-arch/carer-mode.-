@@ -182,7 +182,7 @@
     opt = opt || {};
     const club = G.S.clubs[p.club], tc = UI.tierCls(p);
     const chips = (opt.chips || []).filter(Boolean).map((c) => '<span class="hchip">' + c + '</span>').join('');
-    return '<section class="cine ' + tc + (opt.big ? ' big' : '') + '">' + (UI.stadiumBg ? UI.stadiumBg(p.club) : '') + '<div class="cine-top"><div class="cine-ovr"><b class="ovr ' + tc + '">' + p.ovr + '</b><small>' + p.pos + '</small></div>' +
+    return '<section class="cine ' + tc + (opt.big ? ' big' : '') + '">' + (UI.stadiumBg ? UI.stadiumBg(p.club) : '') + '<div class="cine-top"><div class="cine-ovr"><b class="ovr ' + tc + '" data-cu="ovr" data-v="' + p.ovr + '">' + p.ovr + '</b><small>' + p.pos + '</small></div>' +
       '<div class="cine-kick">' + (UI.natBadge(p.nat, 18) || '') + '<span>منتخب ' + esc(UI.natName(p.nat)) + '</span></div>' + (opt.act ? '<div class="cine-act">' + opt.act + '</div>' : '') + '</div>' +
       '<div class="cine-body"><div class="cine-art">' + UI.avatar(p.look, p.club, opt.big ? 210 : 176, p.n) + '</div><div class="cine-in">' +
       '<h1 class="cine-name">' + esc(p.n) + '</h1><div class="cine-sub">' + G.POS_AR[p.pos] + ' · ' + p.age + ' سنة · رقم ' + p.num + '</div>' +
