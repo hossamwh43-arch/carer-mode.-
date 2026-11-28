@@ -47,7 +47,7 @@
       let w = gf > ga ? 1 : gf < ga ? -1 : 0;
       if (w === 0 && sm.pens) w = (mine === 'h' ? sm.pens.h - sm.pens.a : sm.pens.a - sm.pens.h) > 0 ? 1 : -1;
       const fo = G.Cups ? G.Cups.finalOutcome(sm) : null; // نهائي كأس/سوبر
-      if (fo && fo.won) { UI.fx('fanfare'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك', { art: fo.key === 'cup' ? 'cup' : 'sup', ms: 3400 }); return; }
+      if (fo && fo.won) { UI.fx('fanfare'); if (UI.sceneTrophy) UI.sceneTrophy(fo.key === 'cup' ? 'cup' : 'sup', fo.key === 'cup' ? 'بطل ' + G.cupName(fo.cn, true) : 'بطل ' + G.supName(fo.cn, true), 'لقب جديد في خزانتك'); UI.banner('win', fo.key === 'cup' ? '🏆 بطل ' + G.cupName(fo.cn, true) + '!' : '🛡️ بطل ' + G.supName(fo.cn, true) + '!', 'لقب جديد في خزانتك', { art: fo.key === 'cup' ? 'cup' : 'sup', ms: 3400 }); return; }
       const sk = sm.gro && sm.gro.ev.find((e) => e.k === 'streak');
       if (sk && sm.mins > 0) { UI.fx('fanfare'); UI.notify('ach', 'ارتقى مستواك', sm.gro.s + ' مباريات متتالية متألقة'); }
       else if (sm.motm && sm.mins > 0) { UI.fx('fanfare'); UI.notify('ach', 'نجم المباراة', 'تقييمك ' + Number(sm.rating).toFixed(1)); }
@@ -293,7 +293,11 @@
       G.Season.commitUser(m);
       UI.lastM = m; UI.mv = { phase: 'post' };
       resultFx();
-    } else UI.mv = { phase: 'live', speed: 1, paused: false };
+    } else {
+      UI.mv = { phase: 'live', speed: 1, paused: true }; // يبدأ متوقفًا خلف مشهد النفق (المباريات الكبرى فقط) ثم يُستأنف
+      const go = () => { UI.mv.paused = false; UI.render(); };
+      if (!(UI.sceneWalkout && UI.sceneWalkout(fix, go))) UI.mv.paused = false;
+    }
   });
   UI.on('resumeMatch', () => { UI.cur = 'match'; UI.mv = { phase: 'live', speed: 1, paused: false }; });
 

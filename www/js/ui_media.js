@@ -56,7 +56,7 @@
       '<button class="btn pri" data-a="closeSheet">حسنًا</button>';
   }
 
-  UI.on('pressOpen', () => { if (!M() || !M().pending()) { UI.toast('لا يوجد مؤتمر صحفي'); return; } UI.sheetRender(pressSheet); return false; });
+  UI.on('pressOpen', () => { if (!M() || !M().pending()) { UI.toast('لا يوجد مؤتمر صحفي'); return; } const open = () => UI.sheetRender(pressSheet); if (!(UI.scenePress && UI.scenePress(open))) open(); return false; });
   UI.on('pressAns', (id) => {
     const r = M().answer(id);
     if (!r.ok) { UI.toast(r.msg); return false; }
