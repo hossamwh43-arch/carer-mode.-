@@ -17,7 +17,15 @@
       A.ctx = new AC();
       A.master = A.ctx.createGain(); A.master.gain.value = 0.85;
       const comp = A.ctx.createDynamicsCompressor ? A.ctx.createDynamicsCompressor() : null; // يمنع التشويه عند تراكب الأصوات
+      const out = comp || A.ctx.destination;
       if (comp) { A.master.connect(comp); comp.connect(A.ctx.destination); } else A.master.connect(A.ctx.destination);
+      // صدى استاد (Build 35): استجابة نبضية مولَّدة (ضجيج يخفت) تمرّ عبر Convolver بمستوى خفيف؛ تُتجاوز بالجودة المنخفضة
+      if (A.ctx.createConvolver && !(UI.quality && UI.quality() === 'low')) {
+        const len = Math.floor(A.ctx.sampleRate * 1.3), ir = A.ctx.createBuffer(2, len, A.ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+        const conv = A.ctx.createConvolver(), wet = A.ctx.createGain(); conv.buffer = ir; wet.gain.value = 0.17;
+        A.master.connect(conv); conv.connect(wet); wet.connect(out); A.wet = wet;
+      }
     } catch (e) { A.ctx = null; }
     return A.ctx;
   }
@@ -88,6 +96,19 @@
     done: (c, t) => [784, 988, 1175].forEach((f, i) => tone(c, 'sine', f, f, t + i * 0.12, 0.6, 0.12)),
     bad: (c, t) => { tone(c, 'sawtooth', 120, 70, t, 0.4, 0.1); },
     tap: (c, t) => tone(c, 'sine', 640, 520, t, 0.04, 0.05),
+    nav: (c, t) => { tone(c, 'sine', 520, 520, t, 0.05, 0.045); tone(c, 'sine', 780, 780, t + 0.045, 0.07, 0.04); },
+    sheet: (c, t) => noise(c, t, 0.2, 0.05, 420, 1900, 0.9, 0.05),
+    whoosh: (c, t) => noise(c, t, 0.55, 0.12, 300, 2600, 0.7, 0.2),
+    flash: (c, t) => { noise(c, t, 0.05, 0.1, 5200, 5200, 2, 0.003, 'highpass'); tone(c, 'square', 1900, 1200, t, 0.03, 0.03, 0.002); },
+    flashes: (c, t) => [0, 0.13, 0.21, 0.4, 0.47, 0.71].forEach((d) => SND.flash(c, t + d)),
+    walkout: (c, t) => { noise(c, t, 2.4, 0.17, 160, 900, 0.6, 1.4, 'lowpass'); tone(c, 'sine', 62, 52, t + 0.2, 0.3, 0.2); tone(c, 'sine', 62, 52, t + 0.85, 0.3, 0.2); tone(c, 'sine', 66, 54, t + 1.45, 0.34, 0.24); A.swell(0.8); },
+    trophy: (c, t) => {
+      [[880, 0], [1318.5, 0.05], [1760, 0.1], [2217, 0.16]].forEach(([f, d]) => tone(c, 'sine', f, f, t + d, 2.2, 0.07, 0.004));
+      SND.fanfare(c, t + 0.1); A.swell(1);
+    },
+    reveal: (c, t) => { noise(c, t, 1.3, 0.14, 260, 3200, 0.8, 1.1); tone(c, 'sawtooth', 110, 330, t, 1.3, 0.05, 0.9); tone(c, 'triangle', 392, 392, t + 1.3, 1.4, 0.12, 0.01); tone(c, 'triangle', 523.25, 523.25, t + 1.3, 1.4, 0.1, 0.01); },
+    farewell: (c, t) => [[261.63, 0], [329.63, 0.12], [392, 0.24], [523.25, 0.36]].forEach(([f, d]) => tone(c, 'triangle', f, f, t + d, 3.2, 0.09, 0.3)),
+    stamp: (c, t) => { tone(c, 'sine', 120, 60, t, 0.14, 0.22); noise(c, t, 0.12, 0.09, 1200, 500, 0.8, 0.01); },
     fanfare: (c, t) => {
       [[523.25, 0], [659.25, 0.16], [783.99, 0.32], [1046.5, 0.5]].forEach(([f, d]) => {
         const x = tone(c, 'sawtooth', f, f, t + d, d === 0.5 ? 1.3 : 0.22, 0.09, 0.02);
@@ -111,10 +132,19 @@
         g.gain.value = 0.0001; g.gain.exponentialRampToValueAtTime(0.028, c.currentTime + 1.2);
         s.connect(f); f.connect(g); g.connect(A.master); s.start();
         A.crowdSrc = s; A.crowdG = g;
+        // طبقة منخفضة (هدير المدرّج) + نبض بطيء يجعل الجمهور «يتنفّس» (Build 35)
+        try {
+          const s2 = c.createBufferSource(), f2 = c.createBiquadFilter(), g2 = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+          s2.buffer = noiseBuffer(c); s2.loop = true; f2.type = 'lowpass'; f2.frequency.value = 240; g2.gain.value = 0.02;
+          lfo.frequency.value = 0.17; lg.gain.value = 0.008; lfo.connect(lg); lg.connect(g2.gain);
+          s2.connect(f2); f2.connect(g2); g2.connect(A.master); s2.start(); lfo.start();
+          A.crowd2 = { s: s2, l: lfo };
+        } catch (e2) { /* لا شيء */ }
       } else if (A.crowdSrc) {
         const s = A.crowdSrc, g = A.crowdG; A.crowdSrc = null; A.crowdG = null;
         g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.5);
-        setTimeout(() => { try { s.stop(); } catch (e) { /* لا شيء */ } }, 650);
+        const c2 = A.crowd2; A.crowd2 = null;
+        setTimeout(() => { try { s.stop(); if (c2) { c2.s.stop(); c2.l.stop(); } } catch (e) { /* لا شيء */ } }, 650);
       }
     } catch (e) { /* لا شيء */ }
   };
@@ -144,10 +174,44 @@
 
   // ---------- الاهتزاز ----------
   const PAT = { goalMe: [0, 70, 45, 70, 45, 160], goal: [0, 60, 40, 110], oppGoal: [0, 60], ping: [25], red: [0, 120, 60, 120], card: [35], bad: [0, 90, 60, 90], level: [20, 35, 20], coin: [22], done: [35], tap: [10], fanfare: [0, 60, 40, 60, 40, 200], save: [30], whistle: [30], whistle3: [0, 40, 40, 40, 40, 90] };
+  PAT.nav = [8]; PAT.sheet = [8]; PAT.whoosh = [15]; PAT.flash = [10]; PAT.walkout = [0, 50, 600, 70, 500, 120]; PAT.trophy = [0, 60, 40, 60, 40, 60, 40, 240]; PAT.reveal = [0, 30, 120, 40, 120, 60, 140, 90, 140, 200]; PAT.farewell = [0, 40, 80, 40]; PAT.stamp = [0, 80];
+  // Haptics الأصلي (إضافة @capacitor/haptics في APK): أقوى وأدقّ من navigator.vibrate. غيابه (ويب/اختبارات) يعيدنا للاهتزاز العادي.
+  // في الـAPK: Capacitor.Plugins.Haptics إن وُجد، وإلا نُنشئ وكيل الإضافة عبر Capacitor.registerPlugin (الطريقة الموثّقة بلا حزمة JS)؛ لا إضافة ⇒ null ⇒ navigator.vibrate
+  let hapProxy = null;
+  const nativeHap = () => {
+    try {
+      const c = window.Capacitor;
+      if (!c || !c.isNativePlatform || !c.isNativePlatform()) return null;
+      if (c.Plugins && c.Plugins.Haptics) return c.Plugins.Haptics;
+      if (c.isPluginAvailable && !c.isPluginAvailable('Haptics')) return null;
+      if (!hapProxy && typeof c.registerPlugin === 'function') hapProxy = c.registerPlugin('Haptics');
+      return hapProxy;
+    } catch (e) { return null; }
+  };
+  const KIND = { nav: 'sel', tap: 'sel', sheet: 'sel', flash: 'sel', ping: 'ok', level: 'ok', coin: 'ok', done: 'ok', bad: 'err', red: 'err', oppGoal: 'err', card: 'mid', save: 'mid', whistle: 'mid', stamp: 'heavy' };
+  // استدعاء نبضة أصلية: الطريقة الناقصة أو الاستثناء المتزامن يرميان (للرجوع للاحتياطي)، ورفض الوعد (Promise) يُبتلَع كي لا يظهر كخطأ غير ملتقَط
+  const pulse = (h, kind, a) => { const f = kind === 'n' ? h.notification : h.impact; if (typeof f !== 'function') throw new Error('no haptics method'); const r = f.call(h, kind === 'n' ? { type: a } : { style: a }); if (r && typeof r.catch === 'function') r.catch(() => {}); };
   A.vibe = (name) => {
     if (!hapOn()) return false;
     const p = PAT[name];
     if (!p) return false;
+    const h = nativeHap();
+    if (h) {
+      try {
+        const k = KIND[name];
+        if (k === 'sel') pulse(h, 'i', 'LIGHT');
+        else if (k === 'ok') pulse(h, 'n', 'SUCCESS');
+        else if (k === 'err') pulse(h, 'n', 'ERROR');
+        else if (k === 'mid') pulse(h, 'i', 'MEDIUM');
+        else if (k === 'heavy') pulse(h, 'i', 'HEAVY');
+        else { // نمط زمني: النبضة الأولى فورًا (فشلها يُرجعنا للاحتياطي)، والباقي مؤجَّل ولا يرمي
+          const hits = []; let t = 0;
+          p.forEach((d, i) => { if (i % 2 === 1) hits.push([t, d > 100 ? 'HEAVY' : 'MEDIUM']); t += d; });
+          hits.forEach((x, j) => { if (j === 0 && x[0] === 0) pulse(h, 'i', x[1]); else setTimeout(() => { try { pulse(h, 'i', x[1]); } catch (e) { /* لا شيء */ } }, x[0]); });
+        }
+        return true;
+      } catch (e) { /* نرجع للاحتياطي */ }
+    }
     try { if (navigator.vibrate) return navigator.vibrate(p); } catch (e) { /* لا شيء */ }
     return false;
   };

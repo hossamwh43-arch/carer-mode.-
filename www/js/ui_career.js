@@ -133,8 +133,13 @@
     const tgl = (k, on, title, sub) => '<div class="setrow"><div>' + title + '<small>' + sub + '</small></div><button class="tgl ' + (on ? 'on' : '') + '" data-a="prefToggle" data-v="' + k + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" aria-label="' + title + '"></button></div>';
     h += '<div class="card"><h3>🎬 عرض المباراة</h3>' +
       tgl('stage', P.stage !== false, 'الملعب المرئي (رسوم متحركة)', 'أوقفه إن شعرت ببطء أو سخونة: تبقى المباراة كاملة بأحداثها ونتيجتها بدون رسم الملعب') + '</div>';
+    const qp = UI.qualityPref ? UI.qualityPref() : 'auto', qn = { auto: 'تلقائي (' + (UI.quality && UI.quality() === 'low' ? 'منخفضة على جهازك' : 'عالية على جهازك') + ')', high: 'عالية', low: 'منخفضة' };
+    h += '<div class="card"><h3>✨ جودة الرسوميات والحركة</h3><p class="sm mut">المنخفضة تُلغي الحركات والعدّادات والصدى الصوتي وتخفّف الجهد على الهاتف. الحالي: ' + qn[qp] + '</p><div class="chips" role="radiogroup">' +
+      ['auto', 'high', 'low'].map((k) => '<button class="chip ' + (qp === k ? 'on' : '') + '" data-a="qualitySet" data-v="' + k + '" role="radio" aria-checked="' + (qp === k) + '">' + ({ auto: 'تلقائي', high: 'عالية', low: 'منخفضة' })[k] + '</button>').join('') + '</div></div>';
+    h += '<div class="card"><h3>🎞️ المشاهد السينمائية</h3>' + tgl('scenes', P.scenes !== false, 'مشاهد اللحظات الكبيرة', 'توقيع العقد، رفع الألقاب، الكرة الذهبية، المؤتمر الصحفي، نفق المباريات الكبرى، وداع الاعتزال — قابلة للتخطّي بنقرة') + '</div>';
     h += '<div class="card"><h3>🔊 الصوت والاهتزاز</h3>' +
       tgl('sound', P.sound !== false, 'المؤثرات الصوتية', 'صافرات وجمهور وأهداف — تُولَّد داخل اللعبة بلا ملفات') +
+      tgl('uiSound', P.uiSound !== false, 'أصوات الواجهة', 'نقرات خفيفة عند الأزرار والتبويبات وفتح النوافذ') +
       tgl('haptics', P.haptics !== false, 'الاهتزاز', 'عند الأهداف والبطاقات ولحظات القرار (الهواتف التي تدعمه)') +
       '<button class="btn sm" data-a="fxTest">🎧 جرّب المؤثرات</button></div>';
     if (G.Diag) {
@@ -155,13 +160,14 @@
   };
 
   UI.on('prefToggle', (k) => {
-    if (k !== 'sound' && k !== 'haptics' && k !== 'stage') return false;
+    if (k !== 'sound' && k !== 'haptics' && k !== 'stage' && k !== 'uiSound' && k !== 'scenes') return false;
     UI.prefs[k] = UI.prefs[k] === false; // الافتراضي مفعّل: غير المعرَّف أو true يصبح false، وfalse يصبح true
     UI.savePrefs();
     if (k === 'sound' && UI.prefs.sound === false && G.Audio) G.Audio.crowd(false);
     if (k === 'stage' && UI.prefs.stage === false && UI.stadium && UI.stadium.destroy) UI.stadium.destroy();
     if (UI.prefs[k]) UI.fx(k === 'sound' ? 'ping' : 'done');
   });
+  UI.on('qualitySet', (v) => { if (v !== 'auto' && v !== 'high' && v !== 'low') return false; UI.prefs.quality = v; UI.savePrefs(); if (UI.applyQuality) UI.applyQuality(); UI.snd('ping'); });
   UI.on('fxTest', () => { UI.fx('goalMe'); UI.banner('me', '⚽ هدف!', 'هكذا تبدو المؤثرات'); return false; });
   UI.on('saveNow', () => { UI.toast(G.Save.save(true) ? 'تم الحفظ ✔️' : 'تعذّر الحفظ (قد يكون التخزين ممتلئًا أو معطّلًا)'); });
   UI.on('exportSave', () => {

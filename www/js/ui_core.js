@@ -243,6 +243,7 @@
     const oldTabs = UI.tabsMemo ? UI.tabsMemo() : null;
     app.innerHTML = (UI.switcher ? G.safe(UI.switcher, 'switcher') || '' : '') + html;
     if (UI.tabsFx) G.safe(() => UI.tabsFx(oldTabs, entering), 'tabsFx');
+    if (UI.feelAfter) G.safe(() => UI.feelAfter(entering), 'feelAfter');
     if (UI._sheetFn && !$('#sheetWrap').classList.contains('hidden')) $('#sheet').innerHTML = UI._sheetFn();
     if (UI.inboxNotify) G.safe(UI.inboxNotify, 'inboxNotify');
     if (UI.after) { const f = UI.after; UI.after = null; f(); }

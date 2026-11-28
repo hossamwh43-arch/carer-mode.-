@@ -117,6 +117,7 @@
     timer = setTimeout(() => { timer = null; w.remove(); }, 3600);
   }
 
+  UI.confetti = confetti;
   // واجهات قديمة: banner(kind, title, sub, opt) و toast(msg, ms) تعمل كما كانت لكن بالتصميم الجديد
   UI.banner = (kind, title, sub, opt) => UI.notify(kind, title, sub, opt);
   const inferKind = (m) => (/تعذّر|^(لا يمكن|لا يوجد|لا حصص|استُنفدت|النص غير|أنت لست|هذه المباراة)/.test(m) ? 'warn' : /^(تم|نُسخ|انطلق|انتهت)|✔|✅/.test(m) ? 'ok' : 'info');
@@ -147,9 +148,9 @@
       const S = G.S, sm = S && S.summary;
       if (!sm || S.phase !== 'end' || !sm.row) return false;
       const tr = sm.row.trophies || {}, mine = (sm.awards || []).filter((a) => a.user);
-      if (tr.ucl) { UI.fx('fanfare'); UI.banner('win', '🌟 بطل أوروبا!', 'توّجتَ بدوري أبطال أوروبا', { art: 'ucl', ms: 3400 }); return true; }
-      if (tr.uel) { UI.fx('fanfare'); UI.banner('win', '🏅 بطل الدوري الأوروبي!', 'توّجتَ بلقب الدوري الأوروبي', { art: 'uel', ms: 3400 }); return true; }
-      if (tr.liga || tr.d2) { UI.fx('fanfare'); UI.banner('win', tr.d2 ? '🥈 بطل الدرجة الثانية!' : '🥇 بطل الدوري!', 'لقب ' + G.leagueName(sm.row.lgId) + ' لك', { art: tr.d2 ? 'd2' : 'liga', ms: 3400 }); return true; }
+      if (tr.ucl) { UI.fx('fanfare'); if (UI.sceneTrophy) UI.sceneTrophy('ucl', 'بطل أوروبا', 'دوري أبطال أوروبا'); UI.banner('win', '🌟 بطل أوروبا!', 'توّجتَ بدوري أبطال أوروبا', { art: 'ucl', ms: 3400 }); return true; }
+      if (tr.uel) { UI.fx('fanfare'); if (UI.sceneTrophy) UI.sceneTrophy('uel', 'بطل الدوري الأوروبي', 'الدوري الأوروبي'); UI.banner('win', '🏅 بطل الدوري الأوروبي!', 'توّجتَ بلقب الدوري الأوروبي', { art: 'uel', ms: 3400 }); return true; }
+      if (tr.liga || tr.d2) { UI.fx('fanfare'); if (UI.sceneTrophy) UI.sceneTrophy(tr.d2 ? 'd2' : 'liga', tr.d2 ? 'بطل الدرجة الثانية' : 'بطل الدوري', G.leagueName(sm.row.lgId)); UI.banner('win', tr.d2 ? '🥈 بطل الدرجة الثانية!' : '🥇 بطل الدوري!', 'لقب ' + G.leagueName(sm.row.lgId) + ' لك', { art: tr.d2 ? 'd2' : 'liga', ms: 3400 }); return true; }
       if (mine.length) { UI.fx('fanfare'); UI.banner('win', '🎖️ ' + G.Season.AWARD_AR[mine[0].type], mine.length > 1 ? 'و' + (mine.length - 1) + ' جوائز أخرى' : 'جائزة الموسم', { art: ({ scorer: 'scorer', player: 'player', assist: 'assist', ucl: 'uclp', young: 'young' })[mine[0].type] || 'player', ms: 3200 }); return true; }
       UI.fx('done');
       return false;

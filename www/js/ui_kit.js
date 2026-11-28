@@ -79,7 +79,7 @@
   // مؤشّر رقمي: رقم كبير + عنوان صغير + (اختياري) دلتا ولون
   UI.kpi = (label, value, o) => {
     o = o || {};
-    return '<div class="kpi' + (o.tone ? ' ' + o.tone : '') + '"' + (o.act ? ' data-a="' + o.act + '"' + (o.v != null ? ' data-v="' + esc(o.v) + '"' : '') + ' role="button" tabindex="0"' : '') + '><b class="num">' + value + '</b><small>' + label + '</small>' + (o.sub ? '<em>' + o.sub + '</em>' : '') + '</div>';
+    return '<div class="kpi' + (o.tone ? ' ' + o.tone : '') + '"' + (o.act ? ' data-a="' + o.act + '"' + (o.v != null ? ' data-v="' + esc(o.v) + '"' : '') + ' role="button" tabindex="0"' : '') + '><b class="num"' + (typeof value === 'number' ? ' data-cu="kpi:' + esc(label) + '" data-v="' + value + '"' : '') + '>' + value + '</b><small>' + label + '</small>' + (o.sub ? '<em>' + o.sub + '</em>' : '') + '</div>';
   };
   // سلسلة الأداء الأخير (نقاط ملوّنة): arr من 'w'|'d'|'l' أو 'g'|'y'|'r'
   UI.formStrip = (arr) => {
